@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "async_vbo_transfers_Scenario2", "async_vbo_transfers_Scenario2.vcxproj", "{04EE60D8-DC4E-4EBB-A257-4562123AE516}"
 EndProject
@@ -19,7 +19,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{04EE60D8-DC4E-4EBB-A257-4562123AE516}.Debug|Win32.ActiveCfg = Debug|Win32
 		{04EE60D8-DC4E-4EBB-A257-4562123AE516}.Debug|Win32.Build.0 = Debug|Win32
-		{04EE60D8-DC4E-4EBB-A257-4562123AE516}.Debug|x64.ActiveCfg = Debug|Win32
+		{04EE60D8-DC4E-4EBB-A257-4562123AE516}.Debug|x64.ActiveCfg = Debug|x64
+		{04EE60D8-DC4E-4EBB-A257-4562123AE516}.Debug|x64.Build.0 = Debug|x64
 		{04EE60D8-DC4E-4EBB-A257-4562123AE516}.Debug-clang|Win32.ActiveCfg = Debug|Win32
 		{04EE60D8-DC4E-4EBB-A257-4562123AE516}.Debug-clang|Win32.Build.0 = Debug|Win32
 		{04EE60D8-DC4E-4EBB-A257-4562123AE516}.Debug-clang|x64.ActiveCfg = Debug|Win32

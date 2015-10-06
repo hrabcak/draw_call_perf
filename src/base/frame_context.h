@@ -43,17 +43,20 @@ struct cmd
 {
     unsigned _count;
     unsigned _instanceCount;
-    unsigned _first;
+    unsigned _firstIndex;
+    unsigned _baseVertex;
     unsigned _baseInstance;
 
     cmd(
         const unsigned count,
         const unsigned instanceCount,
-        const unsigned first,
+        const unsigned firstIndex,
+        const unsigned baseVertex,
         const unsigned baseInstance)
         : _count(count)
         , _instanceCount(instanceCount)
-        , _first(first)
+        , _firstIndex(firstIndex)
+        , _baseVertex(baseVertex)
         , _baseInstance(baseInstance)
     {}
 };

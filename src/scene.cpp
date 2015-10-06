@@ -235,15 +235,13 @@ int scene::frustum_check(base::frame_context *ctx,const bool dont_check)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-const int num_sides = 64;
+const int num_sides = 32;
 
 void scene::upload_blocks_to_gpu(
 	const base::source_location &loc,
 	base::frame_context *ctx)
 {
     static int counter = 0;
-
-    //if (counter++ == 4) return;
 
 	ctx->_scene_data_ptr_size = 0;
 	for(int i = 0; i < NumTypes; ++i)
@@ -283,6 +281,7 @@ void scene::upload_blocks_to_gpu(
                 type == 0 ? count : 8,
                 1,
                 0,
+                0,
                 ctx->_scene_data_offset + offset);
 
             ptr[type]++;
@@ -299,20 +298,12 @@ void scene::render_blocks(base::frame_context * const ctx)
 {
 	glUseProgram(_prg);
 
-    base::hptimer timer;
-
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
     timer.start();
 
     const bool fast_drawcall = true;
     const bool fast_drawcall_old_way = false;
-    const bool fast_draw_call_gl33 = false;
+    const bool fast_draw_call_gl33 = true;
     const bool use_instancing = false;
-
-	// this is only needed on AMD cards due to driver bug wich needs
-	// to have attr0 array anabled
-	//base::set_attr0_vbo_amd_wa();
 
     glVertexAttribI1i(13, 0);
     glVertexAttribI1i(14, 0);
@@ -362,8 +353,9 @@ void scene::render_blocks(base::frame_context * const ctx)
                         ctx->_num_visible_blocks[0]);
                 }
                 else {
-                    glMultiDrawArraysIndirect(
+                    glMultiDrawElementsIndirect(
                         GL_TRIANGLE_STRIP,
+                        GL_UNSIGNED_SHORT,
                         (void*)((ctx->_scene_data_offset) * sizeof(base::cmd)),
                         ctx->_num_visible_blocks[0],
                         0);
@@ -427,8 +419,9 @@ void scene::render_blocks(base::frame_context * const ctx)
                         ctx->_num_visible_blocks[1]);
                 }
                 else {
-                    glMultiDrawArraysIndirect(
+                    glMultiDrawElementsIndirect(
                         GL_TRIANGLE_STRIP,
+                        GL_UNSIGNED_SHORT,
                         (void*)((ctx->_scene_data_offset + pos) * sizeof(base::cmd)),
                         ctx->_num_visible_blocks[1],
                         0);
@@ -476,9 +469,6 @@ void scene::render_blocks(base::frame_context * const ctx)
     glQueryCounter(ctx->_time_queries[1], GL_TIMESTAMP);
 
     ctx->_cpu_render_time = timer.elapsed_time();
-
-	// AMD workaround
-	//base::clear_attr0_vbo_amd_wa();
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
