@@ -1,0 +1,1 @@
+svn co https://coid.googlecode.com/svn/trunk/src/coid/comm ext/comm
