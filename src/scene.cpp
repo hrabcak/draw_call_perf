@@ -305,10 +305,10 @@ void scene::render_blocks(base::frame_context * const ctx)
 
     timer.start();
 
-    const bool fast_drawcall = true;
+    const bool fast_drawcall = false;
     const bool fast_drawcall_old_way = false;
     const bool fast_draw_call_gl33 = false;
-    const bool use_instancing = true;
+    const bool use_instancing = false;
 
 	// this is only needed on AMD cards due to driver bug wich needs
 	// to have attr0 array anabled
