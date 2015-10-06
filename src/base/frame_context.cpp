@@ -50,6 +50,36 @@ base::ctx_data * __ctx_data_ptr = 0;
 
 unsigned ctx_counter = 0;
 
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+const int n_contexts = 4;
+
+template<class T>
+unsigned create_buffer(const unsigned nelem, T** const ptr, void * const data = 0)
+{
+    GLuint handle = 0;
+
+    glGenBuffers(1, &handle);
+    glBindBuffer(GL_ARRAY_BUFFER, handle);
+    const unsigned flags = data == 0
+        ? GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+        : 0;
+    const unsigned size = sizeof(T) * nelem;
+
+    glBufferStorage(GL_ARRAY_BUFFER, size, data, flags);
+
+    if (ptr != 0) {
+        *ptr = reinterpret_cast<T*>(
+            glMapBufferRange(GL_ARRAY_BUFFER, 0, size, flags));
+    }
+    
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    return handle;
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 void base::frame_context::create_buffers()
 {
 	first = true;
@@ -57,69 +87,43 @@ void base::frame_context::create_buffers()
     _ctx_id = ctx_counter++;
 
     if (!__buffers_created) {
-        glGenBuffers(1, &__scene_buffer);
-        _scene_vbo = __scene_buffer;
-        glGenBuffers(1, &__elem_buffer);
-        _elem_vbo = __elem_buffer;
-        glGenBuffers(1, &__ctx_buffer);
-        _ctx_vbo = __ctx_buffer;
         glGenBuffers(1, &__drawid_buffer);
         _drawid_vbo = __drawid_buffer;
         glGenBuffers(1, &__cmd_buffer);
         _cmd_vbo = __cmd_buffer;
 
-        {
-            glBindBuffer(GL_UNIFORM_BUFFER, _ctx_vbo);
-            unsigned flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-            const unsigned size = 4 * sizeof(base::ctx_data);
+        _ctx_vbo = __ctx_buffer = create_buffer(1 * n_contexts, &__ctx_data_ptr);
+        _ctx_data_ptr = __ctx_data_ptr;
 
-            glBufferStorage(GL_UNIFORM_BUFFER, size, 0, flags);
+        _scene_vbo = __scene_buffer = create_buffer(scene::MAX_BLOCK_COUNT * n_contexts, &__scene_data_ptr);
+        _scene_data_ptr = __scene_data_ptr;
+        _scene_data_offset = 0;
 
-            _ctx_data_ptr = __ctx_data_ptr = reinterpret_cast<base::ctx_data*>(
-                glMapBufferRange(GL_UNIFORM_BUFFER, 0, size, flags));
-            glBindBuffer(GL_UNIFORM_BUFFER, 0);
-        }
-
-        {
-            glBindBuffer(GL_UNIFORM_BUFFER, _scene_vbo);
-            unsigned flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-            const unsigned size = 4 * scene::MAX_BLOCK_COUNT * sizeof(base::block_data);
-
-            glBufferStorage(GL_UNIFORM_BUFFER, size, 0, flags);
-
-            _scene_data_ptr = __scene_data_ptr = reinterpret_cast<base::block_data*>(
-                glMapBufferRange(GL_UNIFORM_BUFFER, 0, size, flags));
-            _scene_data_offset = 0;
-            glBindBuffer(GL_UNIFORM_BUFFER, 0);
-        }
+        //TODO create spheres/boxes
         {
             const int size = 4096;
 
             unsigned short * const data = new unsigned short[size];
             for (int i = 0; i < size; ++i) data[i] = unsigned short(i);
 
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, __elem_buffer);
-            glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, size * 2, data, 0);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+            _elem_vbo = __elem_buffer = create_buffer<unsigned short>(size, 0, data);
 
             delete[] data;
+
+            //TODO create vertex buffer
         }
-        {
-            const int size = scene::MAX_BLOCK_COUNT * sizeof(int) * 4/*int4*/ * 4;
-            unsigned flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
 
-            glBindBuffer(GL_ARRAY_BUFFER, __drawid_buffer);
-            glBufferStorage(GL_ARRAY_BUFFER, size, 0, flags);
-            glEnableVertexAttribArray(13);
-            glVertexAttribIPointer(13, 4, GL_INT, 0, (GLvoid*)0);
-            glVertexAttribDivisor(13, 1);
+        _drawid_vbo = __drawid_buffer = create_buffer<int>(
+            scene::MAX_BLOCK_COUNT * 4 * n_contexts,
+            &__drawid_data_ptr);
+        _drawid_data_ptr = __drawid_data_ptr;
+        _drawid_data_offset = 0;
+        glBindBuffer(GL_ARRAY_BUFFER, _drawid_vbo);
+        glEnableVertexAttribArray(13);
+        glVertexAttribIPointer(13, 4, GL_INT, 0, (GLvoid*)0);
+        glVertexAttribDivisor(13, 1);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-            _drawid_data_ptr = __drawid_data_ptr =
-                reinterpret_cast<int*>(glMapBufferRange(GL_ARRAY_BUFFER, 0, size, flags));
-            _drawid_data_offset = 0;
-
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-        }
         {
             const int size = scene::MAX_BLOCK_COUNT * sizeof(base::cmd) * 4;
             unsigned flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
