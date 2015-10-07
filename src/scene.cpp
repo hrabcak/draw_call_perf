@@ -137,10 +137,12 @@ void scene::init_gpu_stuff(const base::source_location&)
 
     get_face_and_vert_count_for_tess_level(tess_level, _nelements, _nvertices);
 
+    //_nelements *= 3;
+
     std::vector<unsigned short> elements;
     std::vector<float> vertices;
-    elements.resize(_nelements * 2);
-    vertices.resize(_nvertices * 8 * 2);
+    elements.resize(_nelements);
+    vertices.resize(_nvertices * 8);
 
     gen_cube(tess_level, &vertices[0], &elements[0]);
 
@@ -326,7 +328,7 @@ void scene::upload_blocks_to_gpu(
             drawid[offset * 4] = ctx->_scene_data_offset + offset;
 
             new (cmd + offset) base::cmd(
-                type == 0 ? count : 8,
+                _nelements,
                 1,
                 0,
                 0,
@@ -348,7 +350,7 @@ void scene::render_blocks(base::frame_context * const ctx)
 
     timer.start();
 
-    const bool fast_drawcall = true;
+    const bool fast_drawcall = false;
     const bool fast_drawcall_old_way = false;
     const bool fast_draw_call_gl33 = true;
     const bool use_instancing = false;
@@ -370,6 +372,9 @@ void scene::render_blocks(base::frame_context * const ctx)
         glUniform1i(_prg_tb_blocks, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_BUFFER, ctx->_scene_tb);
+        glUniform1i(_prg_tb_vert, 1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_BUFFER, _tb_vert);
     }
 
     if ((fast_drawcall && fast_drawcall_old_way)
@@ -381,7 +386,7 @@ void scene::render_blocks(base::frame_context * const ctx)
 
     glQueryCounter(ctx->_time_queries[0], GL_TIMESTAMP);
 
-    const int count = _nvertices * 3;
+    const int count = _nelements;
     const unsigned vbo = ctx->_scene_vbo;
 
 	if(ctx->_num_visible_blocks[0]>0) {
