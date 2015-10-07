@@ -225,6 +225,7 @@
     <ClCompile Include="..\..\src\base\mutex.cpp" />
     <ClCompile Include="..\..\src\base\pixelfmt.cpp" />
     <ClCompile Include="..\..\src\base\thread_win.cpp" />
+    <ClCompile Include="..\..\src\cube_gen.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\renderer.cpp" />
     <ClCompile Include="..\..\src\scene.cpp" />

@@ -131,13 +131,26 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+inline ivec2 pack_to_pos3x21b(const dvec3 &pos, const double scale)
+{
+    const ivec3 pos21(pos * scale);
+    return ivec2((pos21.x << 11) | ((pos21.y >> 10) & 0x7ff),
+        ((pos21.y & 0x3ff) << 21) | (pos21.z & 0x1fffff));
+}
+
+inline vec3 unpack_from_pos3x21b(const ivec2 &pos, const float scale)
+{
+    return vec3(
+        pos.x >> 11,
+        ((pos.x << 21) >> 11) | (pos.y >> 21),
+        (pos.y << 11) >> 11) * scale;
+}
+
 void scene::init_gpu_stuff(const base::source_location&)
 {
     const int tess_level = 1;
 
     get_face_and_vert_count_for_tess_level(tess_level, _nelements, _nvertices);
-
-    //_nelements *= 3;
 
     std::vector<unsigned short> elements;
     std::vector<float> vertices;
@@ -146,10 +159,22 @@ void scene::init_gpu_stuff(const base::source_location&)
 
     gen_cube(tess_level, &vertices[0], &elements[0]);
 
+    //TODO convert vertices to more efficient format
+    const double scale = (glm::pow(2.0, 20.0) - 1.0) / 3.0;
+
+    auto i = &vertices[0];
+    auto e = i + vertices.size();
+    do {
+        const ivec2 pos = pack_to_pos3x21b(dvec3(i[0], i[1], i[2]), scale);
+
+
+        i += 8;
+    } while (i != e);
+
     _buffer_elem = base::create_buffer<unsigned short>(_nelements, 0, &elements[0]);
     _buffer_vert = base::create_buffer<float>(_nvertices * 8, 0, &vertices[0]);
 
-    // vertices texture buffer
+    // create texture buffer for vertices
     glGenTextures(1, &_tb_vert);
     glBindTexture(GL_TEXTURE_BUFFER, _tb_vert);
     glTexBuffer(
@@ -157,17 +182,6 @@ void scene::init_gpu_stuff(const base::source_location&)
         base::get_pfd(base::PF_RGBA32F)->_internal,
         _buffer_vert);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
-
-    /*{
-        _nelements = 1024;
-
-        unsigned short * const data = new unsigned short[_nelements];
-        for (int i = 0; i < _nelements; ++i) data[i] = unsigned short(i);
-
-        _buffer_elem = base::create_buffer<unsigned short>(_nelements, 0, data);
-
-        delete[] data;
-    }*/
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -352,7 +366,7 @@ void scene::render_blocks(base::frame_context * const ctx)
 
     timer.start();
 
-    const bool fast_drawcall = true;
+    const bool fast_drawcall = false;
     const bool fast_drawcall_old_way = false;
     const bool fast_draw_call_gl33 = true;
     const bool use_instancing = false;
