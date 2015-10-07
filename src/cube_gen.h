@@ -70,9 +70,9 @@ const glm::vec3& top_v4 = v3;
 const glm::vec3 normals[6] = { glm::vec3(0.0, 0.0, 1.0), glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -1.0), glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, -1.0, 0.0) };
 };
 
-void get_face_and_vert_count_for_tess_level(uint32 tess_level, uint32 & face_count, uint32 & vert_count) {
+void get_face_and_vert_count_for_tess_level(uint32 tess_level, uint32 & element_count, uint32 & vert_count) {
 	vert_count = (1 << tess_level) + 1; // vert per edge
-	face_count = (((vert_count - 1) * (vert_count - 1)) << 1)*CUBE_FACE_COUNT;
+	element_count = (((vert_count - 1) * (vert_count - 1)) << 1) * CUBE_FACE_COUNT * 3;
 	vert_count *= vert_count*CUBE_FACE_COUNT;
 }
 
