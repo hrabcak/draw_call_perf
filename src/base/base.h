@@ -211,6 +211,30 @@ struct config {
 
 config& cfg();
 
+template<class T>
+unsigned create_buffer(const unsigned nelem, T** const ptr, void * const data = 0)
+{
+    GLuint handle = 0;
+
+    glGenBuffers(1, &handle);
+    glBindBuffer(GL_ARRAY_BUFFER, handle);
+    const unsigned flags = data == 0
+        ? GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+        : 0;
+    const unsigned size = sizeof(T) * nelem;
+
+    glBufferStorage(GL_ARRAY_BUFFER, size, data, flags);
+
+    if (ptr != 0) {
+        *ptr = reinterpret_cast<T*>(
+            glMapBufferRange(GL_ARRAY_BUFFER, 0, size, flags));
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    return handle;
+}
+
 } // end of namespace base
 
 #define SRC_LOCATION base::source_location(__FUNCTION__,__FILE__,__LINE__)

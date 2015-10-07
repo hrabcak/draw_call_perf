@@ -480,11 +480,6 @@ void base::app::create_frame_context_pool(const bool premap)
 	for(int i = 0; i < base::frame_context::POOL_SIZE; ++i) {
 		base::frame_context *ctx = new base::frame_context();
 		ctx->create_buffers();
-		ctx->assign_buffer_range(i);
-		if(premap) {
-			ctx->map_scene();
-			ctx->map_canvas();
-		}
 		_pool.push_front(ctx);
 	}
 }

@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include "scene.h"
 #include "base/base.h"
 #include "base/frame_context.h"
+#include "base/hptimer.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -40,6 +41,12 @@ GLint scene::_prg_block_type = -1;
 GLint scene::_prg_start_index = -1;
 GLint scene::_prg_mvp = -1;
 GLint scene::_prg_ctx = -1;
+
+GLuint scene::_buffer_elem = 0;
+GLuint scene::_buffer_vert = 0;
+
+int scene::_nelements = 0;
+int scene::_nvertices = 0;
 
 const bool uniform_block = false;
 
@@ -122,7 +129,26 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-inline glm::vec4 normalize_plane(const glm::vec4 &p) {
+void scene::init_gpu_stuff(const base::source_location&)
+{
+    _nelements = 4096;
+
+    unsigned short * const data = new unsigned short[_nelements];
+    for (int i = 0; i < _nelements; ++i) data[i] = unsigned short(i);
+
+    _buffer_elem = base::create_buffer<unsigned short>(_nelements, 0, data);
+
+    delete[] data;
+
+    _nvertices = 1024;
+
+    _buffer_vert = base::create_buffer<float>(_nvertices, 0, data);
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+inline glm::vec4 normalize_plane(const glm::vec4 &p)
+{
 	return p*(1.0f/length(p.swizzle(X,Y,Z)));
 }
 
@@ -174,7 +200,6 @@ void scene::create_frustum_planes(
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-#include "base\hptimer.h"
 base::hptimer timer;
 double elapsed=0;
 int iterations = 0;
@@ -235,7 +260,7 @@ int scene::frustum_check(base::frame_context *ctx,const bool dont_check)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-const int num_sides = 32;
+const int num_sides = 64;
 
 void scene::upload_blocks_to_gpu(
 	const base::source_location &loc,
@@ -314,7 +339,7 @@ void scene::render_blocks(base::frame_context * const ctx)
         ctx->_ctx_id * sizeof(base::ctx_data),
         sizeof(base::ctx_data));
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ctx->_elem_vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffer_elem);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, ctx->_cmd_vbo);
 
 	// bind canvas elements texture buffer
