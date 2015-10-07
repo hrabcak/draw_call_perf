@@ -1,11 +1,13 @@
 #ifndef __ASYNC_VBO_TRANSFERS_CUBE_GEN_H__
 #define __ASYNC_VBO_TRANSFERS_CUBE_GEN_H__
-#include <comm/commtypes.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
 #define CUBE_FACE_COUNT			6
 
+
+typedef unsigned short ushort;
+typedef unsigned int uint32;
 
 namespace gen_cube_name{
 
