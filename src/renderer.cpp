@@ -72,49 +72,21 @@ void renderer::run()
 	// create frame_context pool
 	{
 		base::mutex_guard g(_mx_queue);
-
 		base::app::get()->create_frame_context_pool(!_create_shared_context);
 	}
 
 	base::canvas::load_and_init_shaders(SRC_LOCATION);
 	scene::load_and_init_shaders(SRC_LOCATION);
+    scene::init_gpu_stuff(SRC_LOCATION);
 
 	_app->renderer_side_start();
 
 	_event.signal();
 
-
-	// TEST
-	base::pixelfmt fmt = base::PF_BGRA8;
-	GLuint buf;
-	int texsize = 1024;
-	int bufsize = texsize * texsize * base::get_pfd(fmt)->_size;
-	int counter = 0;
-
-	int prg =base::create_program(
-		base::create_and_compile_shader(SRC_LOCATION,"shaders/vs.glsl",GL_VERTEX_SHADER),
-		0,
-		base::create_and_compile_shader(SRC_LOCATION,"shaders/fs.glsl",GL_FRAGMENT_SHADER));
-	
-	base::link_program(SRC_LOCATION, prg);
-
-	int prg_tex = get_uniform_location(SRC_LOCATION, prg, "tex");
-
-	glGenBuffers(1, &buf);
-	glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
-	glBufferData(GL_PIXEL_UNPACK_BUFFER, bufsize, 0, GL_STREAM_DRAW);
-
-	GLuint tex = base::create_texture(texsize,texsize,fmt,0);
-
 	for(;;) {
 		base::frame_context *ctx = 0;
 
 		if(!_waiting.empty() && _waiting.front()->check_fence()) {
-			if(!_create_shared_context) {
-				_waiting.front()->map_scene();
-				//_waiting.front()->map_canvas();
-			}
-
 			base::mutex_guard g(_mx_queue);
 			base::app::get()->push_frame_context_to_pool(_waiting.front());
 			
@@ -136,36 +108,8 @@ void renderer::run()
 
 		draw_frame(ctx);
 
-		// TEST
-		/*{
-			glUseProgram(prg);
-			glUniform1i(prg_tex, 1);
-	        glActiveTexture(GL_TEXTURE0);
-		    glBindTexture(GL_TEXTURE_2D, tex);
-			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		}*/
-
 		ctx->put_fence();
 		_waiting.push_back(ctx);
-
-		if(!_create_shared_context && counter++ > 3) {
-			//base::set_shared_rc();
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
-			void * data = glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
-			//void * data = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, bufsize, GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
-			//memset(data, 0xab, bufsize);
-			glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
-
-			glBindTexture(GL_TEXTURE_2D, tex);
-			glTexSubImage2D(
-				GL_TEXTURE_2D, 0, 0, 0, texsize, texsize, 
-				base::get_pfd(fmt)->_format, base::get_pfd(fmt)->_type, 0);
-
-			counter = 0;
-			//base::set_main_rc();
-		}
 
 		if(_shutdown)
 			break;
@@ -219,12 +163,6 @@ void renderer::draw_frame(base::frame_context *ctx)
 	glEnable(GL_DEPTH_TEST);
     glClearColor(0.3f, 0.2f, 0.4f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// unmap buffers in SC2
-	if(!_create_shared_context) {
-		ctx->flush_scene_data();
-		//ctx->flush_canvas_data();
-	}
 
 	scene::render_blocks(ctx);
 	//base::canvas::render(ctx);

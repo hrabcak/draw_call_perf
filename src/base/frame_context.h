@@ -31,29 +31,24 @@ THE SOFTWARE.
 
 namespace base {
 
-//typedef  struct {
-//    uint  count;
-//    uint  instanceCount;
-//    uint  firstIndex;
-//    uint  baseVertex;
-//    uint  baseInstance;
-//} DrawElementsIndirectCommand;
-
 struct cmd
 {
     unsigned _count;
     unsigned _instanceCount;
-    unsigned _first;
+    unsigned _firstIndex;
+    unsigned _baseVertex;
     unsigned _baseInstance;
 
     cmd(
         const unsigned count,
         const unsigned instanceCount,
-        const unsigned first,
+        const unsigned firstIndex,
+        const unsigned baseVertex,
         const unsigned baseInstance)
         : _count(count)
         , _instanceCount(instanceCount)
-        , _first(first)
+        , _firstIndex(firstIndex)
+        , _baseVertex(baseVertex)
         , _baseInstance(baseInstance)
     {}
 };
@@ -95,24 +90,11 @@ struct batch {
 
 typedef std::vector<batch> batches_t;
 
-enum Mode {
-	ModeInvalidateBuffer,
-	ModeFlushExplicit,
-	ModeUnsynchronized,
-	ModeBufferData,
-	ModeBufferSubData,
-	ModeWrite,
-	ModeAMDpinned,
-    ModePersistent,
-};
-
 struct frame_context
 {
 	static const int POOL_SIZE;
 
 	frame_context();
-
-	Mode _mode;
 
 	glm::mat4 _mprj;
 	glm::mat4 _view;
@@ -123,7 +105,6 @@ struct frame_context
 
     unsigned _ctx_vbo;
 	unsigned _scene_vbo;
-    unsigned _elem_vbo;
 	unsigned _scene_tb;
     unsigned _ctx_id;
     unsigned _drawid_vbo;
@@ -153,17 +134,8 @@ struct frame_context
     double _cpu_render_time;
 
 	GLsync _fence;
-	
-	void map_scene();
-	void map_canvas();
-
-	void flush_scene_data();
-	void flush_canvas_data();
 
 	void create_buffers();
-	void assign_buffer_range(const int index);
-
-	void test_transfer();
 
 	void put_fence();
 	bool check_fence();

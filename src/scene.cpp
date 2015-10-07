@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include "scene.h"
 #include "base/base.h"
 #include "base/frame_context.h"
+#include "base/hptimer.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -40,6 +41,12 @@ GLint scene::_prg_block_type = -1;
 GLint scene::_prg_start_index = -1;
 GLint scene::_prg_mvp = -1;
 GLint scene::_prg_ctx = -1;
+
+GLuint scene::_buffer_elem = 0;
+GLuint scene::_buffer_vert = 0;
+
+int scene::_nelements = 0;
+int scene::_nvertices = 0;
 
 const bool uniform_block = false;
 
@@ -122,7 +129,26 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-inline glm::vec4 normalize_plane(const glm::vec4 &p) {
+void scene::init_gpu_stuff(const base::source_location&)
+{
+    _nelements = 4096;
+
+    unsigned short * const data = new unsigned short[_nelements];
+    for (int i = 0; i < _nelements; ++i) data[i] = unsigned short(i);
+
+    _buffer_elem = base::create_buffer<unsigned short>(_nelements, 0, data);
+
+    delete[] data;
+
+    _nvertices = 1024;
+
+    _buffer_vert = base::create_buffer<float>(_nvertices, 0, data);
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+inline glm::vec4 normalize_plane(const glm::vec4 &p)
+{
 	return p*(1.0f/length(p.swizzle(X,Y,Z)));
 }
 
@@ -174,7 +200,6 @@ void scene::create_frustum_planes(
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-#include "base\hptimer.h"
 base::hptimer timer;
 double elapsed=0;
 int iterations = 0;
@@ -243,8 +268,6 @@ void scene::upload_blocks_to_gpu(
 {
     static int counter = 0;
 
-    //if (counter++ == 4) return;
-
 	ctx->_scene_data_ptr_size = 0;
 	for(int i = 0; i < NumTypes; ++i)
 		ctx->_scene_data_ptr_size += ctx->_num_visible_blocks[i];
@@ -283,6 +306,7 @@ void scene::upload_blocks_to_gpu(
                 type == 0 ? count : 8,
                 1,
                 0,
+                0,
                 ctx->_scene_data_offset + offset);
 
             ptr[type]++;
@@ -299,20 +323,12 @@ void scene::render_blocks(base::frame_context * const ctx)
 {
 	glUseProgram(_prg);
 
-    base::hptimer timer;
-
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
     timer.start();
 
     const bool fast_drawcall = true;
     const bool fast_drawcall_old_way = false;
-    const bool fast_draw_call_gl33 = false;
-    const bool use_instancing = true;
-
-	// this is only needed on AMD cards due to driver bug wich needs
-	// to have attr0 array anabled
-	//base::set_attr0_vbo_amd_wa();
+    const bool fast_draw_call_gl33 = true;
+    const bool use_instancing = false;
 
     glVertexAttribI1i(13, 0);
     glVertexAttribI1i(14, 0);
@@ -323,7 +339,7 @@ void scene::render_blocks(base::frame_context * const ctx)
         ctx->_ctx_id * sizeof(base::ctx_data),
         sizeof(base::ctx_data));
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ctx->_elem_vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffer_elem);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, ctx->_cmd_vbo);
 
 	// bind canvas elements texture buffer
@@ -362,8 +378,9 @@ void scene::render_blocks(base::frame_context * const ctx)
                         ctx->_num_visible_blocks[0]);
                 }
                 else {
-                    glMultiDrawArraysIndirect(
+                    glMultiDrawElementsIndirect(
                         GL_TRIANGLE_STRIP,
+                        GL_UNSIGNED_SHORT,
                         (void*)((ctx->_scene_data_offset) * sizeof(base::cmd)),
                         ctx->_num_visible_blocks[0],
                         0);
@@ -427,8 +444,9 @@ void scene::render_blocks(base::frame_context * const ctx)
                         ctx->_num_visible_blocks[1]);
                 }
                 else {
-                    glMultiDrawArraysIndirect(
+                    glMultiDrawElementsIndirect(
                         GL_TRIANGLE_STRIP,
+                        GL_UNSIGNED_SHORT,
                         (void*)((ctx->_scene_data_offset + pos) * sizeof(base::cmd)),
                         ctx->_num_visible_blocks[1],
                         0);
@@ -476,9 +494,6 @@ void scene::render_blocks(base::frame_context * const ctx)
     glQueryCounter(ctx->_time_queries[1], GL_TIMESTAMP);
 
     ctx->_cpu_render_time = timer.elapsed_time();
-
-	// AMD workaround
-	//base::clear_attr0_vbo_amd_wa();
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

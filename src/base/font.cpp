@@ -48,7 +48,7 @@ void base::font::load(const base::source_location &loc, const char *filename)
         throw base::exception(loc.to_str())
 			<< "This is not the BMF file or it's a bad version \"" << filename << "\"!";
 
-	const unsigned char* block_id=buf+sizeof(_BMFInfo);
+	const unsigned char* block_id=buf+sizeof(BMFInfo);
 	const unsigned char* const end=buf+_data.size();
 
 	while(block_id<end) {

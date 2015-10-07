@@ -8,7 +8,7 @@ base::mutex::mutex()
 	: _cs()
 {
 	InitializeCriticalSectionAndSpinCount(
-		reinterpret_cast<CRITICAL_SECTION*>(&_cs), 4);
+		reinterpret_cast<CRITICAL_SECTION*>(&_cs), 512);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
