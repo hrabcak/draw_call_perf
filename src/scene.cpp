@@ -133,7 +133,7 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 
 void scene::init_gpu_stuff(const base::source_location&)
 {
-    const int tess_level = 2;
+    const int tess_level = 1;
 
     get_face_and_vert_count_for_tess_level(tess_level, _nelements, _nvertices);
 
@@ -348,9 +348,11 @@ void scene::render_blocks(base::frame_context * const ctx)
 {
 	glUseProgram(_prg);
 
+    //glPolygonMode(GL_FRONT, GL_LINE);
+
     timer.start();
 
-    const bool fast_drawcall = false;
+    const bool fast_drawcall = true;
     const bool fast_drawcall_old_way = false;
     const bool fast_draw_call_gl33 = true;
     const bool use_instancing = false;

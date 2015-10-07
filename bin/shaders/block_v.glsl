@@ -144,5 +144,5 @@ void main()
 	}
 */
 
-	color=vec3(vertex_id/32.0);
+	color=nor * 0.5 + 0.5;
 }
