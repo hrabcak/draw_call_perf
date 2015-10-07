@@ -235,11 +235,6 @@
     <None Include="..\..\bin\shaders\canvas_v.glsl" />
     <None Include="..\..\readme.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\ext\comm\_build\msvc\2013\comm_static.vcxproj">
-      <Project>{d2f47060-00c0-4a3c-9888-cf663f14d44d}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
