@@ -103,12 +103,12 @@ void gen_cube( uint32 tess_level, float * vert_data, ushort * index_array ){
 			memcpy(vert_data + (/*0*vertices_count_per_face+*/v*vertices_count_per_edge + u)*(sizeof(gen_cube_name::vert) / sizeof(float)), &new_vertex, sizeof(gen_cube_name::vert));
 
 			if (v < max_idx && u < max_idx){
-				indices.t1_i1 = v*vertices_count_per_edge + u;
-				indices.t1_i2 = (v + 1)*vertices_count_per_edge + u;
-				indices.t1_i3 = v*vertices_count_per_edge + u + 1;
-				indices.t2_i1 = v*vertices_count_per_edge + u + 1;
-				indices.t2_i2 = (v + 1)*vertices_count_per_edge + u;
-				indices.t2_i3 = (v + 1)*vertices_count_per_edge + u + 1;
+				indices.t1_i1 = ushort(v*vertices_count_per_edge + u);
+				indices.t1_i2 = ushort((v + 1)*vertices_count_per_edge + u);
+				indices.t1_i3 = ushort(v*vertices_count_per_edge + u + 1);
+				indices.t2_i1 = ushort(v*vertices_count_per_edge + u + 1);
+				indices.t2_i2 = ushort((v + 1)*vertices_count_per_edge + u);
+				indices.t2_i3 = ushort((v + 1)*vertices_count_per_edge + u + 1);
 				
 				memcpy(index_array + (/*0*triangle_count_per_face_2+*/v*(vertices_count_per_edge-1) + u)*(sizeof(gen_cube_name::triangle_pair_vert_indices)/sizeof(ushort)), &indices, sizeof(gen_cube_name::triangle_pair_vert_indices));
 			}
@@ -135,12 +135,12 @@ void gen_cube( uint32 tess_level, float * vert_data, ushort * index_array ){
 			memcpy(vert_data + (vertices_count_per_face + v*vertices_count_per_edge + u)*(sizeof(gen_cube_name::vert) / sizeof(float)), &new_vertex, sizeof(gen_cube_name::vert));
 
 			if (v < max_idx && u < max_idx){
-				indices.t1_i1 = vertices_count_per_face + v*vertices_count_per_edge + u;
-				indices.t1_i2 = vertices_count_per_face + (v + 1)*vertices_count_per_edge + u;
-				indices.t1_i3 = vertices_count_per_face + v*vertices_count_per_edge + u + 1;
-				indices.t2_i1 = vertices_count_per_face + v*vertices_count_per_edge + u + 1;
-				indices.t2_i2 = vertices_count_per_face + (v + 1)*vertices_count_per_edge + u;
-				indices.t2_i3 = vertices_count_per_face + (v + 1)*vertices_count_per_edge + u + 1;
+				indices.t1_i1 = ushort(vertices_count_per_face + v*vertices_count_per_edge + u);
+				indices.t1_i2 = ushort(vertices_count_per_face + (v + 1)*vertices_count_per_edge + u);
+				indices.t1_i3 = ushort(vertices_count_per_face + v*vertices_count_per_edge + u + 1);
+				indices.t2_i1 = ushort(vertices_count_per_face + v*vertices_count_per_edge + u + 1);
+				indices.t2_i2 = ushort(vertices_count_per_face + (v + 1)*vertices_count_per_edge + u);
+				indices.t2_i3 = ushort(vertices_count_per_face + (v + 1)*vertices_count_per_edge + u + 1);
 
 				memcpy(index_array + (triangle_count_per_face_2 + v * (vertices_count_per_edge - 1) + u)*(sizeof(gen_cube_name::triangle_pair_vert_indices) / sizeof(ushort)), &indices, sizeof(gen_cube_name::triangle_pair_vert_indices));
 			}
@@ -167,12 +167,12 @@ void gen_cube( uint32 tess_level, float * vert_data, ushort * index_array ){
 			memcpy(vert_data + (2 * vertices_count_per_face + v * vertices_count_per_edge + u) * (sizeof(gen_cube_name::vert) / sizeof(float)), &new_vertex, sizeof(gen_cube_name::vert));
 
 			if (v < max_idx && u < max_idx){
-				indices.t1_i1 = 2 * vertices_count_per_face + v*vertices_count_per_edge + u;
-				indices.t1_i2 = 2 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u;
-				indices.t1_i3 = 2 * vertices_count_per_face + v*vertices_count_per_edge + u + 1;
-				indices.t2_i1 = 2 * vertices_count_per_face + v*vertices_count_per_edge + u + 1;
-				indices.t2_i2 = 2 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u;
-				indices.t2_i3 = 2 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u + 1;
+				indices.t1_i1 = ushort(2 * vertices_count_per_face + v*vertices_count_per_edge + u);
+				indices.t1_i2 = ushort(2 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u);
+				indices.t1_i3 = ushort(2 * vertices_count_per_face + v*vertices_count_per_edge + u + 1);
+				indices.t2_i1 = ushort(2 * vertices_count_per_face + v*vertices_count_per_edge + u + 1);
+				indices.t2_i2 = ushort(2 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u);
+				indices.t2_i3 = ushort(2 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u + 1);
 
 				memcpy(index_array + (2 * triangle_count_per_face_2 + v * (vertices_count_per_edge - 1) + u) * (sizeof(gen_cube_name::triangle_pair_vert_indices) / sizeof(ushort)), &indices, sizeof(gen_cube_name::triangle_pair_vert_indices));
 			}
@@ -199,12 +199,12 @@ void gen_cube( uint32 tess_level, float * vert_data, ushort * index_array ){
 			memcpy(vert_data + (3 * vertices_count_per_face + v * vertices_count_per_edge + u) * (sizeof(gen_cube_name::vert) / sizeof(float)), &new_vertex, sizeof(gen_cube_name::vert));
 
 			if (v < max_idx && u < max_idx){
-				indices.t1_i1 = 3 * vertices_count_per_face + v*vertices_count_per_edge + u;
-				indices.t1_i2 = 3 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u;
-				indices.t1_i3 = 3 * vertices_count_per_face + v*vertices_count_per_edge + u + 1;
-				indices.t2_i1 = 3 * vertices_count_per_face + v*vertices_count_per_edge + u + 1;
-				indices.t2_i2 = 3 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u;
-				indices.t2_i3 = 3 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u + 1;
+				indices.t1_i1 = ushort(3 * vertices_count_per_face + v*vertices_count_per_edge + u);
+				indices.t1_i2 = ushort(3 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u);
+				indices.t1_i3 = ushort(3 * vertices_count_per_face + v*vertices_count_per_edge + u + 1);
+				indices.t2_i1 = ushort(3 * vertices_count_per_face + v*vertices_count_per_edge + u + 1);
+				indices.t2_i2 = ushort(3 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u);
+				indices.t2_i3 = ushort(3 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u + 1);
 
 				memcpy(index_array + (3 * triangle_count_per_face_2 + v * (vertices_count_per_edge - 1) + u) * (sizeof(gen_cube_name::triangle_pair_vert_indices) / sizeof(ushort)), &indices, sizeof(gen_cube_name::triangle_pair_vert_indices));
 			}
@@ -231,12 +231,12 @@ void gen_cube( uint32 tess_level, float * vert_data, ushort * index_array ){
 			memcpy(vert_data + (4 * vertices_count_per_face + v * vertices_count_per_edge + u) * (sizeof(gen_cube_name::vert) / sizeof(float)), &new_vertex, sizeof(gen_cube_name::vert));
 
 			if (v < max_idx && u < max_idx){
-				indices.t1_i1 = 4 * vertices_count_per_face + v*vertices_count_per_edge + u;
-				indices.t1_i2 = 4 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u;
-				indices.t1_i3 = 4 * vertices_count_per_face + v*vertices_count_per_edge + u + 1;
-				indices.t2_i1 = 4 * vertices_count_per_face + v*vertices_count_per_edge + u + 1;
-				indices.t2_i2 = 4 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u;
-				indices.t2_i3 = 4 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u + 1;
+				indices.t1_i1 = ushort(4 * vertices_count_per_face + v*vertices_count_per_edge + u);
+				indices.t1_i2 = ushort(4 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u);
+				indices.t1_i3 = ushort(4 * vertices_count_per_face + v*vertices_count_per_edge + u + 1);
+				indices.t2_i1 = ushort(4 * vertices_count_per_face + v*vertices_count_per_edge + u + 1);
+				indices.t2_i2 = ushort(4 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u);
+				indices.t2_i3 = ushort(4 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u + 1);
 
 				memcpy(index_array + (4 * triangle_count_per_face_2 + v * (vertices_count_per_edge - 1) + u) * (sizeof(gen_cube_name::triangle_pair_vert_indices) / sizeof(ushort)), &indices, sizeof(gen_cube_name::triangle_pair_vert_indices));
 			}
@@ -263,12 +263,12 @@ void gen_cube( uint32 tess_level, float * vert_data, ushort * index_array ){
 			memcpy(vert_data + (5 * vertices_count_per_face + v * vertices_count_per_edge + u) * (sizeof(gen_cube_name::vert) / sizeof(float)), &new_vertex, sizeof(gen_cube_name::vert));
 
 			if (v < max_idx && u < max_idx){
-				indices.t1_i1 = 5 * vertices_count_per_face + v*vertices_count_per_edge + u;
-				indices.t1_i2 = 5 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u;
-				indices.t1_i3 = 5 * vertices_count_per_face + v*vertices_count_per_edge + u + 1;
-				indices.t2_i1 = 5 * vertices_count_per_face + v*vertices_count_per_edge + u + 1;
-				indices.t2_i2 = 5 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u;
-				indices.t2_i3 = 5 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u + 1;
+				indices.t1_i1 = ushort(5 * vertices_count_per_face + v*vertices_count_per_edge + u);
+				indices.t1_i2 = ushort(5 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u);
+				indices.t1_i3 = ushort(5 * vertices_count_per_face + v*vertices_count_per_edge + u + 1);
+				indices.t2_i1 = ushort(5 * vertices_count_per_face + v*vertices_count_per_edge + u + 1);
+				indices.t2_i2 = ushort(5 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u);
+				indices.t2_i3 = ushort(5 * vertices_count_per_face + (v + 1)*vertices_count_per_edge + u + 1);
 
 				memcpy(index_array + (5 * triangle_count_per_face_2 + v * (vertices_count_per_edge - 1) + u) * (sizeof(gen_cube_name::triangle_pair_vert_indices) / sizeof(ushort)), &indices, sizeof(gen_cube_name::triangle_pair_vert_indices));
 			}

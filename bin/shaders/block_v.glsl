@@ -26,14 +26,13 @@ precision highp int;
 
 #extension GL_ARB_explicit_attrib_location : enable
 
-out vec3 color;
-
 #define PI 3.14159265358979323846
 #define TWO_PI 6.28318530717958647692
 #define SQRT_2 1.414213562
 
 //#define USE_UNIFORM_BUF 1
 
+// IN
 struct context_data
 {
 	mat4 _mvp;
@@ -60,7 +59,11 @@ layout(std140) uniform context
     uniform samplerBuffer tb_blocks;
 #endif
 
+uniform samplerBuffer tb_vert;
 layout(location = 14) in int block_type;
+
+//OUT 
+out vec3 color;
 
 void main()
 {
@@ -80,8 +83,17 @@ void main()
 		texelFetch(tb_blocks, idx + 3));
 #endif
 
+    vec4 tmp0 = texelFetch(tb_vert, vertex_id * 2);
+    vec4 tmp1 = texelFetch(tb_vert, vertex_id * 2 + 1);
+
+    vec3 pos = tmp0.xyz;
+    vec3 nor = vec3(tmp0.w, tmp1.xy);
+    vec2 uv = tmp1.zw;
+
+    gl_Position = tm * vec4(pos, 1);
+
 	// PILLAR / CYLINDER
-	if(block_type == 0) {
+/*	if(block_type == 0) {
 		float num_sides = _ctx._max_sides; ///TODO lod
 		float angle = (round(float(vertex_id >> 1) * (num_sides / _ctx._max_sides)) / num_sides) * TWO_PI;
 		gl_Position = tm * vec4(cos(angle), (vertex_id & 1) << 1, sin(angle), 1);
@@ -130,5 +142,7 @@ void main()
 				1);
 		}
 	}
+*/
+
 	color=vec3(vertex_id/32.0);
 }

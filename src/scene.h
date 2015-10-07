@@ -98,14 +98,13 @@ protected:
 	blocks_t _blocks;
 
 	static GLuint _prg;
-	static GLint _prg_max_sides;
 	static GLint _prg_tb_blocks;
-	static GLint _prg_block_type;
-	static GLint _prg_start_index;
-	static GLint _prg_mvp;
     static GLint _prg_ctx;
-    static int _nelements;
-    static int _nvertices;
+    static GLint _prg_tb_vert;
+    static unsigned _nelements;
+    static unsigned _nvertices;
+
+    static GLuint _tb_vert;
 
     static GLuint _buffer_elem;
     static GLuint _buffer_vert;
