@@ -57,10 +57,10 @@ const glm::vec3& left_v2 = v1;
 const glm::vec3& left_v3 = v4;
 const glm::vec3& left_v4 = v8;
 
-const glm::vec3& bottom_v1 = v1;
-const glm::vec3& bottom_v2 = v2;
-const glm::vec3& bottom_v3 = v6;
-const glm::vec3& bottom_v4 = v5;
+const glm::vec3& bottom_v1 = v2;
+const glm::vec3& bottom_v2 = v1;
+const glm::vec3& bottom_v3 = v5;
+const glm::vec3& bottom_v4 = v6;
 
 const glm::vec3& top_v1 = v7;
 const glm::vec3& top_v2 = v8;
