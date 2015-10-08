@@ -49,6 +49,8 @@
     <ClInclude Include="..\..\src\cube_gen.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\gen_tex.h" />
+    <ClInclude Include="..\..\src\base\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\base\base.cpp">
@@ -99,6 +101,7 @@
     <ClCompile Include="..\..\src\cube_gen.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\gen_tex.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
