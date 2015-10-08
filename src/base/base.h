@@ -173,7 +173,7 @@ glm::ivec2 get_mouse_pos();
 void set_mouse_pos(const glm::ivec2 &pos);
 
 ///
-void init_opengl_win(const bool create_shared_ctx = false);
+void init_opengl_win();
 
 void init_opengl_dbg_win();
 
@@ -185,13 +185,9 @@ void* get_shared_context();
 
 void set_main_rc();
 
-void set_shared_rc();
-
 void swap_buffers();
 
 void sleep_ms(const int time);
-
-void make_current_shared_context();
 
 struct config {
 	config()

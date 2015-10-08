@@ -58,10 +58,20 @@ layout(std140) uniform context
     uniform samplerBuffer tb_blocks;
 #endif
 
-uniform samplerBuffer tb_vert;
+uniform isamplerBuffer tb_pos;
 
 //OUT 
 out vec3 color;
+
+
+vec3 unpack_position(ivec2 pack_pos, float coef)
+{
+    return vec3(
+        pack_pos.x >> 11,
+        ((pack_pos.x << 21) >> 11) | (pack_pos.y >> 21),
+        (pack_pos.y << 11) >> 11)
+        * coef;
+}
 
 void main()
 {
@@ -81,13 +91,13 @@ void main()
 		texelFetch(tb_blocks, idx + 3));
 #endif
 
-    vec4 tmp0 = texelFetch(tb_vert, gl_InstanceID * 96 + index_start.y + vertex_id /** 2*/);
-    //vec4 tmp1 = texelFetch(tb_vert, index_start.y + vertex_id * 2 + 1);
+    ivec2 tmp0 = texelFetch(tb_pos, gl_InstanceID * 96 + index_start.y + vertex_id /** 2*/).xy;
+    //vec4 tmp1 = texelFetch(tb_pos, index_start.y + vertex_id * 2 + 1);
 
-    vec3 pos = tmp0.xyz;
-    vec3 nor = tmp0.xyz;// vec3(tmp0.w, tmp1.xy);
+    vec3 pos = unpack_position(tmp0.xy, 1.0 / 1048575.0);
+    //vec3 nor = tmp0.xyz;// vec3(tmp0.w, tmp1.xy);
     //vec2 uv = tmp1.zw;
 
     gl_Position = tm * vec4(pos, 1);
-	color=nor * 0.5 + 0.5;
+	color=pos * 0.5 + 0.5;
 }

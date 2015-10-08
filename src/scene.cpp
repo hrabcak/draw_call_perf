@@ -43,12 +43,13 @@ GLint scene::_prg_ctx = -1;
 GLint scene::_prg_tb_vert = -1;
 
 GLuint scene::_buffer_elem = 0;
-GLuint scene::_buffer_vert = 0;
+GLuint scene::_buffer_pos = 0;
+GLuint scene::_buffer_nor_uv = 0;
 
 unsigned scene::_nelements = 0;
 unsigned scene::_nvertices = 0;
 
-GLuint scene::_tb_vert = 0;
+GLuint scene::_tb_pos = 0;
 
 const bool uniform_block = false;
 
@@ -126,7 +127,7 @@ void scene::load_and_init_shaders(const base::source_location &loc)
         _prg_tb_blocks = get_uniform_location(loc, _prg, "tb_blocks");
     }
 
-    _prg_tb_vert = get_uniform_location(loc, _prg, "tb_vert");
+    _prg_tb_vert = get_uniform_location(loc, _prg, "tb_pos");
     _prg_ctx = glGetUniformBlockIndex(_prg, "context");
 }
 
@@ -162,39 +163,32 @@ void scene::init_gpu_stuff(const base::source_location&)
 
     gen_cube(tess_level, &vertices[0], &elements[0]);
 
-    //TODO convert position to int2
-    float * const ptr = &vertices[0];
-    for (int i = 1; i < _nvertices; ++i) {
-        memcpy(ptr + i * 4, ptr + i * 8, sizeof(float) * 4);
+    const double scale = (glm::pow(2.0, 20.0) - 1.0) / 1.0;
+    glm::ivec2 * const ptr = reinterpret_cast<glm::ivec2*>(&vertices[0]);
+    for (int i = 0; i < _nvertices; ++i) {
+        const int idx = i * 8;
+        ptr[i] = pack_to_pos3x21b(dvec3(vertices[idx], vertices[idx + 1], vertices[idx + 2]), scale);
     }
 
     //TODO create second array with normal + uv
 
+    // duplicate 
     for (int i = 1; i < scene::MAX_BLOCK_COUNT; ++i) {
         memcpy(&elements[i * _nelements], &elements[0], _nelements * sizeof(short));
-        memcpy(&vertices[i * 4 * _nvertices], &vertices[0], _nvertices * 4 * sizeof(float));
+        memcpy(&vertices[i * 2 * _nvertices], &vertices[0], _nvertices * sizeof(glm::ivec2));
     }
 
-    //TODO convert vertices to more efficient format
-    //const double scale = (glm::pow(2.0, 20.0) - 1.0) / 3.0;
-    //
-    //auto i = &vertices[0];
-    //auto e = i + vertices.size();
-    //do {
-    //    const ivec2 pos = pack_to_pos3x21b(dvec3(i[0], i[1], i[2]), scale);
-    //    i += 8;
-    //} while (i != e);
-
     _buffer_elem = base::create_buffer<unsigned short>(_nelements * scene::MAX_BLOCK_COUNT, 0, &elements[0]);
-    _buffer_vert = base::create_buffer<float>(_nvertices * 4 * scene::MAX_BLOCK_COUNT, 0, &vertices[0]);
+    _buffer_pos = base::create_buffer<glm::ivec2>(_nvertices * scene::MAX_BLOCK_COUNT, 0, &vertices[0]);
+    //_buffer_nor_uv = base::create_buffer<glm::ivec4>(_nvertices * scene::MAX_BLOCK_COUNT, 0, &vertices[0]);
 
     // create texture buffer for vertices
-    glGenTextures(1, &_tb_vert);
-    glBindTexture(GL_TEXTURE_BUFFER, _tb_vert);
+    glGenTextures(1, &_tb_pos);
+    glBindTexture(GL_TEXTURE_BUFFER, _tb_pos);
     glTexBuffer(
         GL_TEXTURE_BUFFER,
-        base::get_pfd(base::PF_RGBA32F)->_internal,
-        _buffer_vert);
+        base::get_pfd(base::PF_RG32F)->_internal,
+        _buffer_pos);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
 }
 
@@ -265,25 +259,21 @@ void scene::create_frustum_planes(
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-base::hptimer timer;
-double elapsed=0;
-int iterations = 0;
-
-int scene::frustum_check(base::frame_context *ctx,const bool dont_check)
+int scene::frustum_check(base::frame_context * const ctx)
 {
-	timer.restart();
-
 	// prepare frustum planes
 	const int num_planes=6;
 	glm::vec4 planes[num_planes];
 	create_frustum_planes(planes,ctx->_mvp);
 
-	glm::vec4 * const planes_end=planes+num_planes;
+	glm::vec4 * const planes_end = planes +num_planes;
 
 	const mat4 *bbox = &_bboxes[0];
 	const vec3 *hw = &_hws[0];
 	unsigned int *flags = &_flags[0];
 	const unsigned int *e = &_flags[0] + _flags.size();
+
+    const bool dont_check = true;
 
 	memset(ctx->_num_visible_blocks, 0, sizeof(ctx->_num_visible_blocks));
 
@@ -311,13 +301,6 @@ int scene::frustum_check(base::frame_context *ctx,const bool dont_check)
 			*flags |= Visible;
 			++ctx->_num_visible_blocks[*flags & TypeMask];
 		}
-	}
-
-	elapsed += timer.elapsed_time();
-	iterations++;
-	if (iterations % 100 == 0){
-		//printf("Culling time : %.3f ms/frame\n", elapsed/double(iterations));
-		elapsed = 0.0; iterations = 0;
 	}
 
 	return ctx->_num_visible_blocks[0];
@@ -387,6 +370,8 @@ void scene::render_blocks(base::frame_context * const ctx)
 
     //glPolygonMode(GL_FRONT, GL_LINE);
 
+    base::hptimer timer;
+
     timer.start();
 
     const bool fast_drawcall = false;
@@ -412,7 +397,7 @@ void scene::render_blocks(base::frame_context * const ctx)
         glBindTexture(GL_TEXTURE_BUFFER, ctx->_scene_tb);
         glUniform1i(_prg_tb_vert, 1);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_BUFFER, _tb_vert);
+        glBindTexture(GL_TEXTURE_BUFFER, _tb_pos);
     }
 
     if ((fast_drawcall && fast_drawcall_old_way)

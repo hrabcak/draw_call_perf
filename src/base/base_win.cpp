@@ -153,7 +153,7 @@ void base::swap_buffers() { SwapBuffers(__hdc); }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void base::init_opengl_win(const bool create_shared_ctx)
+void base::init_opengl_win()
 {
 	HDC hdc = GetWindowDC(__hwnd);
 	if(hdc == 0)
@@ -220,9 +220,6 @@ void base::init_opengl_win(const bool create_shared_ctx)
 	if(0 == (__hrc = wglCreateContextAttribsARB(hdc, 0, attribs)))
         throw base::exception(SRC_LOCATION_STR) << "wglCreateContext failed!";
 
-	//if(create_shared_ctx)
-		__shared_ctx = wglCreateContextAttribsARB(hdc, __hrc, attribs);
-
     wglSwapIntervalEXT(0);
 
 	set_main_rc();
@@ -234,14 +231,6 @@ void base::set_main_rc()
 {
     if(!wglMakeCurrent(__hdc, __hrc))
 		throw base::exception(SRC_LOCATION_STR) << "wglMakeCurrent main context failed!";
-}
-
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-void base::set_shared_rc()
-{
-    if(!wglMakeCurrent(__hdc, __shared_ctx))
-		throw base::exception(SRC_LOCATION_STR) << "wglMakeCurrent shared context failed!";
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -334,11 +323,6 @@ void base::run_app_win(base::app *a, const bool initgl)
 		throw base::exception(SRC_LOCATION_STR)
 			<< "Cannot get device context!";
 
-	if(initgl) {
-		init_opengl_win();
-		init_opengl_dbg_win();
-	}
-
 	MSG msg;
 
 	a->start();
@@ -417,16 +401,6 @@ void* base::get_shared_context()
 void* base::get_window_hdc()
 {
 	return __hdc;
-}
-
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-void base::make_current_shared_context()
-{
-	set_shared_rc();
-	/*wglMakeCurrent(
-		(HDC)base::get_window_hdc(),
-		(HGLRC)base::get_shared_context());*/
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

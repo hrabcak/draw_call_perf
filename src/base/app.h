@@ -49,11 +49,11 @@ public:
 	app();
 	virtual ~app();
 
-	virtual void start(const bool nogl=false);
+	virtual void start();
 	virtual void renderer_side_start();
-	void begin_frame(base::frame_context *ctx, const bool nogl = false); 
+	void begin_frame(); 
 	virtual void draw_frame() {}
-	void end_frame(base::frame_context *ctx, const bool nogl = false);
+	void end_frame();
 	virtual void stop();
 	
 	// desired client area size / OpenGL frame buffer size
@@ -78,14 +78,6 @@ public:
 	/// it is called in base::run_app_win...
 	void inc_frame_number() { ++_frame_number; }
 
-	void init_screen_capture();
-	void process_captured_screen();
-	void capture_screen();
-
-	static void load_and_init_shaders(const base::source_location &loc);
-	void prepare_showtime(frame_context *ctx);
-	static void render_showtime(frame_context *ctx);
-
 	base::frame_context* pop_frame_context_from_pool() {
 		if(!_pool.empty()) {
 			base::frame_context *ctx = _pool.back();
@@ -100,7 +92,7 @@ public:
 		_pool.push_front(ctx);
 	}
 
-	void create_frame_context_pool(const bool premap = false);
+	void create_frame_context_pool();
 
 protected:
 	static app *_app;
@@ -114,8 +106,6 @@ protected:
 
 	glm::vec3 _velocity;
 	glm::vec3 _position;
-
-	base::hptimer _timer;
 
 	int _frame_number;
 

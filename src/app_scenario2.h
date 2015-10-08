@@ -47,7 +47,7 @@ public:
 
 	virtual const char* get_app_name() const { return "scenario 2"; }
 
-	virtual void start(const bool);
+	virtual void start();
 	virtual void renderer_side_start();
 
 	virtual void stop();

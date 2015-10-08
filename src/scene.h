@@ -54,7 +54,7 @@ public:
 	void upload_blocks_to_gpu(
 		const base::source_location &loc,
 		base::frame_context *ctx);
-	int frustum_check(base::frame_context *fc,const bool dont_check=true);
+	int frustum_check(base::frame_context *fc);
 	void create_frustum_planes(glm::vec4 *planes, const glm::mat4 &mvp);
 
 	static void load_and_init_shaders(const base::source_location &loc);
@@ -105,10 +105,12 @@ protected:
     static unsigned _nelements;
     static unsigned _nvertices;
 
-    static GLuint _tb_vert;
+    static GLuint _tb_pos;
+    static GLuint _tb_nor_uv;
 
     static GLuint _buffer_elem;
-    static GLuint _buffer_vert;
+    static GLuint _buffer_pos;
+    static GLuint _buffer_nor_uv;
 };
 
 #endif // __ASYNC_VBO_TRANSFERS_SCENE_H__

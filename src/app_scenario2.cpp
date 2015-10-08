@@ -39,12 +39,12 @@ app_scenario2::~app_scenario2() {}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void app_scenario2::start(const bool)
+void app_scenario2::start()
 {
 	_renderer.reset(new renderer(this));
 	_renderer->start(SRC_LOCATION);
 
-	app::start(true);
+	app::start();
 
 	_scene.reset(new scene());
 	scene::create_test_scene(_scene.get());
@@ -72,33 +72,20 @@ void app_scenario2::draw_frame()
 	base::frame_context *ctx = 0;
 	
 	// wait for renderer
-	while((ctx = _renderer->pop_frame_context_from_pool()) == 0) base::sleep_ms(0);
+	while((ctx = _renderer->pop_frame_context_from_pool()) == 0)
+        base::sleep_ms(0);
 	
 	assert(ctx != 0);
 
-	app::begin_frame(ctx, true);
+	app::begin_frame();
 
 	app::create_perspective_matrix(ctx);
 	app::update_camera(ctx);
 
-	//memset(ctx->_test_vbo_ptr,0x30,base::frame_context::TEST_VBO_SIZE);
+	_scene->frustum_check(ctx);
+	_scene->upload_blocks_to_gpu(SRC_LOCATION, ctx);
 
-	static int first_time = base::frame_context::POOL_SIZE;
-	static char* cached_scene_data_ptr;
-	static int cached_scene_data_ptr_size;
-	if(first_time) {
-		_scene->frustum_check(ctx);
-		_scene->upload_blocks_to_gpu(SRC_LOCATION, ctx);
-		/*first_time--;
-		cached_scene_data_ptr_size = ctx->_scene_data_ptr_size;
-		cached_scene_data_ptr = new char[cached_scene_data_ptr_size];
-		memcpy(cached_scene_data_ptr, ctx->_scene_data_ptr, cached_scene_data_ptr_size);*/
-	}
-	else {
-		memcpy(ctx->_scene_data_ptr, cached_scene_data_ptr, cached_scene_data_ptr_size);
-	}
-
-	app::end_frame(ctx, true);
+	app::end_frame();
     
 	_renderer->push_frame_context(ctx);
 }

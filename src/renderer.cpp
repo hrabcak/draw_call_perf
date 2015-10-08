@@ -37,14 +37,13 @@ using namespace glm;
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-renderer::renderer(base::app *a, const bool create_shared_context)
+renderer::renderer(base::app * const a)
 	: thread()
 	, _event()
 	, _queue()
 	, _mx_queue()
 	, _shutdown(false)
 	, _app(a)
-	, _create_shared_context(create_shared_context)
 {}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -66,13 +65,13 @@ void renderer::start(const base::source_location &loc)
 
 void renderer::run()
 {
-	base::init_opengl_win(_create_shared_context);
+	base::init_opengl_win();
 	base::init_opengl_dbg_win();
 
 	// create frame_context pool
 	{
 		base::mutex_guard g(_mx_queue);
-		base::app::get()->create_frame_context_pool(!_create_shared_context);
+		base::app::get()->create_frame_context_pool();
 	}
 
 	base::canvas::load_and_init_shaders(SRC_LOCATION);
@@ -166,10 +165,6 @@ void renderer::draw_frame(base::frame_context *ctx)
 
 	scene::render_blocks(ctx);
 	//base::canvas::render(ctx);
-
-	if(_create_shared_context) {
-		//_app->capture_screen();
-	}
 
 	base::swap_buffers();
 }

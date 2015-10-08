@@ -45,11 +45,10 @@ protected:
 	base::mutex _mx_queue;
 	bool _shutdown;
 	base::app *_app;
-	bool _create_shared_context;
 
 public:
 
-	renderer(base::app *a,const bool create_shared_context = false);
+	renderer(base::app *a);
 	virtual ~renderer();
 
 	virtual void start(const base::source_location &loc);
