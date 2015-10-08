@@ -183,7 +183,9 @@
     <ClInclude Include="..\..\src\base\pixelfmt.h" />
     <ClInclude Include="..\..\src\base\tga_utils.h" />
     <ClInclude Include="..\..\src\base\thread.h" />
+    <ClInclude Include="..\..\src\base\utils.h" />
     <ClInclude Include="..\..\src\cube_gen.h" />
+    <ClInclude Include="..\..\src\gen_tex.h" />
     <ClInclude Include="..\..\src\renderer.h" />
     <ClInclude Include="..\..\src\scene.h" />
   </ItemGroup>
@@ -226,6 +228,7 @@
     <ClCompile Include="..\..\src\base\pixelfmt.cpp" />
     <ClCompile Include="..\..\src\base\thread_win.cpp" />
     <ClCompile Include="..\..\src\cube_gen.cpp" />
+    <ClCompile Include="..\..\src\gen_tex.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\renderer.cpp" />
     <ClCompile Include="..\..\src\scene.cpp" />
