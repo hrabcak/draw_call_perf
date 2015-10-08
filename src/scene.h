@@ -101,7 +101,7 @@ protected:
 	static GLuint _prg;
 	static GLint _prg_tb_blocks;
     static GLint _prg_ctx;
-    static GLint _prg_tb_vert;
+    static GLint _prg_tb_pos;
     static unsigned _nelements;
     static unsigned _nvertices;
 

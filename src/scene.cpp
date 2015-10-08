@@ -40,7 +40,7 @@ using namespace glm;
 GLuint scene::_prg = 0;
 GLint scene::_prg_tb_blocks = -1;
 GLint scene::_prg_ctx = -1;
-GLint scene::_prg_tb_vert = -1;
+GLint scene::_prg_tb_pos = -1;
 
 GLuint scene::_buffer_elem = 0;
 GLuint scene::_buffer_pos = 0;
@@ -127,7 +127,7 @@ void scene::load_and_init_shaders(const base::source_location &loc)
         _prg_tb_blocks = get_uniform_location(loc, _prg, "tb_blocks");
     }
 
-    _prg_tb_vert = get_uniform_location(loc, _prg, "tb_pos");
+    _prg_tb_pos = get_uniform_location(loc, _prg, "tb_pos");
     _prg_ctx = glGetUniformBlockIndex(_prg, "context");
 }
 
@@ -165,7 +165,7 @@ void scene::init_gpu_stuff(const base::source_location&)
 
     const double scale = (glm::pow(2.0, 20.0) - 1.0) / 1.0;
     glm::ivec2 * const ptr = reinterpret_cast<glm::ivec2*>(&vertices[0]);
-    for (int i = 0; i < _nvertices; ++i) {
+    for (unsigned i = 0; i < _nvertices; ++i) {
         const int idx = i * 8;
         ptr[i] = pack_to_pos3x21b(dvec3(vertices[idx], vertices[idx + 1], vertices[idx + 2]), scale);
     }
@@ -194,7 +194,7 @@ void scene::init_gpu_stuff(const base::source_location&)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void scene::create_textures(const base::source_location& loc)
+void scene::create_textures(const base::source_location&)
 {
     std::vector<glm::u8vec4> dst;
     dst.resize(64 * 64 * 4);
@@ -395,7 +395,7 @@ void scene::render_blocks(base::frame_context * const ctx)
         glUniform1i(_prg_tb_blocks, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_BUFFER, ctx->_scene_tb);
-        glUniform1i(_prg_tb_vert, 1);
+        glUniform1i(_prg_tb_pos, 1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_BUFFER, _tb_pos);
     }
