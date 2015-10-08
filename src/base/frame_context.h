@@ -56,8 +56,7 @@ struct cmd
 struct ctx_data
 {
     glm::mat4 _mvp;
-    float _num_sides;
-    char _res[256 - 64 - 4];
+    char _res[256 - 64];
 };
 
 struct block_data

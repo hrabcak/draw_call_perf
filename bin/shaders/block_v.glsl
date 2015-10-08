@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#version 140
+#version 430
 precision highp float;
 precision highp int;
 
@@ -36,7 +36,6 @@ precision highp int;
 struct context_data
 {
 	mat4 _mvp;
-	float _max_sides;
 };
 
 layout(std140) uniform context
@@ -55,12 +54,11 @@ layout(std140) uniform context
 		block_data _blocks;
 	};
 #else
-	layout(location=13) in int index_start;
+	layout(location=13) in ivec4 index_start;
     uniform samplerBuffer tb_blocks;
 #endif
 
 uniform samplerBuffer tb_vert;
-layout(location = 14) in int block_type;
 
 //OUT 
 out vec3 color;
@@ -75,7 +73,7 @@ void main()
 #else
     int index = vertex_id >> 12;
     vertex_id &= 0xfff;
-    int idx = (index_start + index + gl_InstanceID) * 16;
+    int idx = (index_start.x + index + gl_InstanceID) * 16;
 	mat4 tm = _ctx._mvp * mat4(
 		texelFetch(tb_blocks, idx),
 		texelFetch(tb_blocks, idx + 1),
@@ -83,66 +81,13 @@ void main()
 		texelFetch(tb_blocks, idx + 3));
 #endif
 
-    vec4 tmp0 = texelFetch(tb_vert, vertex_id * 2);
-    vec4 tmp1 = texelFetch(tb_vert, vertex_id * 2 + 1);
+    vec4 tmp0 = texelFetch(tb_vert, gl_InstanceID * 96 + index_start.y + vertex_id /** 2*/);
+    //vec4 tmp1 = texelFetch(tb_vert, index_start.y + vertex_id * 2 + 1);
 
     vec3 pos = tmp0.xyz;
-    vec3 nor = vec3(tmp0.w, tmp1.xy);
-    vec2 uv = tmp1.zw;
+    vec3 nor = tmp0.xyz;// vec3(tmp0.w, tmp1.xy);
+    //vec2 uv = tmp1.zw;
 
     gl_Position = tm * vec4(pos, 1);
-
-	// PILLAR / CYLINDER
-/*	if(block_type == 0) {
-		float num_sides = _ctx._max_sides; ///TODO lod
-		float angle = (round(float(vertex_id >> 1) * (num_sides / _ctx._max_sides)) / num_sides) * TWO_PI;
-		gl_Position = tm * vec4(cos(angle), (vertex_id & 1) << 1, sin(angle), 1);
-	}
-	// BOX
-	else if(block_type == 1) {
-		float angle = float(vertex_id >> 1) * 0.25 * TWO_PI - PI * 0.25;
-
-		if((inst_id & 1) != 0) {
-			angle += PI;
-			gl_Position = tm * vec4(
-				cos(angle) * SQRT_2,
-				(vertex_id & 1) << 1,
-				sin(angle) * SQRT_2,
-				1);
-		}
-		else {
-			gl_Position = tm * vec4(
-				(1 - (vertex_id & 1)) * 2 - 1,
-				cos(angle) * SQRT_2 + 1.0,
-				sin(angle) * SQRT_2,
-				1);
-		}
-	}
-	// STAIRS
-	else if(block_type == 2) {
-		int vtx_id=vertex_id + 2;
-
-		if((inst_id & 1) != 0) {
-			float step_size = 1.0/20.0;
-			float step_pos = (vtx_id >> 2) * step_size * 2;
-			gl_Position = tm * vec4(
-				(1 - (vtx_id & 1)) * 2 - 1,
-				step_pos,
-				-1.0 + step_pos + ((vtx_id & 2) - 1) * step_size,
-				1);
-		}
-		else {
-			int vtx_id_clamped = clamp(vtx_id,0,2);
-			float step_size = 1.0/20.0;
-			float step_pos = (vtx_id >> 2) * step_size * 2;
-			gl_Position = tm * vec4(
-				-1,
-				step_pos + ((vtx_id_clamped & 2) - 1) * step_size,
-				-1.5 + step_pos + ((vtx_id_clamped & 1) * 2 - 1) * step_size,
-				1);
-		}
-	}
-*/
-
 	color=nor * 0.5 + 0.5;
 }

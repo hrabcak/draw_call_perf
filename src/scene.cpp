@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include "base/hptimer.h"
 
 #include "cube_gen.h"
+#include "gen_tex.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -146,33 +147,46 @@ inline vec3 unpack_from_pos3x21b(const ivec2 &pos, const float scale)
         (pos.y << 11) >> 11) * scale;
 }
 
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 void scene::init_gpu_stuff(const base::source_location&)
 {
-    const int tess_level = 1;
+    const int tess_level = 2;
 
     get_face_and_vert_count_for_tess_level(tess_level, _nelements, _nvertices);
 
     std::vector<unsigned short> elements;
     std::vector<float> vertices;
-    elements.resize(_nelements);
-    vertices.resize(_nvertices * 8);
+    elements.resize(_nelements * scene::MAX_BLOCK_COUNT);
+    vertices.resize(_nvertices * 8 * scene::MAX_BLOCK_COUNT);
 
     gen_cube(tess_level, &vertices[0], &elements[0]);
 
+    //TODO convert position to int2
+    float * const ptr = &vertices[0];
+    for (int i = 1; i < _nvertices; ++i) {
+        memcpy(ptr + i * 4, ptr + i * 8, sizeof(float) * 4);
+    }
+
+    //TODO create second array with normal + uv
+
+    for (int i = 1; i < scene::MAX_BLOCK_COUNT; ++i) {
+        memcpy(&elements[i * _nelements], &elements[0], _nelements * sizeof(short));
+        memcpy(&vertices[i * 4 * _nvertices], &vertices[0], _nvertices * 4 * sizeof(float));
+    }
+
     //TODO convert vertices to more efficient format
-    const double scale = (glm::pow(2.0, 20.0) - 1.0) / 3.0;
+    //const double scale = (glm::pow(2.0, 20.0) - 1.0) / 3.0;
+    //
+    //auto i = &vertices[0];
+    //auto e = i + vertices.size();
+    //do {
+    //    const ivec2 pos = pack_to_pos3x21b(dvec3(i[0], i[1], i[2]), scale);
+    //    i += 8;
+    //} while (i != e);
 
-    auto i = &vertices[0];
-    auto e = i + vertices.size();
-    do {
-        const ivec2 pos = pack_to_pos3x21b(dvec3(i[0], i[1], i[2]), scale);
-
-
-        i += 8;
-    } while (i != e);
-
-    _buffer_elem = base::create_buffer<unsigned short>(_nelements, 0, &elements[0]);
-    _buffer_vert = base::create_buffer<float>(_nvertices * 8, 0, &vertices[0]);
+    _buffer_elem = base::create_buffer<unsigned short>(_nelements * scene::MAX_BLOCK_COUNT, 0, &elements[0]);
+    _buffer_vert = base::create_buffer<float>(_nvertices * 4 * scene::MAX_BLOCK_COUNT, 0, &vertices[0]);
 
     // create texture buffer for vertices
     glGenTextures(1, &_tb_vert);
@@ -182,6 +196,18 @@ void scene::init_gpu_stuff(const base::source_location&)
         base::get_pfd(base::PF_RGBA32F)->_internal,
         _buffer_vert);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void scene::create_textures(const base::source_location& loc)
+{
+    std::vector<glm::u8vec4> dst;
+    dst.resize(64 * 64 * 4);
+
+    gen_texture(&dst[0], 64, 16);
+
+    //base::create_texture();
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -299,8 +325,6 @@ int scene::frustum_check(base::frame_context *ctx,const bool dont_check)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-const int num_sides = 64;
-
 void scene::upload_blocks_to_gpu(
 	const base::source_location &loc,
 	base::frame_context *ctx)
@@ -329,7 +353,6 @@ void scene::upload_blocks_to_gpu(
 		unsigned int *flags = &_flags[0];
         base::cmd * cmd = ctx->_cmd_data_ptr;
 
-        const int count = (num_sides << 1) + 2;
         int * const drawid = ctx->_drawid_data_ptr + ctx->_drawid_data_offset;
 
 		// transform visible blocks to screen and add to VBO 
@@ -340,11 +363,12 @@ void scene::upload_blocks_to_gpu(
             ptr[type]->_tm = *tm;
 
             drawid[offset * 4] = ctx->_scene_data_offset + offset;
+            drawid[offset * 4 + 1] = _nvertices * offset /** 2*/;
 
             new (cmd + offset) base::cmd(
                 _nelements,
                 1,
-                0,
+                _nelements * offset,
                 0,
                 ctx->_scene_data_offset + offset);
 
@@ -353,7 +377,6 @@ void scene::upload_blocks_to_gpu(
 	}
 
     ctx->_ctx_data_ptr->_mvp = ctx->_mvp;
-    ctx->_ctx_data_ptr->_num_sides = float(num_sides);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -368,11 +391,10 @@ void scene::render_blocks(base::frame_context * const ctx)
 
     const bool fast_drawcall = false;
     const bool fast_drawcall_old_way = false;
-    const bool fast_draw_call_gl33 = true;
+    const bool fast_draw_call_gl33 = false;
     const bool use_instancing = false;
 
     glVertexAttribI1i(13, 0);
-    glVertexAttribI1i(14, 0);
     glBindBufferRange(
         GL_UNIFORM_BUFFER,
         _prg_ctx,
@@ -404,144 +426,74 @@ void scene::render_blocks(base::frame_context * const ctx)
 
     const int count = _nelements;
     const unsigned vbo = ctx->_scene_vbo;
+    const uint nblocks = ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1];
 
-	if(ctx->_num_visible_blocks[0]>0) {
-		int pos = 0;
+    if (nblocks == 0)
+        return;
+    
+    if (!uniform_block) {
+        int offset = ctx->_scene_data_offset;
 
-        if (!uniform_block) {
-            int offset = ctx->_scene_data_offset + pos;
-
-            if (!fast_drawcall) {
-                if (use_instancing) {
+        if (!fast_drawcall) {
+            if (use_instancing) {
+                glVertexAttribI1i(13, offset);
+                glDrawElementsInstanced(
+                    GL_TRIANGLES,
+                    count,
+                    GL_UNSIGNED_SHORT,
+                    0,
+                    ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1]);
+            }
+            else {
+                glMultiDrawElementsIndirect(
+                    GL_TRIANGLES,
+                    GL_UNSIGNED_SHORT,
+                    (void*)((ctx->_scene_data_offset) * sizeof(base::cmd)),
+                    ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1],
+                    0);
+            }
+        }
+        else {
+            const int offset_e = offset + ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1];
+            while (offset != offset_e) {
+                if (fast_drawcall_old_way) {
                     glVertexAttribI1i(13, offset);
-                    glDrawElementsInstanced(
+                    glDrawElements(
+                        GL_TRIANGLES,
+                        count,
+                        GL_UNSIGNED_SHORT,
+                        0);
+                }
+                else if (fast_draw_call_gl33) {
+                    glDrawElementsBaseVertex(
                         GL_TRIANGLES,
                         count,
                         GL_UNSIGNED_SHORT,
                         0,
-                        ctx->_num_visible_blocks[0]);
+                        offset << 12);
                 }
                 else {
-                    glMultiDrawElementsIndirect(
-                        GL_TRIANGLES,
-                        GL_UNSIGNED_SHORT,
-                        (void*)((ctx->_scene_data_offset) * sizeof(base::cmd)),
-                        ctx->_num_visible_blocks[0],
-                        0);
-                }
-            }
-            else {
-                const int offset_e = offset + ctx->_num_visible_blocks[0];
-                while (offset != offset_e) {
-                    if (fast_drawcall_old_way) {
-                        glVertexAttribI1i(13, offset);
-                        glDrawElements(
-                            GL_TRIANGLES,
-                            count,
-                            GL_UNSIGNED_SHORT,
-                            0);
-                    }
-                    else if (fast_draw_call_gl33) {
-                        glDrawElementsBaseVertex(
-                            GL_TRIANGLES,
-                            count,
-                            GL_UNSIGNED_SHORT,
-                            0,
-                            offset << 12);
-                    }
-                    else {
-                        glDrawElementsInstancedBaseInstance(
-                            GL_TRIANGLES,
-                            count,
-                            GL_UNSIGNED_SHORT,
-                            0,
-                            1,
-                            offset);
-                    }
-                    offset++;
-                }
-            }
-        }
-        else {
-            unsigned offset = (ctx->_scene_data_offset + pos) * sizeof(base::block_data);
-            const unsigned offset_e = offset + ctx->_num_visible_blocks[0] * sizeof(base::block_data);
-            while (offset != offset_e) {
-                glBindBufferRange(GL_UNIFORM_BUFFER, _prg_tb_blocks, vbo, offset, 64);
-                glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, 0);
-                offset += sizeof(base::block_data);
-            }
-        }
-	}
-
-	if(ctx->_num_visible_blocks[1]) {
-        glVertexAttribI1i(14, 1);
-
-		int pos = ctx->_num_visible_blocks[0];
-
-        if (!uniform_block) {
-            int offset = ctx->_scene_data_offset + pos;
-
-            if (!fast_drawcall) {
-                if (use_instancing) {
-                    glVertexAttribI1i(13, offset);
-                    glDrawElementsInstanced(
+                    glDrawElementsInstancedBaseInstance(
                         GL_TRIANGLES,
                         count,
                         GL_UNSIGNED_SHORT,
                         0,
-                        ctx->_num_visible_blocks[1]);
+                        1,
+                        offset);
                 }
-                else {
-                    glMultiDrawElementsIndirect(
-                        GL_TRIANGLES,
-                        GL_UNSIGNED_SHORT,
-                        (void*)((ctx->_scene_data_offset + pos) * sizeof(base::cmd)),
-                        ctx->_num_visible_blocks[1],
-                        0);
-                }
-            }
-            else {
-                int offset_e = offset + ctx->_num_visible_blocks[1];
-                while (offset != offset_e) {
-                    if (fast_drawcall_old_way) {
-                        glVertexAttribI1i(13, offset);
-                        glDrawElements(
-                            GL_TRIANGLES,
-                            count,
-                            GL_UNSIGNED_SHORT,
-                            0);
-                    }
-                    else if (fast_draw_call_gl33) {
-                        glDrawElementsBaseVertex(
-                            GL_TRIANGLES,
-                            count,
-                            GL_UNSIGNED_SHORT,
-                            0,
-                            offset << 12);
-                    }
-                    else {
-                        glDrawElementsInstancedBaseInstance(
-                            GL_TRIANGLES,
-                            count,
-                            GL_UNSIGNED_SHORT,
-                            0,
-                            1,
-                            offset);
-                    }
-                    offset++;
-                }
+                offset++;
             }
         }
-        else {
-            unsigned offset = (ctx->_scene_data_offset + pos) * sizeof(base::block_data);
-            unsigned offset_e = offset + ctx->_num_visible_blocks[1] * sizeof(base::block_data);
-            while (offset != offset_e) {
-                glBindBufferRange(GL_UNIFORM_BUFFER, _prg_tb_blocks, vbo, offset, 64);
-                glDrawElements(GL_TRIANGLES, 8, GL_UNSIGNED_SHORT, 0);
-                offset += sizeof(base::block_data);
-            }
+    }
+    else {
+        unsigned offset = (ctx->_scene_data_offset) * sizeof(base::block_data);
+        const unsigned offset_e = offset + (ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1]) * sizeof(base::block_data);
+        while (offset != offset_e) {
+            glBindBufferRange(GL_UNIFORM_BUFFER, _prg_tb_blocks, vbo, offset, 64);
+            glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, 0);
+            offset += sizeof(base::block_data);
         }
-	}
+    }
 
     glQueryCounter(ctx->_time_queries[1], GL_TIMESTAMP);
 
