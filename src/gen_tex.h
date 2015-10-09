@@ -4,6 +4,6 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
-void gen_texture(glm::u8vec4 * tex_data, ushort dim, ushort grid_dim);
+void gen_texture(glm::u8vec4 * tex_data, ushort dim, ushort grid_dim, unsigned seed);
 
 #endif

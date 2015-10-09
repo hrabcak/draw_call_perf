@@ -20,16 +20,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#version 140
-//#version 330
+#version 430
 precision highp float;
 precision highp int;
 
-in vec3 color;
+#extension GL_ARB_bindless_texture : enable
 
-out vec4 _retval;
+in vec3 color;
+in vec2 uv;
+in flat uvec2 tex_handle;
+
+uniform sampler2D mat_tex;
+
+out vec3 _retval;
 
 void main()
 {
-	_retval = vec4(color, 0);
+    _retval = texture(sampler2D(tex_handle), uv, 0).rgb;
 }

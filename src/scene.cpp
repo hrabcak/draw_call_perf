@@ -41,17 +41,24 @@ GLuint scene::_prg = 0;
 GLint scene::_prg_tb_blocks = -1;
 GLint scene::_prg_ctx = -1;
 GLint scene::_prg_tb_pos = -1;
+GLint scene::_prg_tex = -1;
 
 GLuint scene::_buffer_elem = 0;
 GLuint scene::_buffer_pos = 0;
 GLuint scene::_buffer_nor_uv = 0;
+GLuint scene::_buffer_tex_handles = 0;
 
 unsigned scene::_nelements = 0;
 unsigned scene::_nvertices = 0;
 
 GLuint scene::_tb_pos = 0;
+GLuint scene::_tb_tex_handles = 0;
 
 const bool uniform_block = false;
+const bool use_bindless_tex = true;
+
+std::vector<GLuint> scene::_texs;
+std::vector<GLuint64> scene::_tex_handles;
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -129,6 +136,13 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 
     _prg_tb_pos = get_uniform_location(loc, _prg, "tb_pos");
     _prg_ctx = glGetUniformBlockIndex(_prg, "context");
+
+    if (use_bindless_tex) {
+        _prg_tex = get_uniform_location(loc, _prg, "tb_tex_handles");
+    }
+    else {
+        _prg_tex = get_uniform_location(loc, _prg, "mat_tex");
+    }
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -194,14 +208,39 @@ void scene::init_gpu_stuff(const base::source_location&)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void scene::create_textures(const base::source_location&)
+void scene::create_textures(const base::source_location &)
 {
-    std::vector<glm::u8vec4> dst;
-    dst.resize(64 * 64 * 4);
+    std::vector<unsigned char> data;
+    data.resize(64 * 64 * 4);
 
-    gen_texture(&dst[0], 64, 16);
+    for (int i = 0; i < 32768; ++i) {
+        gen_texture(reinterpret_cast<glm::u8vec4*>(&data[0]), 64, 16, i);
 
-    //base::create_texture();
+        const GLint tex = create_texture(
+            64,
+            64,
+            base::PF_BGRA8_SRGB,
+            &data[0]);
+
+        _texs.push_back(tex);
+
+        const GLuint64 handle = glGetTextureHandleARB(tex);
+
+        _tex_handles.push_back(handle);
+
+        glMakeTextureHandleResidentARB(handle);
+    }
+
+    _buffer_tex_handles = base::create_buffer<GLuint64>(32768, 0, &_tex_handles[0]);
+
+    // create texture buffer for vertices
+    glGenTextures(1, &_tb_tex_handles);
+    glBindTexture(GL_TEXTURE_BUFFER, _tb_tex_handles);
+    glTexBuffer(
+        GL_TEXTURE_BUFFER,
+        base::get_pfd(base::PF_RG32F)->_internal,
+        _buffer_tex_handles);
+    glBindTexture(GL_TEXTURE_BUFFER, 0);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -346,7 +385,8 @@ void scene::upload_blocks_to_gpu(
             ptr[type]->_tm = *tm;
 
             drawid[offset * 4] = ctx->_scene_data_offset + offset;
-            drawid[offset * 4 + 1] = _nvertices * offset /** 2*/;
+            drawid[offset * 4 + 1] = _nvertices * offset;
+            drawid[offset * 4 + 2] = offset;
 
             new (cmd + offset) base::cmd(
                 _nelements,
@@ -376,7 +416,7 @@ void scene::render_blocks(base::frame_context * const ctx)
 
     const bool fast_drawcall = false;
     const bool fast_drawcall_old_way = false;
-    const bool fast_draw_call_gl33 = false;
+    const bool fast_draw_call_gl33 = true;
     const bool use_instancing = false;
 
     glVertexAttribI1i(13, 0);
@@ -395,9 +435,14 @@ void scene::render_blocks(base::frame_context * const ctx)
         glUniform1i(_prg_tb_blocks, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_BUFFER, ctx->_scene_tb);
+
         glUniform1i(_prg_tb_pos, 1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_BUFFER, _tb_pos);
+
+        glUniform1i(_prg_tex, 2);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_BUFFER, _tb_tex_handles);
     }
 
     if ((fast_drawcall && fast_drawcall_old_way)
@@ -439,6 +484,7 @@ void scene::render_blocks(base::frame_context * const ctx)
             }
         }
         else {
+            int counter = 0;
             const int offset_e = offset + ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1];
             while (offset != offset_e) {
                 if (fast_drawcall_old_way) {
@@ -450,6 +496,11 @@ void scene::render_blocks(base::frame_context * const ctx)
                         0);
                 }
                 else if (fast_draw_call_gl33) {
+                    /*if (counter % 190 == 0) {
+                        glBindTextures(0, 190, &_texs[counter]);
+                    }
+                    glUniform1i(_prg_tex, counter % 190);*/
+                    //glUniformHandleui64ARB(_prg_tex, _tex_handles[counter]);
                     glDrawElementsBaseVertex(
                         GL_TRIANGLES,
                         count,
@@ -467,6 +518,7 @@ void scene::render_blocks(base::frame_context * const ctx)
                         offset);
                 }
                 offset++;
+                counter++;
             }
         }
     }

@@ -6,12 +6,12 @@
 
 #define COMP_LATTICE_PROBABILITY		0.25f
 
-void gen_texture(glm::u8vec4 * tex_data, ushort dim, ushort grid_dim){
+void gen_texture(glm::u8vec4 * tex_data, ushort dim, ushort grid_dim, unsigned seed){
 	if (grid_dim <= 0){
 		return;
 	}
 
-	srand((uint32)time(NULL));
+	srand(seed);
 
 	int max = (int)(1 / COMP_LATTICE_PROBABILITY);
 

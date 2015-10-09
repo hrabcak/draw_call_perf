@@ -102,15 +102,21 @@ protected:
 	static GLint _prg_tb_blocks;
     static GLint _prg_ctx;
     static GLint _prg_tb_pos;
+    static GLint _prg_tex;
     static unsigned _nelements;
     static unsigned _nvertices;
 
     static GLuint _tb_pos;
     static GLuint _tb_nor_uv;
+    static GLuint _tb_tex_handles;
 
     static GLuint _buffer_elem;
     static GLuint _buffer_pos;
     static GLuint _buffer_nor_uv;
+    static GLuint _buffer_tex_handles;
+
+    static std::vector<GLuint> _texs;
+    static std::vector<GLuint64> _tex_handles;
 };
 
 #endif // __ASYNC_VBO_TRANSFERS_SCENE_H__

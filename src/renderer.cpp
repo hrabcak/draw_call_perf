@@ -77,6 +77,7 @@ void renderer::run()
 	base::canvas::load_and_init_shaders(SRC_LOCATION);
 	scene::load_and_init_shaders(SRC_LOCATION);
     scene::init_gpu_stuff(SRC_LOCATION);
+    scene::create_textures(SRC_LOCATION);
 
 	_app->renderer_side_start();
 

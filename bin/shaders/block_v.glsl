@@ -31,6 +31,7 @@ precision highp int;
 #define SQRT_2 1.414213562
 
 //#define USE_UNIFORM_BUF 1
+//#define USE_BINDLESS_TEX 1
 
 // IN
 struct context_data
@@ -60,9 +61,16 @@ layout(std140) uniform context
 
 uniform isamplerBuffer tb_pos;
 
+//#ifdef USE_BINDLESS_TEX
+
+uniform usamplerBuffer tb_tex_handles;
+
+//#endif
+
 //OUT 
 out vec3 color;
-
+out vec2 uv;
+out flat uvec2 tex_handle;
 
 vec3 unpack_position(ivec2 pack_pos, float coef)
 {
@@ -75,7 +83,6 @@ vec3 unpack_position(ivec2 pack_pos, float coef)
 
 void main()
 {
-	int inst_id = 0;
 	int vertex_id = gl_VertexID;
 
 #ifdef USE_UNIFORM_BUF
@@ -91,12 +98,14 @@ void main()
 		texelFetch(tb_blocks, idx + 3));
 #endif
 
-    ivec2 tmp0 = texelFetch(tb_pos, gl_InstanceID * 96 + index_start.y + vertex_id /** 2*/).xy;
-    //vec4 tmp1 = texelFetch(tb_pos, index_start.y + vertex_id * 2 + 1);
+    int inst_id = index_start.z >> 3;
+
+    ivec2 tmp0 = texelFetch(tb_pos, gl_InstanceID * 96 + index_start.y + vertex_id).xy;
 
     vec3 pos = unpack_position(tmp0.xy, 1.0 / 1048575.0);
-    //vec3 nor = tmp0.xyz;// vec3(tmp0.w, tmp1.xy);
-    //vec2 uv = tmp1.zw;
+    uv = pos.xy * 0.5 + 0.5;
+
+    tex_handle = texelFetch(tb_tex_handles, inst_id).xy;
 
     gl_Position = tm * vec4(pos, 1);
 	color=pos * 0.5 + 0.5;
