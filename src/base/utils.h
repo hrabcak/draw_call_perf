@@ -8,7 +8,7 @@ namespace util{
 
 static int rndFromInterval(int min, int max){
 	int result = rand();
-	result %= (max - min);
+	result %= (max - min + 1);
 	return result + min;
 }
 

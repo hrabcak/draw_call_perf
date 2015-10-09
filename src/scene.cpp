@@ -175,7 +175,9 @@ void scene::init_gpu_stuff(const base::source_location&)
     elements.resize(_nelements * scene::MAX_BLOCK_COUNT);
     vertices.resize(_nvertices * 8 * scene::MAX_BLOCK_COUNT);
 
-    gen_cube(tess_level, &vertices[0], &elements[0]);
+	unsigned int dummy; // toto som dolpnil len aby sa to dalo skompilovat
+
+    gen_cube(tess_level, &vertices[0], &elements[0],dummy,dummy);
 
     const double scale = (glm::pow(2.0, 20.0) - 1.0) / 1.0;
     glm::ivec2 * const ptr = reinterpret_cast<glm::ivec2*>(&vertices[0]);

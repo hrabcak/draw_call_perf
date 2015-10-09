@@ -2,6 +2,7 @@
 #define __ASYNC_VBO_TRANSFERS_TYPES_H__
 
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 typedef unsigned short ushort;
 typedef unsigned int uint32;
