@@ -416,7 +416,19 @@ void scene::render_blocks(base::frame_context * const ctx)
 
     timer.start();
 
-    const bool fast_drawcall = false;
+    /*
+        Benchmark modes
+
+        1: OpenGL 3.3 glDrawElementsBaseVertex + std texture binding
+        2: Instancing for efficiency comparison
+        3: Indirect OpenGL 4.3
+        4: glDrawElementsBaseInstance + bindless textures    
+    */
+
+
+    // SET FRAME RENDER STATES
+
+    const bool fast_drawcall = true;
     const bool fast_drawcall_old_way = false;
     const bool fast_draw_call_gl33 = true;
     const bool use_instancing = false;

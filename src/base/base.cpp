@@ -92,7 +92,7 @@ GLuint base::create_and_compile_shader(
 	read_glsl_file(loc, filename.c_str(),src);
 
 	GLuint shader = glCreateShader(type);
-	GLint len = src.length();
+	GLint len = GLint(src.length());
 	const char *psrc=src.c_str();
 
 	std::cout<<"Compiling shader \""<<filename<<"\"..."<<std::endl;

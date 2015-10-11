@@ -117,6 +117,17 @@ protected:
 
     static std::vector<GLuint> _texs;
     static std::vector<GLuint64> _tex_handles;
+
+    enum BenchmarkMode
+    {
+        BenchBaseVertex     = 1,
+        BenchInstancing     = 2,
+        BenchIndirect       = 3,
+        BenchBaseInstance   = 4,
+    };
+
+    BenchmarkMode _bench_mode;
+
 };
 
 #endif // __ASYNC_VBO_TRANSFERS_SCENE_H__
