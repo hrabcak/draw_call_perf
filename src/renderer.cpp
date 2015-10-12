@@ -74,12 +74,7 @@ void renderer::run()
 		base::app::get()->create_frame_context_pool();
 	}
 
-	base::canvas::load_and_init_shaders(SRC_LOCATION);
-	scene::load_and_init_shaders(SRC_LOCATION);
-    scene::init_gpu_stuff(SRC_LOCATION);
-    scene::create_textures(SRC_LOCATION);
-
-	_app->renderer_side_start();
+    _app->gpu_init();
 
 	_event.signal();
 
@@ -141,7 +136,7 @@ void renderer::stop(const base::source_location &loc)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void renderer::draw_frame(base::frame_context *ctx)
+void renderer::draw_frame(base::frame_context * const ctx)
 {
     base::hptimer timer;
     
@@ -164,8 +159,7 @@ void renderer::draw_frame(base::frame_context *ctx)
     glClearColor(0.3f, 0.2f, 0.4f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	scene::render_blocks(ctx);
-	//base::canvas::render(ctx);
+    _app->gpu_draw_frame(ctx);
 
 	base::swap_buffers();
 }

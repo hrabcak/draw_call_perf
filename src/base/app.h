@@ -50,12 +50,13 @@ public:
 	virtual ~app();
 
 	virtual void start();
-	virtual void renderer_side_start();
-	void begin_frame(); 
-	virtual void draw_frame() {}
-	void end_frame();
+    virtual void gpu_init();
+    void begin_frame();
+    virtual void draw_frame() = 0;
+    virtual void gpu_draw_frame(base::frame_context * const ctx) = 0;
+    void end_frame();
 	virtual void stop();
-	
+
 	// desired client area size / OpenGL frame buffer size
 	virtual int get_wnd_width() const { return 1280; }
 	virtual int get_wnd_height() const { return 720; }
@@ -135,12 +136,6 @@ protected:
 
 	/// frame context pool
 	std::list<base::frame_context*> _pool;
-
-	// showtime stuff
-	static GLuint _prg;
-	static GLint _prg_mvp;
-	static GLint _prg_size;
-	static GLint _prg_tex;
 
 private:
 	app(const app&);

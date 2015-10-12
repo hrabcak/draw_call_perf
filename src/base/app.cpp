@@ -31,13 +31,6 @@ THE SOFTWARE.
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#define GL_EXTERNAL_VIRTUAL_MEMORY_AMD 37216
-
-GLuint base::app::_prg = 0;
-GLint base::app::_prg_mvp = -1;
-GLint base::app::_prg_size = -1;
-GLint base::app::_prg_tex = -1;
-
 base::app* base::app::_app = 0;
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -47,12 +40,13 @@ base::app::app()
     , _position(46.5, 40.3, 190)
 	, _frame_number(0)
 { 
-	assert(_app==0); _app=this; 
+	assert(_app == 0);
+    _app = this; 
 
 	// init mouse stuff
 	base::set_mouse_pos(glm::ivec2(200));
 	_last_mouse_pos = base::get_mouse_pos();
-	_mouse_pos=glm::ivec2(0);
+	_mouse_pos = glm::ivec2(0);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -70,7 +64,7 @@ void base::app::start()
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void base::app::renderer_side_start()
+void base::app::gpu_init()
 {
 	_fnt_mono.reset(new base::font());
 	_fnt_mono->load(SRC_LOCATION,"fonts/lucida_console_13.fnt");

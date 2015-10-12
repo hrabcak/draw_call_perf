@@ -37,28 +37,8 @@ THE SOFTWARE.
 
 using namespace glm;
 
-GLuint scene::_prg = 0;
-GLint scene::_prg_tb_blocks = -1;
-GLint scene::_prg_ctx = -1;
-GLint scene::_prg_tb_pos = -1;
-GLint scene::_prg_tex = -1;
-
-GLuint scene::_buffer_elem = 0;
-GLuint scene::_buffer_pos = 0;
-GLuint scene::_buffer_nor_uv = 0;
-GLuint scene::_buffer_tex_handles = 0;
-
-unsigned scene::_nelements = 0;
-unsigned scene::_nvertices = 0;
-
-GLuint scene::_tb_pos = 0;
-GLuint scene::_tb_tex_handles = 0;
-
 const bool uniform_block = false;
 const bool use_bindless_tex = true;
-
-std::vector<GLuint> scene::_texs;
-std::vector<GLuint64> scene::_tex_handles;
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -68,11 +48,33 @@ scene::scene()
 	, _hws()
 	, _flags()
 	, _blocks()
+
+    , _prg(0)
+    , _prg_tb_blocks(-1)
+    , _prg_ctx(-1)
+    , _prg_tb_pos(-1)
+    , _prg_tex(-1)
+
+    , _buffer_elem(0)
+    , _buffer_pos(0)
+    , _buffer_nor_uv(0)
+    , _buffer_tex_handles(0)
+
+    , _nelements(0)
+    , _nvertices(0)
+
+    , _tb_pos(0)
+    , _tb_tex_handles(0)
+
+    , _texs()
+    , _tex_handles()
 {
 	_tms.reserve(MAX_BLOCK_COUNT);
 	_bboxes.reserve(MAX_BLOCK_COUNT);
 	_hws.reserve(MAX_BLOCK_COUNT);
 	_flags.reserve(MAX_BLOCK_COUNT);
+
+    create_test_scene();
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -164,8 +166,10 @@ inline vec3 unpack_from_pos3x21b(const ivec2 &pos, const float scale)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void scene::init_gpu_stuff(const base::source_location&)
+void scene::init_gpu_stuff(const base::source_location &loc)
 {
+    load_and_init_shaders(loc);
+
     const int tess_level = 2;
 
     get_face_and_vert_count_for_tess_level(tess_level, _nelements, _nvertices);
@@ -206,6 +210,8 @@ void scene::init_gpu_stuff(const base::source_location&)
         base::get_pfd(base::PF_RG32F)->_internal,
         _buffer_pos);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
+
+    create_textures(loc);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -553,11 +559,10 @@ void scene::render_blocks(base::frame_context * const ctx)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void scene::create_test_scene(scene *s)
+void scene::create_test_scene()
 {
 	const int grid_size = BUILDING_SIDE_SIZE;
 	const glm::vec3 pillar_size(0.25f, 2.6f, 0.25f);
-	//const glm::vec3 pillar_size(1.5f, 2.6f, 3.5f);
 	const glm::vec3 box_size(3.0f, 0.2f, 4.0f);
 
 	// create floor's pillars
@@ -565,9 +570,9 @@ void scene::create_test_scene(scene *s)
 		for(int y = 0; y < (grid_size >> 1); ++y)
 			for(int x = 0; x < grid_size; ++x) {
 				if(z < grid_size-1) 
-					s->add_block(
+					add_block(
 						0, glm::vec3(x * 3, 0.2 + z * 2.8, y * 4), pillar_size, 0);
-				s->add_block(
+				add_block(
 					1, glm::vec3(x * 3, z * 2.8, y * 4), box_size, 0);
 			}
 }

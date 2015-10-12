@@ -138,10 +138,6 @@ HWND __hwnd = 0;
 HDC __hdc = 0;
 HGLRC __hrc;
 HGLRC __shared_ctx = 0;
-/*bool __use_dbg_context = false;
-bool __use_dbg_sync = false;
-bool __use_pinned_memory = false;
-bool __nvidia_fast_download = false;*/
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
