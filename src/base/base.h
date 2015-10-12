@@ -231,6 +231,8 @@ unsigned create_buffer(const unsigned nelem, T** const ptr, void * const data = 
     return handle;
 }
 
+int rndFromInterval(int min, int max);
+
 } // end of namespace base
 
 #define SRC_LOCATION base::source_location(__FUNCTION__,__FILE__,__LINE__)

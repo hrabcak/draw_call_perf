@@ -286,6 +286,12 @@ void base::clear_attr0_vbo_amd_wa()
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+int base::rndFromInterval(int min, int max){
+	int result = rand();
+	result %= (max - min + 1);
+	return result + min;
+}
+
 base::config& base::cfg() { static config ___c; return ___c; }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
