@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include <gl/glew.h>
 
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 #define TMP_STR_BUF_SIZE 64
 
@@ -248,6 +249,20 @@ inline glm::vec3 unpack_from_pos3x21b(const glm::ivec2 &pos, const float scale)
         pos.x >> 11,
         ((pos.x << 21) >> 11) | (pos.y >> 21),
         (pos.y << 11) >> 11) * scale;
+}
+
+inline glm::ivec2 pack_to_norm2x16b_uv2x15b(const glm::dvec3 &norm, const glm::dvec2 &uv, const double scale_norm, const double scale_uv) {
+	const glm::ivec3 norm16(norm*scale_norm);
+	const glm::ivec2 uv15(uv*scale_uv);
+
+	return glm::ivec2(norm16.x << 16 | (norm16.y & 0xffff), (uv15.x << 17) | ((uv15.y << 2) & 0x3fffc) | ((unsigned int)(norm16.z & 0x80000000) >> 31));
+}
+
+inline void unpack_from_norm2x16b_uv2x15b(const glm::ivec2 &norm_uv, const float scale_norm, const float scale_uv, glm::vec3 &norm_out, glm::vec2 &uv_out) {
+	norm_out = glm::vec3(norm_uv.x >> 16, (norm_uv.x << 16) >> 16, 0.0f);
+	norm_out *= scale_norm;
+	norm_out.z = (norm_uv.y & 0x1) ? -1.0f*(glm::sqrt(1.0f - glm::length2(norm_out))) : glm::sqrt(1.0f - glm::length2(norm_out));
+	uv_out = glm::vec2(norm_uv.y >> 17, (norm_uv.y << 15) >> 17)*scale_uv;
 }
 
 

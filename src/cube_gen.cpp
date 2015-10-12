@@ -29,7 +29,22 @@ namespace gen {
 	const glm::i8vec3* faces[6][4] = { { &v1,&v2,&v3,&v4 },{ &v2,&v6,&v7,&v3 },{ &v6,&v5,&v8,&v7 },{ &v5,&v1,&v4,&v8 },{ &v2,&v1,&v5,&v6 },{ &v7,&v8,&v4,&v3 } };
 }
 
+void * cpy_float(void * data_ptr, const gen::vert & vert_data){
+	memcpy(data_ptr, &vert_data, 32);
+	return ((char *)data_ptr + 32);
+}
 
+void * cpy_int(void * data_ptr, const gen::vert & vert_data){
+	int pack[4];
+	const double scale_pos = 1048575.0;//(glm::pow(2.0, 20.0) - 1.0);
+	const double scale_norm = 32767.0;//(glm::pow(2.0, 15.0) - 1.0);
+	const double scale_uv = 16383.0; //(glm::pow(2.0, 14.0) - 1.0);
+	(*reinterpret_cast<glm::ivec2*>(&pack[0])) = base::pack_to_pos3x21b(glm::dvec3(vert_data.pos), scale_pos);
+	(*reinterpret_cast<glm::ivec2*>(&pack[2])) = base::pack_to_norm2x16b_uv2x15b(glm::dvec3(vert_data.norm), glm::dvec2(vert_data.uv), scale_norm, scale_uv);
+	memcpy(data_ptr, pack, 16);
+
+	return (char *)data_ptr + 16;
+}
 
 void generate_rand_corner(ushort edge_vert_max_idx, glm::u8vec3 & out_corner) {
 	out_corner.x = (uint8)((ushort)base::rndFromInterval(0, 1) * edge_vert_max_idx);
@@ -273,7 +288,8 @@ void get_face_and_vert_count_for_tess_level(uint32 tess_level, uint32 & element_
 	vert_count = element_count;
 }
 
-void gen_cube(ushort tess_level, float * vert_data, ushort * index_array, uint32 & element_count, uint32 & vert_count) {
+
+void gen_cube_imp(ushort tess_level, float * vert_data, ushort * index_array, uint32 & element_count, uint32 & vert_count,cpy_fun trait) {
 	srand((ushort)time(NULL));
 
 	VertMaskVec vertex_list;
@@ -298,6 +314,7 @@ void gen_cube(ushort tess_level, float * vert_data, ushort * index_array, uint32
 	gen::triangle_pair_vert_indices indices;
 
 	ushort cur_pos = 0;
+	void * cur_data_pos = vert_data;
 
 	for (uint32 i = 0; i < index_vec.size(); i += 3) {
 		if (index_vec[i] == 0 && index_vec[i + 1] == 0 && index_vec[i + 2] == 0) {
@@ -357,9 +374,12 @@ void gen_cube(ushort tess_level, float * vert_data, ushort * index_array, uint32
 				vert3.uv.y = (vert3.pos.y + norm_sign) / (2.0f * norm_sign);
 			}
 		
-		memcpy(vert_data + cur_pos * (sizeof(gen::vert) / sizeof(float)), &vert1, sizeof(gen::vert));
+		/*memcpy(vert_data + cur_pos * (sizeof(gen::vert) / sizeof(float)), &vert1, sizeof(gen::vert));
 		memcpy(vert_data + (cur_pos + 1) * (sizeof(gen::vert) / sizeof(float)), &vert2, sizeof(gen::vert));
-		memcpy(vert_data + (cur_pos + 2) * (sizeof(gen::vert) / sizeof(float)), &vert3, sizeof(gen::vert));
+		memcpy(vert_data + (cur_pos + 2) * (sizeof(gen::vert) / sizeof(float)), &vert3, sizeof(gen::vert));*/
+		cur_data_pos = trait(cur_data_pos, vert1);
+		cur_data_pos = trait(cur_data_pos, vert2);
+		cur_data_pos = trait(cur_data_pos, vert3);
 		memcpy(index_array + cur_pos, &indices, 3 * sizeof(ushort));
 
 		cur_pos += 3;
