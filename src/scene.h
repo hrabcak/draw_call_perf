@@ -57,12 +57,14 @@ public:
 	int frustum_check(base::frame_context *fc);
 	void create_frustum_planes(glm::vec4 *planes, const glm::mat4 &mvp);
 
-	static void load_and_init_shaders(const base::source_location &loc);
-    static void init_gpu_stuff(const base::source_location &loc);
-    static void create_textures(const base::source_location &loc);
+    void init_gpu_stuff(const base::source_location &loc);
+	void render_blocks(base::frame_context * const ctx);
 
-	static void create_test_scene(scene *s);
-	static void render_blocks(base::frame_context * const ctx);
+protected:
+
+    void load_and_init_shaders(const base::source_location &loc);
+    void create_textures(const base::source_location &loc);
+    void create_test_scene();
 
 public:
 
@@ -98,25 +100,25 @@ protected:
 	typedef std::vector<block> blocks_t;
 	blocks_t _blocks;
 
-	static GLuint _prg;
-	static GLint _prg_tb_blocks;
-    static GLint _prg_ctx;
-    static GLint _prg_tb_pos;
-    static GLint _prg_tex;
-    static unsigned _nelements;
-    static unsigned _nvertices;
+	GLuint _prg;
+	GLint _prg_tb_blocks;
+    GLint _prg_ctx;
+    GLint _prg_tb_pos;
+    GLint _prg_tex;
+    unsigned _nelements;
+    unsigned _nvertices;
 
-    static GLuint _tb_pos;
-    static GLuint _tb_nor_uv;
-    static GLuint _tb_tex_handles;
+    GLuint _tb_pos;
+    GLuint _tb_nor_uv;
+    GLuint _tb_tex_handles;
 
-    static GLuint _buffer_elem;
-    static GLuint _buffer_pos;
-    static GLuint _buffer_nor_uv;
-    static GLuint _buffer_tex_handles;
+    GLuint _buffer_elem;
+    GLuint _buffer_pos;
+    GLuint _buffer_nor_uv;
+    GLuint _buffer_tex_handles;
 
-    static std::vector<GLuint> _texs;
-    static std::vector<GLuint64> _tex_handles;
+    std::vector<GLuint> _texs;
+    std::vector<GLuint64> _tex_handles;
 
     enum BenchmarkMode
     {

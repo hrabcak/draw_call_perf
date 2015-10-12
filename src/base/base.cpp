@@ -43,7 +43,7 @@ void read_glsl_file(
 
     unsigned int size = (unsigned int)st.st_size;
 
-	str.resize(size+1);
+	str.resize(str.size() + size + 1);
 
     const int file = _open(filename, _O_BINARY | _O_RDONLY);
 
@@ -84,6 +84,7 @@ void base::read_file(
 
 GLuint base::create_and_compile_shader(
 	const base::source_location &loc,
+    const std::string &cfg,
 	const std::string &filename,
 	const GLuint type)
 {

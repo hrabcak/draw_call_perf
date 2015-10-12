@@ -130,6 +130,7 @@ void read_file(
 ///
 GLuint create_and_compile_shader(
 	const base::source_location &loc,
+    const std::string &cfg,
 	const std::string &filename,
 	const GLuint type);
 
@@ -231,7 +232,24 @@ unsigned create_buffer(const unsigned nelem, T** const ptr, void * const data = 
     return handle;
 }
 
+
 int rndFromInterval(int min, int max);
+
+inline glm::ivec2 pack_to_pos3x21b(const glm::dvec3 &pos, const double scale)
+{
+    const glm::ivec3 pos21(pos * scale);
+    return glm::ivec2((pos21.x << 11) | ((pos21.y >> 10) & 0x7ff),
+        ((pos21.y & 0x3ff) << 21) | (pos21.z & 0x1fffff));
+}
+
+inline glm::vec3 unpack_from_pos3x21b(const glm::ivec2 &pos, const float scale)
+{
+    return glm::vec3(
+        pos.x >> 11,
+        ((pos.x << 21) >> 11) | (pos.y >> 21),
+        (pos.y << 11) >> 11) * scale;
+}
+
 
 } // end of namespace base
 

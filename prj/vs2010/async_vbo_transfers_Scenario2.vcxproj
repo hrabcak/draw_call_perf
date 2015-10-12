@@ -170,7 +170,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\app_scenario2.h" />
+    <ClInclude Include="..\..\src\benchmark.h" />
     <ClInclude Include="..\..\src\base\app.h" />
     <ClInclude Include="..\..\src\base\base.h" />
     <ClInclude Include="..\..\src\base\bmf.h" />
@@ -191,7 +191,7 @@
     <ClInclude Include="..\..\src\scene.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\app_scenario2.cpp" />
+    <ClCompile Include="..\..\src\benchmark.cpp" />
     <ClCompile Include="..\..\src\base\app.cpp" />
     <ClCompile Include="..\..\src\base\base.cpp" />
     <ClCompile Include="..\..\src\base\base_win.cpp" />

@@ -53,12 +53,20 @@ void base::canvas::load_and_init_shaders(const base::source_location &loc)
 {
 	assert(_prg == 0);
 
+    std::string cfg;
+
 	_prg=base::create_program(
 		base::create_and_compile_shader(
-			SRC_LOCATION,"shaders/canvas_v.glsl",GL_VERTEX_SHADER),
+			SRC_LOCATION,
+            cfg,
+            "shaders/canvas_v.glsl",
+            GL_VERTEX_SHADER),
 		0,
 		base::create_and_compile_shader(
-			SRC_LOCATION,"shaders/canvas_f.glsl",GL_FRAGMENT_SHADER));
+			SRC_LOCATION,
+            cfg,
+            "shaders/canvas_f.glsl",
+            GL_FRAGMENT_SHADER));
 	base::link_program(loc, _prg);
 
 	_prg_tb_elements= get_uniform_location(loc, _prg, "tb_elements");

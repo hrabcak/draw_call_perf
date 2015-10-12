@@ -33,30 +33,33 @@ THE SOFTWARE.
 
 class renderer;
 
-class app_scenario2
+class benchmark
 	: public base::app
 {
 protected:
 	std::auto_ptr<scene> _scene;
-
 	std::auto_ptr<renderer> _renderer;
 
 public:
-	app_scenario2();
-	virtual ~app_scenario2();
+	benchmark();
+	virtual ~benchmark();
 
-	virtual const char* get_app_name() const { return "scenario 2"; }
+	virtual const char* get_app_name() const override { return "draw call benchmark"; }
+    virtual const char* get_wnd_name() const override { return get_app_name(); }
+    virtual const char* get_wnd_cls() const override { return "benchmark class"; }
 
-	virtual void start();
-	virtual void renderer_side_start();
+	virtual void start() override;
+    virtual void gpu_init() override;
 
-	virtual void stop();
+	virtual void stop() override;
 
-	virtual void draw_frame();
+	virtual void draw_frame() override;
+
+    virtual void gpu_draw_frame(base::frame_context * const ctx) override;
 
 private:
-	app_scenario2(const app_scenario2&);
-	void operator =(const app_scenario2&);
+	benchmark(const benchmark&);
+	void operator =(const benchmark&);
 };
 
 #endif // __ASYNC_VBO_TRANSFERS_APP_SCENARIO2_H__

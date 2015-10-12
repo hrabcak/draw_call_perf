@@ -48,16 +48,14 @@ protected:
 
 public:
 
-	renderer(base::app *a);
+    renderer(base::app * const a, const base::source_location &loc);
 	virtual ~renderer();
-
-	virtual void start(const base::source_location &loc);
 
 	virtual void run();
 
 	virtual void stop(const base::source_location &loc);
 
-	void draw_frame(base::frame_context *ctx);
+	void draw_frame(base::frame_context * const ctx);
 
 	void push_frame_context(base::frame_context *ctx) {
 		base::mutex_guard g(_mx_queue);

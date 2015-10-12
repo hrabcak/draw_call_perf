@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include "base/base.h"
 #include "base/app.h"
-#include "app_scenario2.h"
+#include "benchmark.h"
 
 #include <iostream>
 
@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 	try {
 		std::cout << "Hello OpenGL Insights reader!" << std::endl;
 
-		app_scenario2 myapp;
+		benchmark myapp;
 		
 		for(int i = 1; i < argc; ++i) {
 			if(stricmp(argv[i], "--debug-ctx") == 0) {

@@ -20,10 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "app_scenario2.h"
+#include "benchmark.h"
 
 #include "base/base.h"
 #include "base/frame_context.h"
+#include "base/canvas.h"
 #include "scene.h"
 #include "renderer.h"
 
@@ -31,35 +32,39 @@ THE SOFTWARE.
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-app_scenario2::app_scenario2() : app() {}
+benchmark::benchmark()
+    : app()
+    , _scene(new scene())
+{}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-app_scenario2::~app_scenario2() {}
+benchmark::~benchmark() {}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void app_scenario2::start()
+void benchmark::start()
 {
-	_renderer.reset(new renderer(this));
-	_renderer->start(SRC_LOCATION);
-
-	app::start();
-
-	_scene.reset(new scene());
-	scene::create_test_scene(_scene.get());
+    // start renderer thread
+    _renderer.reset(new renderer(this, SRC_LOCATION));
+   
+    app::start();
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void app_scenario2::renderer_side_start()
+void benchmark::gpu_init()
 {
-	app::renderer_side_start();
+    app::gpu_init();
+
+    base::canvas::load_and_init_shaders(SRC_LOCATION);
+
+    _scene->init_gpu_stuff(SRC_LOCATION);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void app_scenario2::stop()
+void benchmark::stop()
 {
 	_renderer->stop(SRC_LOCATION);
 	app::stop();
@@ -67,7 +72,7 @@ void app_scenario2::stop()
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void app_scenario2::draw_frame()
+void benchmark::draw_frame()
 {
 	base::frame_context *ctx = 0;
 	
@@ -91,3 +96,11 @@ void app_scenario2::draw_frame()
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void benchmark::gpu_draw_frame(base::frame_context * const ctx)
+{
+    _scene->render_blocks(ctx);
+    //base::canvas::render(ctx);
+
+}
+

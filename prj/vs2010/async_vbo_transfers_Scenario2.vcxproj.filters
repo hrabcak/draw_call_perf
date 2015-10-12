@@ -25,9 +25,6 @@
     <ClInclude Include="..\..\src\base\hptimer.h">
       <Filter>src\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\app_scenario2.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\scene.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -54,6 +51,9 @@
     <ClInclude Include="..\..\src\base\types.h">
       <Filter>src\base</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\benchmark.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\base\base.cpp">
@@ -76,9 +76,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\base\hptimer_win.cpp">
       <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\app_scenario2.cpp">
-      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main.cpp">
       <Filter>src</Filter>
@@ -105,6 +102,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\gen_tex.cpp" />
+    <ClCompile Include="..\..\src\benchmark.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
