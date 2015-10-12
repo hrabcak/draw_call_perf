@@ -26,15 +26,15 @@ namespace gen {
 	const glm::i8vec3 v7(1, 1, 1);
 	const glm::i8vec3 v8(0, 1, 1);
 
-	const glm::i8vec3* faces[6][4] = { { &v1,&v2,&v3,&v4 },{ &v2,&v6,&v7,&v3 },{ &v6,&v5,&v8,&v7 },{ &v5,&v1,&v4,&v8 },{ &v2,&v1,&v5,&v6 },{ &v7,&v8,&v4,&v3 } };
+	const glm::i8vec3* faces[6][4] = { { &v1, &v2, &v3, &v4 }, { &v2, &v6, &v7, &v3 }, { &v6, &v5, &v8, &v7 }, { &v5, &v1, &v4, &v8 }, { &v2, &v1, &v5, &v6 }, { &v7, &v8, &v4, &v3 } };
 }
 
-void * cpy_float(void * data_ptr, const gen::vert & vert_data){
+inline void * cpy_unpacked(void * data_ptr, const gen::vert & vert_data){
 	memcpy(data_ptr, &vert_data, 32);
 	return ((char *)data_ptr + 32);
 }
 
-void * cpy_int(void * data_ptr, const gen::vert & vert_data){
+inline void * cpy_packed(void * data_ptr, const gen::vert & vert_data){
 	int pack[4];
 	const double scale_pos = 1048575.0;//(glm::pow(2.0, 20.0) - 1.0);
 	const double scale_norm = 32767.0;//(glm::pow(2.0, 15.0) - 1.0);
@@ -45,6 +45,7 @@ void * cpy_int(void * data_ptr, const gen::vert & vert_data){
 
 	return (char *)data_ptr + 16;
 }
+
 
 void generate_rand_corner(ushort edge_vert_max_idx, glm::u8vec3 & out_corner) {
 	out_corner.x = (uint8)((ushort)base::rndFromInterval(0, 1) * edge_vert_max_idx);
@@ -73,7 +74,7 @@ ushort get_vert_idx_from_hash(uint32 vert_hash, VertMaskVec & vert_vec, VertIdxH
 		ushort y = ((vert_hash >> 8) & 0xFF);
 		ushort z = ((vert_hash >> 16) & 0xFF);
 
-		glm::u8vec3 vert(x,y,z);
+		glm::u8vec3 vert(x, y, z);
 
 		return add_vert_to_lists(vert_hash, vert_vec, vert_hash_map, vert);
 	}
@@ -126,7 +127,7 @@ bool tri_same(uint32 tri_idx1, uint32 tri_idx2, std::vector<ushort> &index_array
 	}
 
 	return false;
-} 
+}
 
 void deform_corners(ushort tess_level, VertIdxHashMap & vert_idx_map, VertMaskVec & vert_vec, VertTriangleHashMap & vert_tri_hash_map, std::vector<ushort> &index_array) {
 	std::set<uint32> used_corners_hashes;
@@ -136,11 +137,11 @@ void deform_corners(ushort tess_level, VertIdxHashMap & vert_idx_map, VertMaskVe
 	glm::u8vec3 c1, c2;
 	uint32 c1_hash, c2_hash;
 	for (ushort i = 0; i < 4; i++) {
-		
+
 		if (base::rndFromInterval(0, 1) == 0) {
 			continue;
 		}
-		
+
 		do {
 			generate_rand_corner(edge_vert_max_idx, c1);
 			c1_hash = u8vec3_to_hash(c1);
@@ -156,7 +157,7 @@ void deform_corners(ushort tess_level, VertIdxHashMap & vert_idx_map, VertMaskVe
 				used_corners_hashes.insert(c1_hash);
 				used_corners_hashes.insert(c2_hash);
 
-				glm::i8vec3 d = glm::i8vec3(glm::vec3(edge_vert_max_idx/2.0f, edge_vert_max_idx / 2.0f, edge_vert_max_idx / 2.0f) - glm::vec3(vert_vec[vert_idx_map[c1_hash]]));
+				glm::i8vec3 d = glm::i8vec3(glm::vec3(edge_vert_max_idx / 2.0f, edge_vert_max_idx / 2.0f, edge_vert_max_idx / 2.0f) - glm::vec3(vert_vec[vert_idx_map[c1_hash]]));
 				d.x = (glm::sign(d.x));
 				d.y = (glm::sign(d.y));
 				d.z = (glm::sign(d.z));
@@ -172,27 +173,28 @@ void deform_corners(ushort tess_level, VertIdxHashMap & vert_idx_map, VertMaskVe
 					v.x = c1.x + d.x;
 					v.y = c1.y + d.y;
 					v.z = c1.z + d.z;
-					
+
 					c2_hash = u8vec3_to_hash(v);
-					
+
 					uint32 idx1 = get_vert_idx_from_hash(c1_hash, vert_vec, vert_idx_map);
 					uint32 idx2 = get_vert_idx_from_hash(c2_hash, vert_vec, vert_idx_map);
 
-					std::pair <std::multimap<uint32, uint32>::iterator, std::multimap<uint32, uint32>::iterator> rng_iter =  vert_tri_hash_map.equal_range(c1_hash);
+					std::pair <std::multimap<uint32, uint32>::iterator, std::multimap<uint32, uint32>::iterator> rng_iter = vert_tri_hash_map.equal_range(c1_hash);
 					for (std::multimap<uint32, uint32>::iterator it = rng_iter.first; it != rng_iter.second; it++) {
 						uint32 tri_idx = it->second;
-						vert_tri_hash_map.insert(std::pair<uint32,uint32>(c2_hash,tri_idx));
+						vert_tri_hash_map.insert(std::pair<uint32, uint32>(c2_hash, tri_idx));
 
 						if (index_array[tri_idx] == idx1) {
 							index_array[tri_idx] = (ushort)idx2;
-						}else if (index_array[tri_idx + 1] == idx1) {
+						}
+						else if (index_array[tri_idx + 1] == idx1) {
 							index_array[tri_idx + 1] = (ushort)idx2;
 						}
 						else if (index_array[tri_idx + 2] == idx1) {
 							index_array[tri_idx + 2] = (ushort)idx2;
 						}
 					}
-					
+
 					if (k == 0 || k == edge_vert_max_idx) {
 						rng_iter = vert_tri_hash_map.equal_range(c2_hash);
 
@@ -251,13 +253,13 @@ void tesselate_face2(ushort tess_level, ushort face_ord, std::vector<ushort> &in
 			vert_hash_vec = origin + i8v_mul(dx, x) + i8v_mul(dy, y);
 			vert_hash = (vert_hash_vec.x & 0xFF) | ((vert_hash_vec.y & 0xFF) << 8) | ((vert_hash_vec.z & 0xFF) << 16);
 			v1_idx = get_vert_idx_from_hash(vert_hash, vert_vec, vert_hash_map);
-			vert_tri_hash_map.insert(std::pair<uint32,uint32>(vert_hash,index_array.size()));
+			vert_tri_hash_map.insert(std::pair<uint32, uint32>(vert_hash, index_array.size()));
 
 			vert_hash_vec = origin + i8v_mul(dx, x + 1) + i8v_mul(dy, y);
 			vert_hash = (vert_hash_vec.x & 0xFF) | ((vert_hash_vec.y & 0xFF) << 8) | ((vert_hash_vec.z & 0xFF) << 16);
 			v2_idx = get_vert_idx_from_hash(vert_hash, vert_vec, vert_hash_map);
 			vert_tri_hash_map.insert(std::pair<uint32, uint32>(vert_hash, index_array.size()));
-			vert_tri_hash_map.insert(std::pair<uint32, uint32>(vert_hash, index_array.size()+3));
+			vert_tri_hash_map.insert(std::pair<uint32, uint32>(vert_hash, index_array.size() + 3));
 
 			vert_hash_vec = origin + i8v_mul(dx, x + 1) + i8v_mul(dy, y + 1);
 			vert_hash = (vert_hash_vec.x & 0xFF) | ((vert_hash_vec.y & 0xFF) << 8) | ((vert_hash_vec.z & 0xFF) << 16);
@@ -289,7 +291,7 @@ void get_face_and_vert_count_for_tess_level(uint32 tess_level, uint32 & element_
 }
 
 
-void gen_cube_imp(ushort tess_level, float * vert_data, ushort * index_array, uint32 & element_count, uint32 & vert_count,cpy_fun trait) {
+void gen_cube_imp(ushort tess_level, float * vert_data, ushort * index_array, uint32 & element_count, uint32 & vert_count, bool use_int) {
 	srand((ushort)time(NULL));
 
 	VertMaskVec vertex_list;
@@ -297,10 +299,10 @@ void gen_cube_imp(ushort tess_level, float * vert_data, ushort * index_array, ui
 	VertTriangleHashMap vert_tri_hash_map;
 	std::vector<ushort> index_vec;
 	for (ushort i = 0; i < CUBE_FACE_COUNT; i++) {
-		tesselate_face2(tess_level, i, index_vec, vertex_list, vertex_hash_map,vert_tri_hash_map);
+		tesselate_face2(tess_level, i, index_vec, vertex_list, vertex_hash_map, vert_tri_hash_map);
 	}
 
-	deform_corners(tess_level, vertex_hash_map, vertex_list,vert_tri_hash_map,index_vec);
+	deform_corners(tess_level, vertex_hash_map, vertex_list, vert_tri_hash_map, index_vec);
 
 	gen::vert vert1;
 	gen::vert vert2;
@@ -325,61 +327,70 @@ void gen_cube_imp(ushort tess_level, float * vert_data, ushort * index_array, ui
 		indices.t1_i2 = cur_pos + 1;
 		indices.t1_i3 = cur_pos + 2;
 
-		
 
-		u8vec3_to_vec3(tess_level,vertex_list[index_vec[i]], vert1.pos);
+
+		u8vec3_to_vec3(tess_level, vertex_list[index_vec[i]], vert1.pos);
 		u8vec3_to_vec3(tess_level, vertex_list[index_vec[i + 1]], vert2.pos);
 		u8vec3_to_vec3(tess_level, vertex_list[index_vec[i + 2]], vert3.pos);
 
 		norm = glm::cross(vert2.pos - vert1.pos, vert3.pos - vert1.pos);
-		
-			norm = glm::normalize(norm);
+
+		norm = glm::normalize(norm);
 
 
 
-			vert1.norm = norm;
-			vert2.norm = norm;
-			vert3.norm = norm;
+		vert1.norm = norm;
+		vert2.norm = norm;
+		vert3.norm = norm;
 
-			norm_sign = glm::sign(norm.x + norm.y + norm.z);
+		norm_sign = glm::sign(norm.x + norm.y + norm.z);
 
-			if (glm::abs(norm.x) > 0.0000001) {
-				vert1.uv.x = (vert1.pos.z + norm_sign) / (2.0f * norm_sign);
-				vert1.uv.y = (vert1.pos.y + norm_sign) / (2.0f * norm_sign);
+		if (glm::abs(norm.x) > 0.0000001) {
+			vert1.uv.x = (vert1.pos.z + norm_sign) / (2.0f * norm_sign);
+			vert1.uv.y = (vert1.pos.y + norm_sign) / (2.0f * norm_sign);
 
-				vert2.uv.x = (vert2.pos.z + norm_sign) / (2.0f * norm_sign);
-				vert2.uv.y = (vert2.pos.y + norm_sign) / (2.0f * norm_sign);
+			vert2.uv.x = (vert2.pos.z + norm_sign) / (2.0f * norm_sign);
+			vert2.uv.y = (vert2.pos.y + norm_sign) / (2.0f * norm_sign);
 
-				vert3.uv.x = (vert3.pos.z + norm_sign) / (2.0f * norm_sign);
-				vert3.uv.y = (vert3.pos.y + norm_sign) / (2.0f * norm_sign);
-			}
-			else if (glm::abs(norm.y) > 0.0000001) {
-				vert1.uv.x = (vert1.pos.x + norm_sign) / (2.0f * norm_sign);
-				vert1.uv.y = (vert1.pos.z + norm_sign) / (2.0f * norm_sign);
+			vert3.uv.x = (vert3.pos.z + norm_sign) / (2.0f * norm_sign);
+			vert3.uv.y = (vert3.pos.y + norm_sign) / (2.0f * norm_sign);
+		}
+		else if (glm::abs(norm.y) > 0.0000001) {
+			vert1.uv.x = (vert1.pos.x + norm_sign) / (2.0f * norm_sign);
+			vert1.uv.y = (vert1.pos.z + norm_sign) / (2.0f * norm_sign);
 
-				vert2.uv.x = (vert2.pos.x + norm_sign) / (2.0f * norm_sign);
-				vert2.uv.y = (vert2.pos.z + norm_sign) / (2.0f * norm_sign);
+			vert2.uv.x = (vert2.pos.x + norm_sign) / (2.0f * norm_sign);
+			vert2.uv.y = (vert2.pos.z + norm_sign) / (2.0f * norm_sign);
 
-				vert3.uv.x = (vert3.pos.x + norm_sign) / (2.0f * norm_sign);
-				vert3.uv.y = (vert3.pos.z + norm_sign) / (2.0f * norm_sign);
-			}
-			else {
-				vert1.uv.x = (vert1.pos.x + norm_sign) / (2.0f * norm_sign);
-				vert1.uv.y = (vert1.pos.y + norm_sign) / (2.0f * norm_sign);
+			vert3.uv.x = (vert3.pos.x + norm_sign) / (2.0f * norm_sign);
+			vert3.uv.y = (vert3.pos.z + norm_sign) / (2.0f * norm_sign);
+		}
+		else {
+			vert1.uv.x = (vert1.pos.x + norm_sign) / (2.0f * norm_sign);
+			vert1.uv.y = (vert1.pos.y + norm_sign) / (2.0f * norm_sign);
 
-				vert2.uv.x = (vert2.pos.x + norm_sign) / (2.0f * norm_sign);
-				vert2.uv.y = (vert2.pos.y + norm_sign) / (2.0f * norm_sign);
+			vert2.uv.x = (vert2.pos.x + norm_sign) / (2.0f * norm_sign);
+			vert2.uv.y = (vert2.pos.y + norm_sign) / (2.0f * norm_sign);
 
-				vert3.uv.x = (vert3.pos.x + norm_sign) / (2.0f * norm_sign);
-				vert3.uv.y = (vert3.pos.y + norm_sign) / (2.0f * norm_sign);
-			}
-		
+			vert3.uv.x = (vert3.pos.x + norm_sign) / (2.0f * norm_sign);
+			vert3.uv.y = (vert3.pos.y + norm_sign) / (2.0f * norm_sign);
+		}
+
 		/*memcpy(vert_data + cur_pos * (sizeof(gen::vert) / sizeof(float)), &vert1, sizeof(gen::vert));
 		memcpy(vert_data + (cur_pos + 1) * (sizeof(gen::vert) / sizeof(float)), &vert2, sizeof(gen::vert));
 		memcpy(vert_data + (cur_pos + 2) * (sizeof(gen::vert) / sizeof(float)), &vert3, sizeof(gen::vert));*/
-		cur_data_pos = trait(cur_data_pos, vert1);
-		cur_data_pos = trait(cur_data_pos, vert2);
-		cur_data_pos = trait(cur_data_pos, vert3);
+
+		if (use_int){
+			cur_data_pos = cpy_packed(cur_data_pos, vert1);
+			cur_data_pos = cpy_packed(cur_data_pos, vert2);
+			cur_data_pos = cpy_packed(cur_data_pos, vert3);
+		}
+		else{
+			cur_data_pos = cpy_unpacked(cur_data_pos, vert1);
+			cur_data_pos = cpy_unpacked(cur_data_pos, vert2);
+			cur_data_pos = cpy_unpacked(cur_data_pos, vert3);
+		}
+
 		memcpy(index_array + cur_pos, &indices, 3 * sizeof(ushort));
 
 		cur_pos += 3;
