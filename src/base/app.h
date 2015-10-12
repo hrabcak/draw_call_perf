@@ -110,27 +110,6 @@ protected:
 
 	int _frame_number;
 
-	// capture stuff
-	static const int RB_BUFFERS_SIZE = 4;
-	static const int RB_BUFFERS_MASK = RB_BUFFERS_SIZE - 1;
-	static const base::pixelfmt CAPTURE_PF = base::PF_RGBA8;
-	struct screen_buffer {
-		char *_pinned_ptr;
-		char *_pinned_ptr_aligned;
-		unsigned _buffer;
-		unsigned _tmp_buffer;
-		unsigned _tmp_texture;
-		int _frame_num;
-		GLsync _fence;
-		unsigned _queries[3];
-		int _stage;
-		unsigned _showtime_buffer;
-	};
-	int _rb_head, _rb_tail;
-	screen_buffer _screen_buffers_rb[RB_BUFFERS_SIZE];
-	unsigned _fb;
-	unsigned _showtime_tex;
-
 	bool _velocity_boost : 1;
 	bool _active : 1;
 

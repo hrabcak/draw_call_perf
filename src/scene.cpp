@@ -123,6 +123,33 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 
     std::string cfg;
 
+    switch (_bench_mode) {
+    case BenchNaive:
+        break;
+    case BenchBaseVertex:
+        break;
+    case BenchInstancing:
+        break;
+    case BenchIndirect:
+        break;
+    case BenchBaseInstance:
+        break;
+    case BenchTexBufvsVBO:
+        break;
+    case BenchProceduralVertices:
+        break;
+    
+    case BenchNaiveTextures:
+        break;
+    case BenchTexArray:
+        cfg += "#define USE_ARRAY_TEX 1\n";
+        break;
+    case BenchBindless:
+        cfg += "#define USE_BINDLESS_TEX 1\n";
+        break;
+    }
+
+
 	_prg = base::create_program(
 		base::create_and_compile_shader(
 			SRC_LOCATION,
@@ -240,6 +267,14 @@ void scene::create_textures(const base::source_location &)
         base::get_pfd(base::PF_RG32F)->_internal,
         _buffer_tex_handles);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void scene::update(base::frame_context * const ctx)
+{
+    frustum_check(ctx);
+    upload_blocks_to_gpu(SRC_LOCATION, ctx);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -403,7 +438,7 @@ void scene::upload_blocks_to_gpu(
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void scene::render_blocks(base::frame_context * const ctx)
+void scene::gpu_draw(base::frame_context * const ctx)
 {
 	glUseProgram(_prg);
 
@@ -444,16 +479,13 @@ void scene::render_blocks(base::frame_context * const ctx)
 	// bind canvas elements texture buffer
     if (!uniform_block) {
         glUniform1i(_prg_tb_blocks, 0);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_BUFFER, ctx->_scene_tb);
+        glBindMultiTextureEXT(GL_TEXTURE0, GL_TEXTURE_BUFFER, ctx->_scene_tb);
 
         glUniform1i(_prg_tb_pos, 1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_BUFFER, _tb_pos);
+        glBindMultiTextureEXT(GL_TEXTURE1, GL_TEXTURE_BUFFER, _tb_pos);
 
         glUniform1i(_prg_tex, 2);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_BUFFER, _tb_tex_handles);
+        glBindMultiTextureEXT(GL_TEXTURE2, GL_TEXTURE_BUFFER, _tb_tex_handles);
     }
 
     if ((fast_drawcall && fast_drawcall_old_way)
@@ -535,7 +567,9 @@ void scene::render_blocks(base::frame_context * const ctx)
     }
     else {
         unsigned offset = (ctx->_scene_data_offset) * sizeof(base::block_data);
-        const unsigned offset_e = offset + (ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1]) * sizeof(base::block_data);
+        const unsigned offset_e = offset
+            + (ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1])
+            * sizeof(base::block_data);
         while (offset != offset_e) {
             glBindBufferRange(GL_UNIFORM_BUFFER, _prg_tb_blocks, vbo, offset, 64);
             glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, 0);

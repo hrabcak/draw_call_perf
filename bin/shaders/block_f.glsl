@@ -30,11 +30,25 @@ in vec3 color;
 in vec2 uv;
 in flat uvec2 tex_handle;
 
-uniform sampler2D mat_tex;
+#if defined(USE_ARRAY_TEX)
+    uniform sampler2DArray mat_tex
+#else
+    uniform sampler2D mat_tex;
+#endif
 
 out vec3 _retval;
 
 void main()
 {
-    _retval = texture(sampler2D(tex_handle), uv, 0).rgb;
+    float3 tex_color;
+
+#if defined(USE_ARRAY_TEX)
+    tex_color = texture(mat_tex, float3(uv, 0), 0).rgb;
+#elif defined(USE_BINDLESS_TEX)
+    tex_color = texture(mat_tex, uv, 0).rgb;
+#else
+    tex_color = texture(sampler2D(tex_handle), uv, 0).rgb;
+#endif
+
+    _retval = tex_color;
 }

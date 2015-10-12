@@ -30,9 +30,6 @@ precision highp int;
 #define TWO_PI 6.28318530717958647692
 #define SQRT_2 1.414213562
 
-//#define USE_UNIFORM_BUF 1
-//#define USE_BINDLESS_TEX 1
-
 // IN
 struct context_data
 {
@@ -44,33 +41,25 @@ layout(std140) uniform context
 	context_data _ctx;
 };
 
-#ifdef USE_UNIFORM_BUF
-	struct block_data
-	{
-		mat4 _tm;
-	};
+layout(location=13) in ivec4 index_start;
+uniform samplerBuffer tb_blocks;
 
-	layout(std140) uniform tb_blocks
-	{
-		block_data _blocks;
-	};
+#ifdef USE_TB_FOR_VERTEX_DATA
+    uniform isamplerBuffer tb_pos;
+    uniform isamplerBuffer tb_nor_uv;
 #else
-	layout(location=13) in ivec4 index_start;
-    uniform samplerBuffer tb_blocks;
+    uniform samplerBuffer tb_pos;
+    uniform samplerBuffer tb_nor_uv;
 #endif
 
-uniform isamplerBuffer tb_pos;
-
-//#ifdef USE_BINDLESS_TEX
-
-uniform usamplerBuffer tb_tex_handles;
-
-//#endif
+#if defined(USE_BINDLESS_TEX)
+    uniform usamplerBuffer tb_tex_handles;
+    out flat uvec2 tex_handle;
+#endif
 
 //OUT 
 out vec3 color;
 out vec2 uv;
-out flat uvec2 tex_handle;
 
 vec3 unpack_position(ivec2 pack_pos, float coef)
 {
