@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#version 430
 precision highp float;
 precision highp int;
 
@@ -74,9 +73,6 @@ void main()
 {
 	int vertex_id = gl_VertexID;
 
-#ifdef USE_UNIFORM_BUF
-	mat4 tm = _ctx._mvp * _blocks._tm;
-#else
     int index = vertex_id >> 12;
     vertex_id &= 0xfff;
     int idx = (index_start.x + index + gl_InstanceID) * 16;
@@ -85,7 +81,6 @@ void main()
 		texelFetch(tb_blocks, idx + 1),
 		texelFetch(tb_blocks, idx + 2),
 		texelFetch(tb_blocks, idx + 3));
-#endif
 
     int inst_id = index_start.z >> 3;
 
@@ -94,7 +89,9 @@ void main()
     vec3 pos = unpack_position(tmp0.xy, 1.0 / 1048575.0);
     uv = pos.xy * 0.5 + 0.5;
 
+#if defined(USE_BINDLESS_TEX)
     tex_handle = texelFetch(tb_tex_handles, inst_id).xy;
+#endif
 
     gl_Position = tm * vec4(pos, 1);
 	color=pos * 0.5 + 0.5;

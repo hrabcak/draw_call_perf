@@ -57,7 +57,7 @@ void benchmark::gpu_init()
 {
     app::gpu_init();
 
-    base::canvas::load_and_init_shaders(SRC_LOCATION);
+    //base::canvas::load_and_init_shaders(SRC_LOCATION);
 
     _scene->init_gpu_stuff(SRC_LOCATION);
 }

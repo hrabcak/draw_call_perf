@@ -43,6 +43,8 @@ void read_glsl_file(
 
     unsigned int size = (unsigned int)st.st_size;
 
+    const unsigned offset = str.size();
+
 	str.resize(str.size() + size + 1);
 
     const int file = _open(filename, _O_BINARY | _O_RDONLY);
@@ -50,7 +52,7 @@ void read_glsl_file(
 	if(file==-1)
 		throw base::exception(loc.to_str())<<"Cannot open GLSL source file \""<<filename<<"\"!";
     
-	if(_read(file, &str[0], st.st_size)!=st.st_size)
+	if(_read(file, &str[offset], st.st_size)!=st.st_size)
 		throw base::exception(loc.to_str())<<"File read error on GLSL source file \""<<filename<<"\"!";
     
 	_close(file);
@@ -88,8 +90,8 @@ GLuint base::create_and_compile_shader(
 	const std::string &filename,
 	const GLuint type)
 {
-	std::string src;
-	
+	std::string src = cfg;
+    	
 	read_glsl_file(loc, filename.c_str(),src);
 
 	GLuint shader = glCreateShader(type);

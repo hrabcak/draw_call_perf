@@ -123,14 +123,21 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 
     std::string cfg;
 
+    cfg += "#version 430\n"
+           "#define USE_TB_FOR_VERTEX_DATA 1\n";
+
     switch (_bench_mode) {
     case BenchNaive:
+        cfg += "#define USE_NAIVE_DRAW 1\n";
         break;
     case BenchBaseVertex:
+        cfg += "#define USE_BASE_VERTEX_DRAW 1\n";
         break;
     case BenchInstancing:
+        cfg += "#define USE_INSTANCED_DRAW 1\n";
         break;
     case BenchIndirect:
+        cfg += "#define USE_INDIRECT_DRAW 1\n";
         break;
     case BenchBaseInstance:
         break;
@@ -140,6 +147,7 @@ void scene::load_and_init_shaders(const base::source_location &loc)
         break;
     
     case BenchNaiveTextures:
+        cfg += "#define USE_NAIVE_TEX 1\n";
         break;
     case BenchTexArray:
         cfg += "#define USE_ARRAY_TEX 1\n";
@@ -148,7 +156,6 @@ void scene::load_and_init_shaders(const base::source_location &loc)
         cfg += "#define USE_BINDLESS_TEX 1\n";
         break;
     }
-
 
 	_prg = base::create_program(
 		base::create_and_compile_shader(

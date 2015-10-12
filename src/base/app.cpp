@@ -66,11 +66,11 @@ void base::app::start()
 
 void base::app::gpu_init()
 {
-	_fnt_mono.reset(new base::font());
-	_fnt_mono->load(SRC_LOCATION,"fonts/lucida_console_13.fnt");
-
-	_fnt_arial.reset(new base::font());
-	_fnt_arial->load(SRC_LOCATION,"fonts/arial_14.fnt");
+	//_fnt_mono.reset(new base::font());
+	//_fnt_mono->load(SRC_LOCATION,"fonts/lucida_console_13.fnt");
+    //
+	//_fnt_arial.reset(new base::font());
+	//_fnt_arial->load(SRC_LOCATION,"fonts/arial_14.fnt");
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
