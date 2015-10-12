@@ -45,6 +45,8 @@ public:
 	virtual ~benchmark();
 
 	virtual const char* get_app_name() const override { return "draw call benchmark"; }
+    virtual const char* get_wnd_name() const override { return get_app_name(); }
+    virtual const char* get_wnd_cls() const override { return "benchmark class"; }
 
 	virtual void start() override;
     virtual void gpu_init() override;

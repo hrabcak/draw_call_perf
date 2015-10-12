@@ -61,9 +61,9 @@ public:
 	virtual int get_wnd_width() const { return 1280; }
 	virtual int get_wnd_height() const { return 720; }
 
-	virtual const char* get_app_name() const { return "unknown"; }
-	virtual const char* get_wnd_name() const { return "async vbo transfers scenario one"; }
-	virtual const char* get_wnd_cls() const { return "async vbo transfers"; }
+    virtual const char* get_app_name() const = 0;
+    virtual const char* get_wnd_name() const = 0;
+    virtual const char* get_wnd_cls() const = 0;
 
 	static app* get() { assert(_app); return _app; }
 

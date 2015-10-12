@@ -37,29 +37,24 @@ using namespace glm;
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-renderer::renderer(base::app * const a)
+renderer::renderer(base::app * const a, const base::source_location &loc)
 	: thread()
 	, _event()
 	, _queue()
 	, _mx_queue()
 	, _shutdown(false)
 	, _app(a)
-{}
+{
+    thread::start(loc);
+
+    if (!_event.wait(1000000))
+        throw base::exception(loc.to_str())
+        << "Renderer initialization failed!";
+}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 renderer::~renderer() {}
-
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-void renderer::start(const base::source_location &loc)
-{
-	thread::start(loc);
-
-	if(!_event.wait(1000000))
-		throw base::exception(loc.to_str())
-			<< "Renderer initialization failed!";
-}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 

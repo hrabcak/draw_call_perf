@@ -121,12 +121,20 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 {
 	assert(_prg == 0);
 
-	_prg=base::create_program(
+    std::string cfg;
+
+	_prg = base::create_program(
 		base::create_and_compile_shader(
-			SRC_LOCATION, "shaders/block_v.glsl", GL_VERTEX_SHADER),
+			SRC_LOCATION,
+            cfg,
+            "shaders/block_v.glsl",
+            GL_VERTEX_SHADER),
 		0,
 		base::create_and_compile_shader(
-			SRC_LOCATION, "shaders/block_f.glsl", GL_FRAGMENT_SHADER));
+			SRC_LOCATION,
+            cfg,
+            "shaders/block_f.glsl",
+            GL_FRAGMENT_SHADER));
 	base::link_program(loc, _prg);
 
     if (uniform_block) {
@@ -145,23 +153,6 @@ void scene::load_and_init_shaders(const base::source_location &loc)
     else {
         _prg_tex = get_uniform_location(loc, _prg, "mat_tex");
     }
-}
-
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-inline ivec2 pack_to_pos3x21b(const dvec3 &pos, const double scale)
-{
-    const ivec3 pos21(pos * scale);
-    return ivec2((pos21.x << 11) | ((pos21.y >> 10) & 0x7ff),
-        ((pos21.y & 0x3ff) << 21) | (pos21.z & 0x1fffff));
-}
-
-inline vec3 unpack_from_pos3x21b(const ivec2 &pos, const float scale)
-{
-    return vec3(
-        pos.x >> 11,
-        ((pos.x << 21) >> 11) | (pos.y >> 21),
-        (pos.y << 11) >> 11) * scale;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -187,7 +178,7 @@ void scene::init_gpu_stuff(const base::source_location &loc)
     glm::ivec2 * const ptr = reinterpret_cast<glm::ivec2*>(&vertices[0]);
     for (unsigned i = 0; i < _nvertices; ++i) {
         const int idx = i * 8;
-        ptr[i] = pack_to_pos3x21b(dvec3(vertices[idx], vertices[idx + 1], vertices[idx + 2]), scale);
+        ptr[i] = base::pack_to_pos3x21b(dvec3(vertices[idx], vertices[idx + 1], vertices[idx + 2]), scale);
     }
 
     //TODO create second array with normal + uv

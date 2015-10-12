@@ -45,8 +45,8 @@ benchmark::~benchmark() {}
 
 void benchmark::start()
 {
-	_renderer.reset(new renderer(this));
-	_renderer->start(SRC_LOCATION);
+    // start renderer thread
+    _renderer.reset(new renderer(this, SRC_LOCATION));
    
     app::start();
 }

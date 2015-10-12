@@ -48,10 +48,8 @@ protected:
 
 public:
 
-	renderer(base::app *a);
+    renderer(base::app * const a, const base::source_location &loc);
 	virtual ~renderer();
-
-	virtual void start(const base::source_location &loc);
 
 	virtual void run();
 
