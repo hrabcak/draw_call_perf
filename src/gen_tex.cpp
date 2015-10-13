@@ -37,9 +37,7 @@ void gen_texture(glm::u8vec4 * tex_data, ushort dim, ushort grid_dim, unsigned s
 }
 
 ushort rgb888_to_rgb565(uint8 r, uint8 g, uint8 b) {
-	const double scale_5 = 31;//glm::pow(2.0, 5.0) - 1.0;
-	const double scale_6 = 63;//glm::pow(2.0, 6.0) - 1.0;
-	return (uint8((r / 255.0)*scale_5) << 11) | (uint8((g / 255.0)*scale_6) << 5) | (uint8((b / 255.0)*scale_5));
+	return ((r >> 3) << 11) | (((g >> 2) & 0x3f) << 5) | ((b >> 3) & 0x1f);
 }
 
 glm::ivec2 gen_dxt1_block(uint8 r, uint8 g, uint8 b, uint8 a) {
