@@ -65,6 +65,7 @@ protected:
     void load_and_init_shaders(const base::source_location &loc);
     void create_textures(const base::source_location &loc);
     void create_test_scene();
+	void create_test_scene(unsigned short obj_count);
 
 public:
 

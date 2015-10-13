@@ -74,7 +74,7 @@ scene::scene()
 	_hws.reserve(MAX_BLOCK_COUNT);
 	_flags.reserve(MAX_BLOCK_COUNT);
 
-    create_test_scene();
+    create_test_scene(32768);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -569,3 +569,102 @@ void scene::create_test_scene()
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void scene::create_test_scene(unsigned short obj_count)
+{
+	
+	const int grid_size = 60;
+	const int grid_size2 = grid_size*grid_size;
+	const float prob = 0.8f;
+
+
+	const glm::vec3 box_size(1.0f, 1.0f, 1.0f);
+
+	std::vector<bool> voxel_plane;
+	voxel_plane.resize(grid_size*grid_size, true);
+
+	unsigned short obj_to_place = obj_count >> 1;
+	short level = 0;
+	int num_plane_falses = 0;
+	// lower half
+	while (obj_to_place && (num_plane_falses < grid_size * grid_size) && (level < grid_size/2))
+	{
+		for (int z = 0; z < grid_size; z++) {
+			for (int x = 0; x < grid_size; x++) {
+				if (voxel_plane[z*grid_size + x]  && base::rndNomalized() <= prob) {
+					obj_to_place--;
+					add_block(base::rndFromInterval(0, 1), glm::vec3(x, level, z), box_size, 0);
+					if (obj_to_place == 0) {
+						x = grid_size;
+						z = grid_size;
+					}
+				}
+				else {
+					num_plane_falses += (voxel_plane[z*grid_size + x]) ? 1 : 0;
+					voxel_plane[z*grid_size + x] = false;
+				}
+			}
+		}
+		level++;
+	}
+	level = -1;
+	while (obj_to_place) {
+		for (int z = 0; z < grid_size; z++) {
+			for (int x = 0; x < grid_size; x++) {
+					obj_to_place--;
+					add_block(base::rndFromInterval(0, 1), glm::vec3(x, level, z), box_size, 0);
+					if (obj_to_place == 0) {
+						z = grid_size;
+						x = grid_size;
+					}
+			}
+		}
+		level--;
+	}
+
+	//upper half
+	voxel_plane.resize(0, true);
+	voxel_plane.resize(grid_size2, true);
+	obj_to_place = obj_count >> 1;
+	level = grid_size;
+	num_plane_falses = 0;
+	
+	while (obj_to_place && (num_plane_falses < grid_size * grid_size) && (level > grid_size / 2))
+	{
+		for (int z = 0; z < grid_size; z++) {
+			for (int x = 0; x < grid_size; x++) {
+				if (voxel_plane[z*grid_size + x] && base::rndNomalized() <= prob) {
+					obj_to_place--;
+					add_block(base::rndFromInterval(0,1), glm::vec3(x, level, z), box_size, 0);
+					if (obj_to_place == 0) {
+						x = grid_size;
+						z = grid_size;
+					}
+				}
+				else {
+					num_plane_falses += (voxel_plane[z*grid_size + x]) ? 1 : 0;
+					voxel_plane[z*grid_size + x] = false;
+				}
+			}
+		}
+		level--;
+	}
+	level = grid_size;
+	while (obj_to_place) {
+		for (int z = 0; z < grid_size; z++) {
+			for (int x = 0; x < grid_size; x++) {
+				obj_to_place--;
+				add_block(base::rndFromInterval(0, 1), glm::vec3(x, level, z), box_size, 0);
+				if (obj_to_place == 0) {
+					z = grid_size;
+					x = grid_size;
+				}
+			}
+		}
+		level++;
+	}
+
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+

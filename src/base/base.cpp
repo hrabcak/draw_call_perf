@@ -293,6 +293,13 @@ int base::rndFromInterval(int min, int max){
 	return result + min;
 }
 
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+float base::rndNomalized()
+{
+	return rand()/(float)RAND_MAX;
+}
+
 base::config& base::cfg() { static config ___c; return ___c; }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

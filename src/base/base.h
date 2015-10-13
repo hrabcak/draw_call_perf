@@ -235,6 +235,8 @@ unsigned create_buffer(const unsigned nelem, T** const ptr, void * const data = 
 
 
 int rndFromInterval(int min, int max);
+float rndNomalized();
+
 
 inline glm::ivec2 pack_to_pos3x21b(const glm::dvec3 &pos, const double scale)
 {
