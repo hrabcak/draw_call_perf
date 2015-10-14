@@ -225,7 +225,7 @@ GLuint base::create_texture(
 			0,
 			pfd->_format,
 			pfd->_type,
-			buffer ? 0 : data);
+			data);
 	}
 
     glGenerateMipmap(GL_TEXTURE_2D);

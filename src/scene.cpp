@@ -68,6 +68,8 @@ scene::scene()
 
     , _texs()
     , _tex_handles()
+
+    , _bench_mode(BenchNaive)
 {
 	_tms.reserve(MAX_BLOCK_COUNT);
 	_bboxes.reserve(MAX_BLOCK_COUNT);
@@ -171,21 +173,35 @@ void scene::load_and_init_shaders(const base::source_location &loc)
             GL_FRAGMENT_SHADER));
 	base::link_program(loc, _prg);
 
-    if (uniform_block) {
-        _prg_tb_blocks = glGetUniformBlockIndex(_prg, "tb_blocks");
-    }
-    else {
-        _prg_tb_blocks = get_uniform_location(loc, _prg, "tb_blocks");
-    }
+    // GET UNIFORM STUFF
 
+    _prg_tb_blocks = get_uniform_location(loc, _prg, "tb_blocks");
     _prg_tb_pos = get_uniform_location(loc, _prg, "tb_pos");
     _prg_ctx = glGetUniformBlockIndex(_prg, "context");
 
-    if (use_bindless_tex) {
-        _prg_tex = get_uniform_location(loc, _prg, "tb_tex_handles");
-    }
-    else {
+    switch (_bench_mode) {
+    case BenchNaive:
+        break;
+    case BenchBaseVertex:
+        break;
+    case BenchInstancing:
+        break;
+    case BenchIndirect:
+        break;
+    case BenchBaseInstance:
+        break;
+    case BenchTexBufvsVBO:
+        break;
+    case BenchProceduralVertices:
+        break;
+
+    case BenchNaiveTextures:
+    case BenchTexArray:
         _prg_tex = get_uniform_location(loc, _prg, "mat_tex");
+        break;
+    case BenchBindless:
+        _prg_tex = get_uniform_location(loc, _prg, "tb_tex_handles");
+        break;
     }
 }
 
@@ -236,24 +252,29 @@ void scene::init_gpu_stuff(const base::source_location &loc)
         _buffer_pos);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
 
-    create_textures(loc);
+    if (_bench_mode >= BenchNaiveTextures)
+        create_textures(loc);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 void scene::create_textures(const base::source_location &)
 {
-    std::vector<unsigned char> data;
-    data.resize(64 * 64 * 4);
+    const int tex_size = 64 * 64;
+    glm::u8vec4 * data = 0;
 
+    const GLuint buf = base::create_buffer<u8vec4>(tex_size * 32768, &data);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
+    
     for (int i = 0; i < 32768; ++i) {
-        gen_texture(reinterpret_cast<glm::u8vec4*>(&data[0]), 64, 16, i);
+        gen_texture(data, 64, 16, i);
 
         const GLint tex = create_texture(
             64,
             64,
             base::PF_BGRA8_SRGB,
-            &data[0]);
+            (void*)(i * tex_size * 4), 
+            buf);
 
         _texs.push_back(tex);
 
@@ -263,6 +284,8 @@ void scene::create_textures(const base::source_location &)
 
         glMakeTextureHandleResidentARB(handle);
     }
+
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
     _buffer_tex_handles = base::create_buffer<GLuint64>(32768, 0, &_tex_handles[0]);
 
