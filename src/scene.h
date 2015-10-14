@@ -130,14 +130,18 @@ protected:
         BenchBaseInstance,
         BenchTexBufvsVBO,
         BenchProceduralVertices,
+    };
 
-        // 
-        BenchNaiveTextures,     // glBindTexture
+    enum TexturingMode
+    {
+        BenchTexNone,
+        BenchTexNaive,     // glBindTexture
         BenchTexArray,
-        BenchBindless,
+        BenchTexBindless,
     };
 
     BenchmarkMode _bench_mode;
+    TexturingMode _tex_mode;
 };
 
 #endif // __ASYNC_VBO_TRANSFERS_SCENE_H__

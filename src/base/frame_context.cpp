@@ -89,7 +89,6 @@ void base::frame_context::create_buffers()
         _drawid_data_ptr = __drawid_data_ptr;
         _drawid_data_offset = 0;
         glBindBuffer(GL_ARRAY_BUFFER, _drawid_vbo);
-        glEnableVertexAttribArray(13);
         glVertexAttribIPointer(13, 4, GL_INT, 0, (GLvoid*)0);
         glVertexAttribDivisor(13, 1);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
