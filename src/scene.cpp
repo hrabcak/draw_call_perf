@@ -573,14 +573,77 @@ void scene::create_test_scene()
 void scene::create_test_scene(unsigned short obj_count)
 {
 	
-	const int grid_size = 60;
+	const int grid_size = 40;
 	const int grid_size2 = grid_size*grid_size;
-	const float prob = 0.8f;
+	const int max_height = 15;
 
+	const glm::vec3 box_size(2.0f, 2.0f, 2.0f);
+	std::vector<int> height_map;
+	height_map.resize(grid_size2, 0);
 
-	const glm::vec3 box_size(1.0f, 1.0f, 1.0f);
+	unsigned short obj_to_place = obj_count >> 1;
 
-	std::vector<bool> voxel_plane;
+	for (int y = 0; y < grid_size; y++){
+		for (int x = 0; x < grid_size; x++){
+			int height = base::rndFromInterval(5,max_height);
+			height_map[y*grid_size + x] = height;
+
+			for (int z = 0; z < height; z++){
+				obj_to_place--;
+				add_block(0, glm::vec3(x*2.0, z*2.0, y*2.0), box_size, 0);
+			}
+		}
+	}
+
+	while (obj_to_place){
+		for (int y = 0; y < grid_size; y++){
+			for (int x = 0; x < grid_size; x++){
+				int height = height_map[y*grid_size + x] + 1;;
+				height_map[y*grid_size + x] = height;
+
+				obj_to_place--;
+				add_block(0, glm::vec3(x*2.0, (height-1)*2.0, y*2.0), box_size, 0);
+
+				if (!obj_to_place){
+					y = grid_size;
+					x = grid_size;
+				}
+			}
+		}
+	}
+
+	obj_to_place = obj_count >> 1;
+
+	for (int y = 0; y < grid_size; y++){
+		for (int x = 0; x < grid_size; x++){
+			int height = base::rndFromInterval(5, max_height);
+			height_map[y*grid_size + x] = height;
+
+			for (int z = 0; z < height; z++){
+				obj_to_place--;
+				add_block(0, glm::vec3(x*2.0, (grid_size-z)*2.0, y*2.0), box_size, 0);
+			}
+		}
+	}
+
+	while (obj_to_place){
+		for (int y = 0; y < grid_size; y++){
+			for (int x = 0; x < grid_size; x++){
+				int height = height_map[y*grid_size + x] + 1;;
+				height_map[y*grid_size + x] = height;
+
+				obj_to_place--;
+				add_block(0, glm::vec3(x*2.0, (grid_size - height + 1)*2.0, y*2.0), box_size, 0);
+
+				if (!obj_to_place){
+					y = grid_size;
+					x = grid_size;
+				}
+			}
+		}
+	}
+	/*
+	std::vector<bool> height_map;
 	voxel_plane.resize(grid_size*grid_size, true);
 
 	unsigned short obj_to_place = obj_count >> 1;
@@ -663,7 +726,7 @@ void scene::create_test_scene(unsigned short obj_count)
 		}
 		level++;
 	}
-
+	*/
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
