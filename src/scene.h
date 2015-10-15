@@ -49,12 +49,13 @@ public:
 
 public:
 
+    void add_test_block();
+
     struct block {
         glm::mat4 *_tm;
         unsigned int *_flags;
         glm::vec3 *_hw;
 
-	void add_test_block();
         block(
             glm::mat4 *tm,
             unsigned int *flags,
