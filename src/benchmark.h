@@ -48,6 +48,8 @@ public:
     virtual const char* get_wnd_name() const override { return get_app_name(); }
     virtual const char* get_wnd_cls() const override { return "benchmark class"; }
 
+	virtual void key(const int key, const bool down)override;
+
 	virtual void start() override;
     virtual void gpu_init() override;
 

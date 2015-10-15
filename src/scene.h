@@ -54,6 +54,7 @@ public:
         unsigned int *_flags;
         glm::vec3 *_hw;
 
+	void add_test_block();
         block(
             glm::mat4 *tm,
             unsigned int *flags,
@@ -76,6 +77,7 @@ protected:
     void create_textures(const base::source_location &loc);
     void create_test_scene();
 	void create_test_scene(unsigned short obj_count);
+	
     int frustum_check(base::frame_context *fc);
     void create_frustum_planes(glm::vec4 *planes, const glm::mat4 &mvp);
     void load_and_init_shaders(const base::source_location &loc);
@@ -85,7 +87,7 @@ protected:
     void bind_texture(int counter);
 
 protected:
-
+	glm::ivec2 _cur_next_block;
 	static const int NumTypes = 4;
 
 	enum Flags {

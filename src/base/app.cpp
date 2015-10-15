@@ -101,9 +101,9 @@ void base::app::update_camera(frame_context *fc)
 	fc->_view = glm::rotate(
 		glm::rotate(
 			glm::mat4(1),
-			-_mouse_pos.x,
+			glm::radians(-_mouse_pos.x),
 			glm::vec3(0,1,0)),
-		-_mouse_pos.y, glm::vec3(1,0,0));
+			glm::radians (-_mouse_pos.y), glm::vec3(1, 0, 0));
 
 	_position += glm::mat3(fc->_view) * _velocity * (_velocity_boost ? 3.0f : 1.0f);
 
