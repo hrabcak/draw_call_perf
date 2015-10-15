@@ -104,3 +104,11 @@ void benchmark::gpu_draw_frame(base::frame_context * const ctx)
 
 }
 
+void benchmark::key(const int key, const bool down){
+	app::key(key, down);
+
+	if (key == 'N' && down){
+		_scene->add_test_block();
+	}
+}
+

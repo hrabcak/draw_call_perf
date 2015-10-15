@@ -60,12 +60,14 @@ public:
     void init_gpu_stuff(const base::source_location &loc);
 	void render_blocks(base::frame_context * const ctx);
 
+	void add_test_block();
 protected:
 
     void load_and_init_shaders(const base::source_location &loc);
     void create_textures(const base::source_location &loc);
     void create_test_scene();
 	void create_test_scene(unsigned short obj_count);
+	
 
 public:
 
@@ -85,7 +87,7 @@ public:
 	};
 
 protected:
-
+	glm::ivec2 _cur_next_block;
 	static const int NumTypes = 4;
 
 	enum Flags {

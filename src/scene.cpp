@@ -29,9 +29,8 @@ THE SOFTWARE.
 #include "gen_tex.h"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/noise.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/swizzle.hpp>
-#include <glm/gtx/verbose_operator.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
@@ -43,7 +42,8 @@ const bool use_bindless_tex = true;
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 scene::scene()
-	: _tms()
+	:_cur_next_block(0,0)
+	,_tms()
 	, _bboxes()
 	, _hws()
 	, _flags()
@@ -74,7 +74,7 @@ scene::scene()
 	_hws.reserve(MAX_BLOCK_COUNT);
 	_flags.reserve(MAX_BLOCK_COUNT);
 
-    create_test_scene(32768);
+    create_test_scene();
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -246,7 +246,7 @@ void scene::create_textures(const base::source_location &)
 
 inline glm::vec4 normalize_plane(const glm::vec4 &p)
 {
-	return p*(1.0f/length(p.swizzle(X,Y,Z)));
+	return p*(1.0f/length(vec3(p)));
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -552,7 +552,9 @@ void scene::render_blocks(base::frame_context * const ctx)
 
 void scene::create_test_scene()
 {
-	const int grid_size = BUILDING_SIDE_SIZE;
+	add_test_block();
+
+	/*const int grid_size = BUILDING_SIDE_SIZE;
 	const glm::vec3 pillar_size(0.25f, 2.6f, 0.25f);
 	const glm::vec3 box_size(3.0f, 0.2f, 4.0f);
 
@@ -565,7 +567,7 @@ void scene::create_test_scene()
 						0, glm::vec3(x * 3, 0.2 + z * 2.8, y * 4), pillar_size, 0);
 				add_block(
 					1, glm::vec3(x * 3, z * 2.8, y * 4), box_size, 0);
-			}
+			}*/
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -573,75 +575,7 @@ void scene::create_test_scene()
 void scene::create_test_scene(unsigned short obj_count)
 {
 	
-	const int grid_size = 40;
-	const int grid_size2 = grid_size*grid_size;
-	const int max_height = 15;
-
-	const glm::vec3 box_size(2.0f, 2.0f, 2.0f);
-	std::vector<int> height_map;
-	height_map.resize(grid_size2, 0);
-
-	unsigned short obj_to_place = obj_count >> 1;
-
-	for (int y = 0; y < grid_size; y++){
-		for (int x = 0; x < grid_size; x++){
-			int height = base::rndFromInterval(5,max_height);
-			height_map[y*grid_size + x] = height;
-
-			for (int z = 0; z < height; z++){
-				obj_to_place--;
-				add_block(0, glm::vec3(x*2.0, z*2.0, y*2.0), box_size, 0);
-			}
-		}
-	}
-
-	while (obj_to_place){
-		for (int y = 0; y < grid_size; y++){
-			for (int x = 0; x < grid_size; x++){
-				int height = height_map[y*grid_size + x] + 1;;
-				height_map[y*grid_size + x] = height;
-
-				obj_to_place--;
-				add_block(0, glm::vec3(x*2.0, (height-1)*2.0, y*2.0), box_size, 0);
-
-				if (!obj_to_place){
-					y = grid_size;
-					x = grid_size;
-				}
-			}
-		}
-	}
-
-	obj_to_place = obj_count >> 1;
-
-	for (int y = 0; y < grid_size; y++){
-		for (int x = 0; x < grid_size; x++){
-			int height = base::rndFromInterval(5, max_height);
-			height_map[y*grid_size + x] = height;
-
-			for (int z = 0; z < height; z++){
-				obj_to_place--;
-				add_block(0, glm::vec3(x*2.0, (grid_size-z)*2.0, y*2.0), box_size, 0);
-			}
-		}
-	}
-
-	while (obj_to_place){
-		for (int y = 0; y < grid_size; y++){
-			for (int x = 0; x < grid_size; x++){
-				int height = height_map[y*grid_size + x] + 1;;
-				height_map[y*grid_size + x] = height;
-
-				obj_to_place--;
-				add_block(0, glm::vec3(x*2.0, (grid_size - height + 1)*2.0, y*2.0), box_size, 0);
-
-				if (!obj_to_place){
-					y = grid_size;
-					x = grid_size;
-				}
-			}
-		}
-	}
+	
 	/*
 	std::vector<bool> height_map;
 	voxel_plane.resize(grid_size*grid_size, true);
@@ -728,6 +662,47 @@ void scene::create_test_scene(unsigned short obj_count)
 	}
 	*/
 }
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void scene::add_test_block(){
+	const int grid_size = 16;
+	const int grid_size2 = grid_size*grid_size;
+	int max_height = 5;
+
+	const glm::vec3 box_size(2.0f, 2.0f, 2.0f);
+	std::vector<int> height_map;
+	height_map.resize(grid_size2, 0);
+
+
+	for (int y = 0; y < grid_size; y++){
+		for (int x = 0; x < grid_size; x++){
+			int height = (int)((((glm::simplex(glm::vec2(x / (float)grid_size, y / (float)grid_size)) + 0.5 * glm::simplex(glm::vec2((x*2.0) / (float)grid_size, (y*2.0) / (float)grid_size)))+1.5) / 3.0)*max_height);
+				add_block(0, glm::vec3((_cur_next_block.x*grid_size) + x*2.0, height*2.0, (_cur_next_block.y*grid_size) + y*2.0), box_size, 0);
+			}
+		}
+
+
+	for (int y = 0; y < grid_size; y++){
+		for (int x = 0; x < grid_size; x++){
+			int height = (int)((((glm::simplex(glm::vec2(x / (float)grid_size, y / (float)grid_size)) + 0.5 * glm::simplex(glm::vec2((x*2.0) / (float)grid_size, (y*2.0) / (float)grid_size))) + 1.5) / 3.0)*max_height);
+			add_block(0, glm::vec3((_cur_next_block.x*grid_size) + x*2.0, 32.0 - height*2.0, (_cur_next_block.y*grid_size) + y*2.0), box_size, 0);
+		}
+	}
+	
+
+	// set next block coords
+	if (_cur_next_block.x == 0){
+		_cur_next_block.x = -2;
+	}
+	else if (_cur_next_block.x == -2){
+		_cur_next_block.x = 2;
+	}
+	else if (_cur_next_block.x == 2){
+		_cur_next_block.x = 0;
+		_cur_next_block.y -= 2;
+	}
+
+};
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
