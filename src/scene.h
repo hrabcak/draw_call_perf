@@ -81,6 +81,7 @@ protected:
     void upload_blocks_to_gpu(
         const base::source_location &loc,
         base::frame_context *ctx);
+    void bind_texture(int counter);
 
 protected:
 
