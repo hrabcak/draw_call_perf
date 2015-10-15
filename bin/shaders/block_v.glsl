@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#version 430
 precision highp float;
 precision highp int;
 
@@ -29,9 +28,6 @@ precision highp int;
 #define PI 3.14159265358979323846
 #define TWO_PI 6.28318530717958647692
 #define SQRT_2 1.414213562
-
-//#define USE_UNIFORM_BUF 1
-//#define USE_BINDLESS_TEX 1
 
 // IN
 struct context_data
@@ -44,33 +40,28 @@ layout(std140) uniform context
 	context_data _ctx;
 };
 
-#ifdef USE_UNIFORM_BUF
-	struct block_data
-	{
-		mat4 _tm;
-	};
+layout(location = 13) in ivec4 index_start;
+layout(location = 14) in int index2;
+uniform samplerBuffer tb_blocks;
 
-	layout(std140) uniform tb_blocks
-	{
-		block_data _blocks;
-	};
+#ifdef USE_TB_FOR_VERTEX_DATA
+    uniform isamplerBuffer tb_pos;
+    uniform isamplerBuffer tb_nor_uv;
 #else
-	layout(location=13) in ivec4 index_start;
-    uniform samplerBuffer tb_blocks;
+    uniform samplerBuffer tb_pos;
+    uniform samplerBuffer tb_nor_uv;
 #endif
 
-uniform isamplerBuffer tb_pos;
-
-//#ifdef USE_BINDLESS_TEX
-
-uniform usamplerBuffer tb_tex_handles;
-
-//#endif
+#if defined(USE_BINDLESS_TEX)
+    uniform usamplerBuffer tb_tex_handles;
+    out flat uvec2 tex_handle;
+#elif defined(USE_ARRAY_TEX)
+    out flat float tex_slice;
+#endif
 
 //OUT 
 out vec3 color;
 out vec2 uv;
-out flat uvec2 tex_handle;
 
 vec3 unpack_position(ivec2 pack_pos, float coef)
 {
@@ -85,10 +76,7 @@ void main()
 {
 	int vertex_id = gl_VertexID;
 
-#ifdef USE_UNIFORM_BUF
-	mat4 tm = _ctx._mvp * _blocks._tm;
-#else
-    int index = vertex_id >> 12;
+    int index = (vertex_id >> 12) + index2;
     vertex_id &= 0xfff;
     int idx = (index_start.x + index + gl_InstanceID) * 16;
 	mat4 tm = _ctx._mvp * mat4(
@@ -96,16 +84,23 @@ void main()
 		texelFetch(tb_blocks, idx + 1),
 		texelFetch(tb_blocks, idx + 2),
 		texelFetch(tb_blocks, idx + 3));
-#endif
 
-    int inst_id = index_start.z >> 3;
+#if defined(USE_BASE_INSTANCE) || defined(USE_INDIRECT_DRAW)
+    int inst_id = index_start.z;
+#else
+    int inst_id = index;
+#endif
 
     ivec2 tmp0 = texelFetch(tb_pos, gl_InstanceID * 96 + index_start.y + vertex_id).xy;
 
     vec3 pos = unpack_position(tmp0.xy, 1.0 / 1048575.0);
     uv = pos.xy * 0.5 + 0.5;
 
+#if defined(USE_BINDLESS_TEX)
     tex_handle = texelFetch(tb_tex_handles, inst_id).xy;
+#elif defined(USE_ARRAY_TEX)
+    tex_slice = inst_id & 0x7ff;
+#endif
 
     gl_Position = tm * vec4(pos, 1);
 	color=pos * 0.5 + 0.5;

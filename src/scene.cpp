@@ -37,9 +37,6 @@ THE SOFTWARE.
 
 using namespace glm;
 
-const bool uniform_block = false;
-const bool use_bindless_tex = true;
-
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 scene::scene()
@@ -68,6 +65,9 @@ scene::scene()
 
     , _texs()
     , _tex_handles()
+
+    , _bench_mode(BenchBaseVertex)
+    , _tex_mode(BenchTexArray)
 {
 	_tms.reserve(MAX_BLOCK_COUNT);
 	_bboxes.reserve(MAX_BLOCK_COUNT);
@@ -123,6 +123,43 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 
     std::string cfg;
 
+    cfg += "#version 430\n"
+           "#define USE_TB_FOR_VERTEX_DATA 1\n";
+
+    switch (_bench_mode) {
+    case BenchNaive:
+        cfg += "#define USE_NAIVE_DRAW 1\n";
+        break;
+    case BenchBaseVertex:
+        cfg += "#define USE_BASE_VERTEX_DRAW 1\n";
+        break;
+    case BenchInstancing:
+        cfg += "#define USE_INSTANCED_DRAW 1\n";
+        break;
+    case BenchIndirect:
+        cfg += "#define USE_INDIRECT_DRAW 1\n";
+        break;
+    case BenchBaseInstance:
+        cfg += "#define USE_BASE_INSTANCE 1\n";
+        break;
+    case BenchTexBufvsVBO:
+        break;
+    case BenchProceduralVertices:
+        break;
+    }
+    
+    switch (_tex_mode) {
+    case BenchTexNaive:
+        cfg += "#define USE_NAIVE_TEX 1\n";
+        break;
+    case BenchTexArray:
+        cfg += "#define USE_ARRAY_TEX 1\n";
+        break;
+    case BenchTexBindless:
+        cfg += "#define USE_BINDLESS_TEX 1\n";
+        break;
+    }
+
 	_prg = base::create_program(
 		base::create_and_compile_shader(
 			SRC_LOCATION,
@@ -137,21 +174,37 @@ void scene::load_and_init_shaders(const base::source_location &loc)
             GL_FRAGMENT_SHADER));
 	base::link_program(loc, _prg);
 
-    if (uniform_block) {
-        _prg_tb_blocks = glGetUniformBlockIndex(_prg, "tb_blocks");
-    }
-    else {
-        _prg_tb_blocks = get_uniform_location(loc, _prg, "tb_blocks");
-    }
+    // GET UNIFORM STUFF
 
+    _prg_tb_blocks = get_uniform_location(loc, _prg, "tb_blocks");
     _prg_tb_pos = get_uniform_location(loc, _prg, "tb_pos");
     _prg_ctx = glGetUniformBlockIndex(_prg, "context");
 
-    if (use_bindless_tex) {
-        _prg_tex = get_uniform_location(loc, _prg, "tb_tex_handles");
+    switch (_bench_mode) {
+    case BenchNaive:
+        break;
+    case BenchBaseVertex:
+        break;
+    case BenchInstancing:
+        break;
+    case BenchIndirect:
+        break;
+    case BenchBaseInstance:
+        break;
+    case BenchTexBufvsVBO:
+        break;
+    case BenchProceduralVertices:
+        break;
     }
-    else {
+
+    switch (_tex_mode) {
+    case BenchTexNaive:
+    case BenchTexArray:
         _prg_tex = get_uniform_location(loc, _prg, "mat_tex");
+        break;
+    case BenchTexBindless:
+        _prg_tex = get_uniform_location(loc, _prg, "tb_tex_handles");
+        break;
     }
 }
 
@@ -202,44 +255,89 @@ void scene::init_gpu_stuff(const base::source_location &loc)
         _buffer_pos);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
 
-    create_textures(loc);
+    if (_tex_mode != BenchTexNone)
+        create_textures(loc);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 void scene::create_textures(const base::source_location &)
 {
-    std::vector<unsigned char> data;
-    data.resize(64 * 64 * 4);
+    const int width = 64;
+    const int tex_size = 64 * 64;
+    glm::u8vec4 * data = 0;
+    const int ntex = 32768;
+    const base::pixelfmt pf = base::PF_BGRA8_SRGB;
+    const int tex_size_bytes = tex_size * base::get_pfd(pf)->_size;
 
-    for (int i = 0; i < 32768; ++i) {
-        gen_texture(reinterpret_cast<glm::u8vec4*>(&data[0]), 64, 16, i);
-
-        const GLint tex = create_texture(
-            64,
-            64,
-            base::PF_BGRA8_SRGB,
-            &data[0]);
-
-        _texs.push_back(tex);
-
-        const GLuint64 handle = glGetTextureHandleARB(tex);
-
-        _tex_handles.push_back(handle);
-
-        glMakeTextureHandleResidentARB(handle);
+    const GLuint buf = base::create_buffer<u8vec4>(tex_size * ntex, &data);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
+    
+    for (int i = 0; i < ntex; ++i) {
+        gen_texture(data + i * tex_size, width, 16, i);
     }
 
-    _buffer_tex_handles = base::create_buffer<GLuint64>(32768, 0, &_tex_handles[0]);
+    if (_tex_mode != BenchTexArray) {
+        for (int i = 0; i < ntex; ++i) {
+            const GLint tex = create_texture(
+                width,
+                width,
+                pf,
+                (void*)(i * tex_size_bytes),
+                buf);
 
-    // create texture buffer for vertices
-    glGenTextures(1, &_tb_tex_handles);
-    glBindTexture(GL_TEXTURE_BUFFER, _tb_tex_handles);
-    glTexBuffer(
-        GL_TEXTURE_BUFFER,
-        base::get_pfd(base::PF_RG32F)->_internal,
-        _buffer_tex_handles);
-    glBindTexture(GL_TEXTURE_BUFFER, 0);
+            _texs.push_back(tex);
+        }
+
+        for (int i = 0; i < ntex; ++i) {
+            const GLuint64 handle = glGetTextureHandleARB(_texs[i]);
+            _tex_handles.push_back(handle);
+            glMakeTextureHandleResidentARB(handle);
+        }
+    }
+    else {
+        int nlayers = 1;
+
+        glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &nlayers);
+
+        for (int i = 0; i < ntex; i += nlayers) {
+            const GLint tex = create_texture_array(
+                width,
+                width,
+                nlayers,
+                pf,
+                (void*)(i * tex_size_bytes),
+                buf);
+            _texs.push_back(tex);
+
+            glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
+            glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+        }
+        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    }
+
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
+    if (_tex_mode == BenchTexBindless) {
+        _buffer_tex_handles = base::create_buffer<GLuint64>(ntex, 0, &_tex_handles[0]);
+
+        // create texture buffer for vertices
+        glGenTextures(1, &_tb_tex_handles);
+        glBindTexture(GL_TEXTURE_BUFFER, _tb_tex_handles);
+        glTexBuffer(
+            GL_TEXTURE_BUFFER,
+            base::get_pfd(base::PF_RG32F)->_internal,
+            _buffer_tex_handles);
+        glBindTexture(GL_TEXTURE_BUFFER, 0);
+    }
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void scene::update(base::frame_context * const ctx)
+{
+    frustum_check(ctx);
+    upload_blocks_to_gpu(SRC_LOCATION, ctx);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -403,7 +501,29 @@ void scene::upload_blocks_to_gpu(
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void scene::render_blocks(base::frame_context * const ctx)
+void scene::bind_texture(int counter)
+{
+    //if ((counter & 0x7) != 0)
+    //    return;
+
+    //glUniformHandleui64ARB(_prg_tex, _tex_handles[counter]);
+    
+    if (_tex_mode == BenchTexNaive) {
+        glBindMultiTextureEXT(GL_TEXTURE2, GL_TEXTURE_2D, _texs[counter]);
+    }
+    else if (_tex_mode == BenchTexArray && (counter & 0x7ff) == 0) {
+        glBindMultiTextureEXT(GL_TEXTURE2, GL_TEXTURE_2D, _texs[counter >> 11]);
+    }
+    
+    //const int cm = counter % 190;
+    //if (cm == 0)
+    //    glBindTextures(2, 190, &_texs[counter]);
+    //glUniform1i(_prg_tex, cm + 2);
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void scene::gpu_draw(base::frame_context * const ctx)
 {
 	glUseProgram(_prg);
 
@@ -413,24 +533,15 @@ void scene::render_blocks(base::frame_context * const ctx)
 
     timer.start();
 
-    /*
-        Benchmark modes
-
-        1: OpenGL 3.3 glDrawElementsBaseVertex + std texture binding
-        2: Instancing for efficiency comparison
-        3: Indirect OpenGL 4.3
-        4: glDrawElementsBaseInstance + bindless textures    
-    */
-
-
     // SET FRAME RENDER STATES
 
-    const bool fast_drawcall = true;
-    const bool fast_drawcall_old_way = false;
-    const bool fast_draw_call_gl33 = true;
-    const bool use_instancing = false;
+    bool fast_drawcall = false;
+    bool fast_drawcall_old_way = false;
+    bool fast_draw_call_gl33 = false;
+    bool use_instancing = false;
 
-    glVertexAttribI1i(13, 0);
+    glVertexAttribI4i(13, 0, 0, 0, 0);
+    glVertexAttribI1i(14, 0);
     glBindBufferRange(
         GL_UNIFORM_BUFFER,
         _prg_ctx,
@@ -438,108 +549,129 @@ void scene::render_blocks(base::frame_context * const ctx)
         ctx->_ctx_id * sizeof(base::ctx_data),
         sizeof(base::ctx_data));
 
+    // bind element buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffer_elem);
-    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, ctx->_cmd_vbo);
 
-	// bind canvas elements texture buffer
-    if (!uniform_block) {
-        glUniform1i(_prg_tb_blocks, 0);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_BUFFER, ctx->_scene_tb);
+	// bind texture buffer with block data
+    glUniform1i(_prg_tb_blocks, 0);
+    glBindMultiTextureEXT(GL_TEXTURE0, GL_TEXTURE_BUFFER, ctx->_scene_tb);
 
-        glUniform1i(_prg_tb_pos, 1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_BUFFER, _tb_pos);
+    // bind texture buffer with vertex data
+    glUniform1i(_prg_tb_pos, 1);
+    glBindMultiTextureEXT(GL_TEXTURE1, GL_TEXTURE_BUFFER, _tb_pos);
 
-        glUniform1i(_prg_tex, 2);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_BUFFER, _tb_tex_handles);
+    switch (_bench_mode) {
+    case BenchNaive:
+        fast_drawcall = true;
+        fast_drawcall_old_way = true;
+        glVertexAttribI1i(13, ctx->_scene_data_offset);
+        break;
+    case BenchBaseVertex:
+        fast_drawcall = true;
+        fast_draw_call_gl33 = true;
+        glVertexAttribI1i(13, ctx->_scene_data_offset);
+        break;
+    case BenchInstancing:
+        use_instancing = true;
+        glVertexAttribI1i(13, ctx->_scene_data_offset);
+        break;
+    case BenchIndirect:
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, ctx->_cmd_vbo);
+        glEnableVertexAttribArray(13);
+        break;
+    case BenchBaseInstance:
+        fast_drawcall = true;
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, ctx->_cmd_vbo);
+        glEnableVertexAttribArray(13);
+        break;
+    case BenchTexBufvsVBO:
+        break;
+    case BenchProceduralVertices:
+        break;
     }
 
-    if ((fast_drawcall && fast_drawcall_old_way)
-        || (fast_drawcall && fast_draw_call_gl33)
-        || (!fast_drawcall && use_instancing)
-        || uniform_block) {
-        glDisableVertexAttribArray(13);
+    bool use_tex = false;
+
+    switch (_tex_mode) {
+    case BenchTexNaive:
+        glUniform1i(_prg_tex, 2);
+        use_tex = true;
+        break;
+    case BenchTexArray:
+        glUniform1i(_prg_tex, 2);
+        glBindMultiTextureEXT(GL_TEXTURE2, GL_TEXTURE_2D_ARRAY, _texs[0]);
+        use_tex = true;
+        break;
+    case BenchTexBindless:
+        glUniform1i(_prg_tex, 2);
+        glBindMultiTextureEXT(GL_TEXTURE2, GL_TEXTURE_BUFFER, _tb_tex_handles);
+        break;
     }
 
     glQueryCounter(ctx->_time_queries[0], GL_TIMESTAMP);
 
     const int count = _nelements;
-    const unsigned vbo = ctx->_scene_vbo;
     const uint nblocks = ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1];
 
     if (nblocks == 0)
         return;
     
-    if (!uniform_block) {
-        int offset = ctx->_scene_data_offset;
-
-        if (!fast_drawcall) {
-            if (use_instancing) {
-                glVertexAttribI1i(13, offset);
-                glDrawElementsInstanced(
+    if (!fast_drawcall) {
+        if (use_instancing) {
+            glDrawElementsInstanced(
+                GL_TRIANGLES,
+                count,
+                GL_UNSIGNED_SHORT,
+                0,
+                ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1]);
+        }
+        else {
+            glMultiDrawElementsIndirect(
+                GL_TRIANGLES,
+                GL_UNSIGNED_SHORT,
+                (void*)((ctx->_scene_data_offset) * sizeof(base::cmd)),
+                ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1],
+                0);
+        }
+    }
+    else {
+        int counter = 0;
+        int offset = 0;
+        const int offset_e = ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1];
+        while (offset != offset_e) {
+            if (fast_drawcall_old_way) {
+                if (use_tex)
+                    bind_texture(counter);
+                glVertexAttribI1i(14, offset);
+                glDrawElements(
+                    GL_TRIANGLES,
+                    count,
+                    GL_UNSIGNED_SHORT,
+                    0);
+            }
+            else if (fast_draw_call_gl33) {
+                if (use_tex)
+                    bind_texture(counter);
+                glDrawElementsBaseVertex(
                     GL_TRIANGLES,
                     count,
                     GL_UNSIGNED_SHORT,
                     0,
-                    ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1]);
+                    offset << 12);
             }
             else {
-                glMultiDrawElementsIndirect(
+                if (use_tex)
+                    bind_texture(counter);
+                glDrawElementsInstancedBaseInstance(
                     GL_TRIANGLES,
+                    count,
                     GL_UNSIGNED_SHORT,
-                    (void*)((ctx->_scene_data_offset) * sizeof(base::cmd)),
-                    ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1],
-                    0);
+                    0,
+                    1,
+                    offset);
             }
-        }
-        else {
-            int counter = 0;
-            const int offset_e = offset + ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1];
-            while (offset != offset_e) {
-                if (fast_drawcall_old_way) {
-                    glVertexAttribI1i(13, offset);
-                    glDrawElements(
-                        GL_TRIANGLES,
-                        count,
-                        GL_UNSIGNED_SHORT,
-                        0);
-                }
-                else if (fast_draw_call_gl33) {
-                    /*if (counter % 190 == 0) {
-                        glBindTextures(0, 190, &_texs[counter]);
-                    }
-                    glUniform1i(_prg_tex, counter % 190);*/
-                    //glUniformHandleui64ARB(_prg_tex, _tex_handles[counter]);
-                    glDrawElementsBaseVertex(
-                        GL_TRIANGLES,
-                        count,
-                        GL_UNSIGNED_SHORT,
-                        0,
-                        offset << 12);
-                }
-                else {
-                    glDrawElementsInstancedBaseInstance(
-                        GL_TRIANGLES,
-                        count,
-                        GL_UNSIGNED_SHORT,
-                        0,
-                        1,
-                        offset);
-                }
-                offset++;
-                counter++;
-            }
-        }
-    }
-    else {
-        unsigned offset = (ctx->_scene_data_offset) * sizeof(base::block_data);
-        const unsigned offset_e = offset + (ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1]) * sizeof(base::block_data);
-        while (offset != offset_e) {
-            glBindBufferRange(GL_UNIFORM_BUFFER, _prg_tb_blocks, vbo, offset, 64);
-            glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, 0);
-            offset += sizeof(base::block_data);
+            offset++;
+            counter++;
         }
     }
 

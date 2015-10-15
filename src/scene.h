@@ -43,46 +43,46 @@ public:
 	scene();
 	~scene();
 
-	struct block;
-
-	// heading is in degrees
-	block* add_block(
-		const int type,
-		const glm::vec3 &pos,
-		const glm::vec3 &size,
-		const float heading);
-	void upload_blocks_to_gpu(
-		const base::source_location &loc,
-		base::frame_context *ctx);
-	int frustum_check(base::frame_context *fc);
-	void create_frustum_planes(glm::vec4 *planes, const glm::mat4 &mvp);
-
     void init_gpu_stuff(const base::source_location &loc);
-	void render_blocks(base::frame_context * const ctx);
-
-protected:
-
-    void load_and_init_shaders(const base::source_location &loc);
-    void create_textures(const base::source_location &loc);
-    void create_test_scene();
-	void create_test_scene(unsigned short obj_count);
+    void update(base::frame_context * const ctx);
+    void gpu_draw(base::frame_context * const ctx);
 
 public:
 
-	struct block {
-		glm::mat4 *_tm;
-		unsigned int *_flags;
-		glm::vec3 *_hw;
+    struct block {
+        glm::mat4 *_tm;
+        unsigned int *_flags;
+        glm::vec3 *_hw;
 
-		block(
-			glm::mat4 *tm,
-			unsigned int *flags,
-			glm::vec3 *hw)
-			: _tm(tm)
-			, _flags(flags)
-			, _hw(hw)
-		{}
-	};
+        block(
+            glm::mat4 *tm,
+            unsigned int *flags,
+            glm::vec3 *hw)
+            : _tm(tm)
+            , _flags(flags)
+            , _hw(hw)
+        {}
+    };
+
+protected:
+
+    // heading is in degrees
+    block* add_block(
+        const int type,
+        const glm::vec3 &pos,
+        const glm::vec3 &size,
+        const float heading);
+
+    void create_textures(const base::source_location &loc);
+    void create_test_scene();
+	void create_test_scene(unsigned short obj_count);
+    int frustum_check(base::frame_context *fc);
+    void create_frustum_planes(glm::vec4 *planes, const glm::mat4 &mvp);
+    void load_and_init_shaders(const base::source_location &loc);
+    void upload_blocks_to_gpu(
+        const base::source_location &loc,
+        base::frame_context *ctx);
+    void bind_texture(int counter);
 
 protected:
 
@@ -101,11 +101,12 @@ protected:
 	typedef std::vector<block> blocks_t;
 	blocks_t _blocks;
 
-	GLuint _prg;
-	GLint _prg_tb_blocks;
+    GLuint _prg;
+    GLint _prg_tb_blocks;
     GLint _prg_ctx;
     GLint _prg_tb_pos;
     GLint _prg_tex;
+
     unsigned _nelements;
     unsigned _nvertices;
 
@@ -123,14 +124,27 @@ protected:
 
     enum BenchmarkMode
     {
-        BenchBaseVertex     = 1,
-        BenchInstancing     = 2,
-        BenchIndirect       = 3,
-        BenchBaseInstance   = 4,
+        // no textures (depth prepass, shadow mapping)
+        BenchNaive,
+        BenchBaseVertex,
+        BenchInstancing,
+        BenchIndirect,
+        BenchBaseInstance,
+        
+        BenchTexBufvsVBO,
+        BenchProceduralVertices,
+    };
+
+    enum TexturingMode
+    {
+        BenchTexNone,
+        BenchTexNaive,     // glBindTexture
+        BenchTexArray,
+        BenchTexBindless,
     };
 
     BenchmarkMode _bench_mode;
-
+    TexturingMode _tex_mode;
 };
 
 #endif // __ASYNC_VBO_TRANSFERS_SCENE_H__

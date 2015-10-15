@@ -57,7 +57,7 @@ void benchmark::gpu_init()
 {
     app::gpu_init();
 
-    base::canvas::load_and_init_shaders(SRC_LOCATION);
+    //base::canvas::load_and_init_shaders(SRC_LOCATION);
 
     _scene->init_gpu_stuff(SRC_LOCATION);
 }
@@ -87,8 +87,7 @@ void benchmark::draw_frame()
 	app::create_perspective_matrix(ctx);
 	app::update_camera(ctx);
 
-	_scene->frustum_check(ctx);
-	_scene->upload_blocks_to_gpu(SRC_LOCATION, ctx);
+    _scene->update(ctx);
 
 	app::end_frame();
     
@@ -99,8 +98,7 @@ void benchmark::draw_frame()
 
 void benchmark::gpu_draw_frame(base::frame_context * const ctx)
 {
-    _scene->render_blocks(ctx);
+    _scene->gpu_draw(ctx);
     //base::canvas::render(ctx);
-
 }
 

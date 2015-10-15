@@ -43,6 +43,8 @@ void read_glsl_file(
 
     unsigned int size = (unsigned int)st.st_size;
 
+    const unsigned offset = str.size();
+
 	str.resize(str.size() + size + 1);
 
     const int file = _open(filename, _O_BINARY | _O_RDONLY);
@@ -50,7 +52,7 @@ void read_glsl_file(
 	if(file==-1)
 		throw base::exception(loc.to_str())<<"Cannot open GLSL source file \""<<filename<<"\"!";
     
-	if(_read(file, &str[0], st.st_size)!=st.st_size)
+	if(_read(file, &str[offset], st.st_size)!=st.st_size)
 		throw base::exception(loc.to_str())<<"File read error on GLSL source file \""<<filename<<"\"!";
     
 	_close(file);
@@ -88,8 +90,8 @@ GLuint base::create_and_compile_shader(
 	const std::string &filename,
 	const GLuint type)
 {
-	std::string src;
-	
+	std::string src = cfg;
+    	
 	read_glsl_file(loc, filename.c_str(),src);
 
 	GLuint shader = glCreateShader(type);
@@ -223,12 +225,66 @@ GLuint base::create_texture(
 			0,
 			pfd->_format,
 			pfd->_type,
-			buffer ? 0 : data);
+			data);
 	}
 
     glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D,0);
     
+    return handle;
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+GLuint base::create_texture_array(
+    const int width,
+    const int height,
+    const int nslices,
+    const base::pixelfmt pf,
+    const void *data,
+    const unsigned buffer)
+{
+    const base::pfd* pfd = base::get_pfd(pf);
+
+    GLuint handle;
+    glGenTextures(1, &handle);
+
+    glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
+    glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    if (pfd->_compressed) {
+        
+    }
+    else {
+        glTextureStorage3DEXT(
+            handle,
+            GL_TEXTURE_2D_ARRAY,
+            7,
+            pfd->_internal,
+            width,
+            height,
+            nslices);
+
+        for (int i = 0; i < nslices; ++i) {
+            glTextureSubImage3DEXT(
+                handle,
+                GL_TEXTURE_2D_ARRAY,
+                0,
+                0,
+                0,
+                i,
+                width,
+                height,
+                1,
+                pfd->_format,
+                pfd->_type,
+                (void*)(i * width * height * pfd->_size));
+        }
+    }
+
     return handle;
 }
 

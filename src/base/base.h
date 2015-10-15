@@ -160,6 +160,14 @@ GLuint create_texture(
 	const void *data,
 	const unsigned buffer = 0);
 
+GLuint create_texture_array(
+    const int width,
+    const int height,
+    const int nslices,
+    const base::pixelfmt pf,
+    const void *data,
+    const unsigned buffer);
+
 /// The only supported format is TGA 32bit RGBA8 uncompressed
 GLuint create_texture_from_file(
 	const base::source_location &loc,
