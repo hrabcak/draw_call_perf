@@ -1,3 +1,3 @@
-git clone git://ogl-math.git.sourceforge.net/gitroot/ogl-math/ogl-math ./ext/ogl-math
+git clone https://github.com/g-truc/glm ./ext/ogl-math
 cd ext/ogl-math
-git checkout 0.9.2.6
+git checkout 0.9.8.0
