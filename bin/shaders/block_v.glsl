@@ -96,6 +96,8 @@ void main()
     vec3 pos = unpack_position(tmp0.xy, 1.0 / 1048575.0);
     uv = pos.xy * 0.5 + 0.5;
 
+    inst_id >>= 2;
+
 #if defined(USE_BINDLESS_TEX)
     tex_handle = texelFetch(tb_tex_handles, inst_id).xy;
 #elif defined(USE_ARRAY_TEX)

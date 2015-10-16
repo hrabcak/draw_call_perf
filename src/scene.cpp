@@ -68,7 +68,7 @@ scene::scene(benchmark * const app)
     , _tex_handles()
 
     , _bench_mode(BenchIndirect)
-    , _tex_mode(BenchTexArray)
+    , _tex_mode(BenchTexBindless)
 
     , _max_array_layers(1)
 
