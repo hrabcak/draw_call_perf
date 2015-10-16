@@ -225,17 +225,25 @@ void scene::init_gpu_stuff(const base::source_location &loc)
     get_face_and_vert_count_for_tess_level(tess_level, _nelements, _nvertices);
 
     int2 * vertices_ptr = 0;
+    int2 * norm_uv_ptr = 0;
     ushort * elements_ptr = 0;
 
     _buffer_elem = base::create_buffer<ushort>(_nelements * MAX_BLOCK_COUNT, &elements_ptr, 0);
     _buffer_pos = base::create_buffer<glm::ivec2>(_nvertices * MAX_BLOCK_COUNT, &vertices_ptr, 0);
+    _buffer_nor_uv = base::create_buffer<glm::ivec2>(_nvertices * MAX_BLOCK_COUNT, &norm_uv_ptr, 0);
 
     auto vertices_ptre = vertices_ptr + MAX_BLOCK_COUNT * _nvertices;
     do {
         uint nvertices;
         uint nelements;
 
-        gen_cube<int2>(tess_level, vertices_ptr, elements_ptr, nelements, nvertices);
+        gen_cube<int2>(
+            tess_level,
+            vertices_ptr,
+            norm_uv_ptr,
+            elements_ptr,
+            nelements,
+            nvertices);
 
         base::stats()._ntriangles = nelements / 3;
         base::stats()._nvertices = nvertices;
@@ -490,7 +498,7 @@ void scene::upload_blocks_to_gpu(
 		// transform visible blocks to screen and add to VBO 
         for (; tm != e; ++tm, ++flags) {
             const char type = char(*flags & TypeMask);
-            const uint offset = ptr[type] - ctx->_scene_data_ptr;
+            const uint offset = uint(ptr[type] - ctx->_scene_data_ptr);
 
             ptr[type]->_tm = *tm;
 
@@ -697,7 +705,8 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
 void scene::create_test_scene()
 {
-    for (int i = 0; i < 32; ++i)
+	_cur_block = get_perspective_block_bound(1,2.0f)*2;
+	for (int i = 0; i < 32; ++i)
 	    add_test_block();
 
 	/*const int grid_size = BUILDING_SIDE_SIZE;
@@ -817,6 +826,10 @@ void scene::add_test_block()
 	const int grid_size2 = grid_size * grid_size;
 	int max_height = 5;
 
+	ushort cur_z = (_cur_block & 0xffff0000) >> 16;
+	ushort cur_bound = get_perspective_block_bound(cur_z + 1,2.0f);
+	short cur_x = (_cur_block & 0xffff) - cur_bound;
+
 	const glm::vec3 box_size(2.0f, 2.0f, 2.0f);
 	std::vector<int> height_map;
 	height_map.resize(grid_size2, 0);
@@ -829,12 +842,13 @@ void scene::add_test_block()
             const float s0 = glm::simplex(glm::vec2(x, y) * grid_size_r);
             const float s1 = glm::simplex(glm::vec2(x, y) * 2.f * grid_size_r);
 			const int height = int(((((s0 + .5f * s1) + 1.5f) / 3.f) * max_height));
+			 
 
 			add_block(
                 glm::vec3(
-                    (_cur_next_block.x * grid_size) + x * 2.f,
+                    ((cur_x * grid_size) + x) * 2.f,
                     height * 2.f,
-                    (_cur_next_block.y * grid_size) + y * 2.f),
+                    ((cur_z * grid_size) + y) * 2.f),
                 box_size,
                 0);
 			}
@@ -848,9 +862,9 @@ void scene::add_test_block()
 			int height = (int)((((glm::simplex(pos0) + .5f * glm::simplex(pos1)) + 1.5f) / 3.f) * max_height);
 			add_block(
                 glm::vec3(
-                    (_cur_next_block.x*grid_size) + x * 2.f,
+                    ((cur_x*grid_size) + x) * 2.f,
                     32.f - height * 2.f,
-                    (_cur_next_block.y*grid_size) + y * 2.f),
+                    ((cur_z*grid_size) + y) * 2.f),
                 box_size,
                 0);
 		}
@@ -858,18 +872,22 @@ void scene::add_test_block()
 	
 
 	// set next block coords
-	if (_cur_next_block.x == 0){
-		_cur_next_block.x = -2;
+	if (cur_x - 1 < -cur_bound){
+		cur_z += 1;
+		cur_x = get_perspective_block_bound(cur_z + 1,2.0f) * 2;
+		_cur_block = (cur_z << 16) | ushort(cur_x);
 	}
-	else if (_cur_next_block.x == -2){
-		_cur_next_block.x = 2;
-	}
-	else if (_cur_next_block.x == 2){
-		_cur_next_block.x = 0;
-		_cur_next_block.y -= 2;
+	else{
+		_cur_block--;
 	}
 
 };
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+int scene::get_perspective_block_bound(int row, float scale){
+	float fovx = glm::atan(glm::tan(_app->get_fovy())*(_app->get_aspect()));
+	return int(glm::ceil((glm::tan(fovx)*row) / scale));
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

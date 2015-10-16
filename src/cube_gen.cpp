@@ -29,21 +29,20 @@ namespace gen {
 	const glm::i8vec3* faces[6][4] = { { &v1, &v2, &v3, &v4 }, { &v2, &v6, &v7, &v3 }, { &v6, &v5, &v8, &v7 }, { &v5, &v1, &v4, &v8 }, { &v2, &v1, &v5, &v6 }, { &v7, &v8, &v4, &v3 } };
 }
 
-inline void * cpy_unpacked(void * data_ptr, const gen::vert & vert_data){
-	memcpy(data_ptr, &vert_data, 32);
-	return ((char *)data_ptr + 32);
+inline void cpy_unpacked(void * pos_data_ptr, void * norm_uv_data_ptr, const gen::vert & vert_data){
+	memcpy(pos_data_ptr, &vert_data, 12);
+	memcpy(norm_uv_data_ptr, ((char *)(&vert_data))+12, 20);
 }
 
-inline void * cpy_packed(void * data_ptr, const gen::vert & vert_data){
+inline void cpy_packed(void * pos_data_ptr, void * norm_uv_data_ptr, const gen::vert & vert_data){
 	int pack[4];
-	const double scale_pos = 1048575.0;//(glm::pow(2.0, 20.0) - 1.0);
-	const double scale_norm = 32767.0;//(glm::pow(2.0, 15.0) - 1.0);
-	const double scale_uv = 16383.0; //(glm::pow(2.0, 14.0) - 1.0);
+	const float scale_pos = 1048575.0;//(glm::pow(2.0, 20.0) - 1.0);
+	const float scale_norm = 32767.0;//(glm::pow(2.0, 15.0) - 1.0);
+	const float scale_uv = 16383.0; //(glm::pow(2.0, 14.0) - 1.0);
 	(*reinterpret_cast<glm::ivec2*>(&pack[0])) = base::pack_to_pos3x21b(glm::dvec3(vert_data.pos), scale_pos);
 	(*reinterpret_cast<glm::ivec2*>(&pack[2])) = base::pack_to_norm2x16b_uv2x15b(glm::dvec3(vert_data.norm), glm::dvec2(vert_data.uv), scale_norm, scale_uv);
-	memcpy(data_ptr, pack, 16);
-
-	return (char *)data_ptr + 16;
+	memcpy(pos_data_ptr, &pack[0], 8);
+	memcpy(norm_uv_data_ptr, &pack[2], 8);
 }
 
 
@@ -291,7 +290,15 @@ void get_face_and_vert_count_for_tess_level(uint32 tess_level, uint32 & element_
 }
 
 
-void gen_cube_imp(ushort tess_level, float * vert_data, ushort * index_array, uint32 & element_count, uint32 & vert_count, bool use_int) {
+void gen_cube_imp(
+    ushort tess_level,
+    float * pos_data,
+    float * norm_uv_data,
+    ushort * index_array,
+    uint32 & element_count,
+    uint32 & vert_count,
+    bool use_int)
+{
 	srand((ushort)time(NULL));
 
 	VertMaskVec vertex_list;
@@ -302,8 +309,9 @@ void gen_cube_imp(ushort tess_level, float * vert_data, ushort * index_array, ui
 		tesselate_face2(tess_level, i, index_vec, vertex_list, vertex_hash_map, vert_tri_hash_map);
 	}
 
-	deform_corners(tess_level, vertex_hash_map, vertex_list, vert_tri_hash_map, index_vec);
-
+	
+	//deform_corners(tess_level, vertex_hash_map, vertex_list, vert_tri_hash_map, index_vec);
+	
 	gen::vert vert1;
 	gen::vert vert2;
 	gen::vert vert3;
@@ -316,7 +324,8 @@ void gen_cube_imp(ushort tess_level, float * vert_data, ushort * index_array, ui
 	gen::triangle_pair_vert_indices indices;
 
 	ushort cur_pos = 0;
-	void * cur_data_pos = vert_data;
+	char * cur_pos_data_pos = (char *)pos_data;
+	char * cur_norm_uv_data_pos = (char*)norm_uv_data;
 
 	for (uint32 i = 0; i < index_vec.size(); i += 3) {
 		if (index_vec[i] == 0 && index_vec[i + 1] == 0 && index_vec[i + 2] == 0) {
@@ -344,36 +353,42 @@ void gen_cube_imp(ushort tess_level, float * vert_data, ushort * index_array, ui
 		vert3.norm = norm;
 
 		norm_sign = glm::sign(norm.x + norm.y + norm.z);
+		const float norm_sign_div = 0.5f*norm_sign;
+
+		glm::vec3 v1_uv((vert1.pos+norm_sign)*norm_sign_div);
+		glm::vec3 v2_uv((vert2.pos + norm_sign)*norm_sign_div);
+		glm::vec3 v3_uv((vert3.pos + norm_sign)*norm_sign_div);
 
 		if (glm::abs(norm.x) > 0.0000001) {
-			vert1.uv.x = (vert1.pos.z + norm_sign) / (2.0f * norm_sign);
-			vert1.uv.y = (vert1.pos.y + norm_sign) / (2.0f * norm_sign);
 
-			vert2.uv.x = (vert2.pos.z + norm_sign) / (2.0f * norm_sign);
-			vert2.uv.y = (vert2.pos.y + norm_sign) / (2.0f * norm_sign);
+			vert1.uv.x = v1_uv.z;
+			vert1.uv.y = v1_uv.y;
 
-			vert3.uv.x = (vert3.pos.z + norm_sign) / (2.0f * norm_sign);
-			vert3.uv.y = (vert3.pos.y + norm_sign) / (2.0f * norm_sign);
+			vert2.uv.x = v2_uv.z;
+			vert2.uv.y = v2_uv.y;
+
+			vert3.uv.x = v3_uv.z;
+			vert3.uv.y = v3_uv.y;
 		}
 		else if (glm::abs(norm.y) > 0.0000001) {
-			vert1.uv.x = (vert1.pos.x + norm_sign) / (2.0f * norm_sign);
-			vert1.uv.y = (vert1.pos.z + norm_sign) / (2.0f * norm_sign);
+			vert1.uv.x = v1_uv.x;
+			vert1.uv.y = v1_uv.z;
 
-			vert2.uv.x = (vert2.pos.x + norm_sign) / (2.0f * norm_sign);
-			vert2.uv.y = (vert2.pos.z + norm_sign) / (2.0f * norm_sign);
+			vert2.uv.x = v2_uv.x;
+			vert2.uv.y = v2_uv.z;
 
-			vert3.uv.x = (vert3.pos.x + norm_sign) / (2.0f * norm_sign);
-			vert3.uv.y = (vert3.pos.z + norm_sign) / (2.0f * norm_sign);
+			vert3.uv.x = v3_uv.x;
+			vert3.uv.y = v3_uv.z;
 		}
 		else {
-			vert1.uv.x = (vert1.pos.x + norm_sign) / (2.0f * norm_sign);
-			vert1.uv.y = (vert1.pos.y + norm_sign) / (2.0f * norm_sign);
+			vert1.uv.x = v1_uv.x;
+			vert1.uv.y = v1_uv.y;
 
-			vert2.uv.x = (vert2.pos.x + norm_sign) / (2.0f * norm_sign);
-			vert2.uv.y = (vert2.pos.y + norm_sign) / (2.0f * norm_sign);
+			vert2.uv.x = v2_uv.x;
+			vert2.uv.y = v2_uv.y;
 
-			vert3.uv.x = (vert3.pos.x + norm_sign) / (2.0f * norm_sign);
-			vert3.uv.y = (vert3.pos.y + norm_sign) / (2.0f * norm_sign);
+			vert3.uv.x = v3_uv.x;
+			vert3.uv.y = v3_uv.y;
 		}
 
 		/*memcpy(vert_data + cur_pos * (sizeof(gen::vert) / sizeof(float)), &vert1, sizeof(gen::vert));
@@ -381,14 +396,30 @@ void gen_cube_imp(ushort tess_level, float * vert_data, ushort * index_array, ui
 		memcpy(vert_data + (cur_pos + 2) * (sizeof(gen::vert) / sizeof(float)), &vert3, sizeof(gen::vert));*/
 
 		if (use_int){
-			cur_data_pos = cpy_packed(cur_data_pos, vert1);
-			cur_data_pos = cpy_packed(cur_data_pos, vert2);
-			cur_data_pos = cpy_packed(cur_data_pos, vert3);
+			cpy_packed(cur_pos_data_pos,cur_norm_uv_data_pos, vert1);
+			cur_pos_data_pos += 8;
+			cur_norm_uv_data_pos += 8;
+
+			cpy_packed(cur_pos_data_pos, cur_norm_uv_data_pos, vert2);
+			cur_pos_data_pos += 8;
+			cur_norm_uv_data_pos += 8;
+
+			cpy_packed(cur_pos_data_pos, cur_norm_uv_data_pos, vert3);
+			cur_pos_data_pos += 8;
+			cur_norm_uv_data_pos += 8;
 		}
 		else{
-			cur_data_pos = cpy_unpacked(cur_data_pos, vert1);
-			cur_data_pos = cpy_unpacked(cur_data_pos, vert2);
-			cur_data_pos = cpy_unpacked(cur_data_pos, vert3);
+			cpy_unpacked(cur_pos_data_pos, cur_norm_uv_data_pos, vert1);
+			cur_pos_data_pos += 12;
+			cur_norm_uv_data_pos += 20;
+			
+			cpy_unpacked(cur_pos_data_pos, cur_norm_uv_data_pos, vert2);
+			cur_pos_data_pos += 12;
+			cur_norm_uv_data_pos += 20;
+
+			cpy_unpacked(cur_pos_data_pos, cur_norm_uv_data_pos, vert3);
+			cur_pos_data_pos += 12;
+			cur_norm_uv_data_pos += 20;
 		}
 
 		memcpy(index_array + cur_pos, &indices, 3 * sizeof(ushort));
