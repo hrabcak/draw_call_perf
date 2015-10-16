@@ -34,7 +34,7 @@ THE SOFTWARE.
 
 benchmark::benchmark()
     : app()
-    , _scene(new scene())
+    , _scene(new scene(this))
 {}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -102,7 +102,10 @@ void benchmark::gpu_draw_frame(base::frame_context * const ctx)
     //base::canvas::render(ctx);
 }
 
-void benchmark::key(const int key, const bool down){
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void benchmark::key(const int key, const bool down)
+{
 	app::key(key, down);
 
 	if (key == 'N' && down){
@@ -110,3 +113,4 @@ void benchmark::key(const int key, const bool down){
 	}
 }
 
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

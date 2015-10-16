@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 #include "cube_gen.h"
 #include "gen_tex.h"
+#include "benchmark.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/noise.hpp>
@@ -38,7 +39,7 @@ using namespace glm;
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-scene::scene()
+scene::scene(benchmark * const app)
 	:_cur_next_block(0,0)
 	,_tms()
 	, _bboxes()
@@ -70,6 +71,8 @@ scene::scene()
     , _tex_mode(BenchTexArray)
 
     , _max_array_layers(1)
+
+    , _app(app)
 {
 	_tms.reserve(MAX_BLOCK_COUNT);
 	_bboxes.reserve(MAX_BLOCK_COUNT);
