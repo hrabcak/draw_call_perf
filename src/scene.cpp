@@ -858,7 +858,15 @@ void scene::add_test_block()
 		_cur_next_block.y -= 2;
 	}
 
+	get_perspective_block_bound(32);
+
 };
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+int scene::get_perspective_block_bound(int depth){
+	float fovx = glm::atan(glm::tan(_app->get_fovy())*_app->get_aspect());
+	return 0;
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
