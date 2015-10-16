@@ -29,6 +29,8 @@ THE SOFTWARE.
 
 #include <gl/glew.h>
 
+#include "base/types.h"
+
 namespace base {
 	struct frame_context;
 	class source_location;
@@ -70,7 +72,6 @@ protected:
 
     // heading is in degrees
     block* add_block(
-        const int type,
         const glm::vec3 &pos,
         const glm::vec3 &size,
         const float heading);
@@ -124,6 +125,8 @@ protected:
 
     std::vector<GLuint> _texs;
     std::vector<GLuint64> _tex_handles;
+
+    GLint _max_array_layers;
 
     enum BenchmarkMode
     {

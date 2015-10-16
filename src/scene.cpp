@@ -68,6 +68,8 @@ scene::scene()
 
     , _bench_mode(BenchBaseVertex)
     , _tex_mode(BenchTexArray)
+
+    , _max_array_layers(1)
 {
 	_tms.reserve(MAX_BLOCK_COUNT);
 	_bboxes.reserve(MAX_BLOCK_COUNT);
@@ -84,7 +86,6 @@ scene::~scene() {}
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 scene::block* scene::add_block(
-	const int type,
 	const glm::vec3 &pos,
 	const glm::vec3 &size,
 	const float heading)
@@ -100,11 +101,11 @@ scene::block* scene::add_block(
 	tm[3] = vec4(pos,1);
 	_tms.push_back(tm);
 
-	bbox[3] = vec4(pos + vec3(0,half_size.y,0),1);
+	bbox[3] = vec4(pos + vec3(0, half_size.y, 0), 1);
 	_bboxes.push_back(bbox);
 
 	_hws.push_back(size * 0.5f);
-	_flags.push_back(type & TypeMask);
+	_flags.push_back(0);
 
 	_blocks.push_back(
 		block(
@@ -212,6 +213,8 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 
 void scene::init_gpu_stuff(const base::source_location &loc)
 {
+    glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &_max_array_layers);
+
     load_and_init_shaders(loc);
 
     const int tess_level = 2;
@@ -296,15 +299,11 @@ void scene::create_textures(const base::source_location &)
         }
     }
     else {
-        int nlayers = 1;
-
-        glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &nlayers);
-
-        for (int i = 0; i < ntex; i += nlayers) {
+        for (int i = 0; i < ntex; i += _max_array_layers) {
             const GLint tex = create_texture_array(
                 width,
                 width,
-                nlayers,
+                _max_array_layers,
                 pf,
                 (void*)(i * tex_size_bytes),
                 buf);
@@ -684,7 +683,8 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
 void scene::create_test_scene()
 {
-	add_test_block();
+    for (int i = 0; i < 32; ++i)
+	    add_test_block();
 
 	/*const int grid_size = BUILDING_SIDE_SIZE;
 	const glm::vec3 pillar_size(0.25f, 2.6f, 0.25f);
@@ -796,28 +796,49 @@ void scene::create_test_scene(unsigned short obj_count)
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void scene::add_test_block(){
+
+void scene::add_test_block()
+{
 	const int grid_size = 16;
-	const int grid_size2 = grid_size*grid_size;
+	const int grid_size2 = grid_size * grid_size;
 	int max_height = 5;
 
 	const glm::vec3 box_size(2.0f, 2.0f, 2.0f);
 	std::vector<int> height_map;
 	height_map.resize(grid_size2, 0);
+    
+    const float grid_size_r = 1.f / float(grid_size);
 
+    // bottom layer
+	for (int y = 0; y < grid_size; y++) {
+		for (int x = 0; x < grid_size; x++) {
+            const glm::vec2 pos0 = glm::vec2(x, y) * grid_size_r;
+            const glm::vec2 pos1 = glm::vec2(x, y) * 2.f * grid_size_r;
+			const int height = int(((((glm::simplex(pos0) + .5f * glm::simplex(pos1)) + 1.5f) / 3.f) * max_height));
 
-	for (int y = 0; y < grid_size; y++){
-		for (int x = 0; x < grid_size; x++){
-			int height = (int)((((glm::simplex(glm::vec2(x / (float)grid_size, y / (float)grid_size)) + 0.5 * glm::simplex(glm::vec2((x*2.0) / (float)grid_size, (y*2.0) / (float)grid_size)))+1.5) / 3.0)*max_height);
-				add_block(0, glm::vec3((_cur_next_block.x*grid_size) + x*2.0, height*2.0, (_cur_next_block.y*grid_size) + y*2.0), box_size, 0);
+			add_block(
+                glm::vec3(
+                    (_cur_next_block.x * grid_size) + x * 2.f,
+                    height * 2.f,
+                    (_cur_next_block.y * grid_size) + y * 2.f),
+                box_size,
+                0);
 			}
 		}
 
-
-	for (int y = 0; y < grid_size; y++){
-		for (int x = 0; x < grid_size; x++){
-			int height = (int)((((glm::simplex(glm::vec2(x / (float)grid_size, y / (float)grid_size)) + 0.5 * glm::simplex(glm::vec2((x*2.0) / (float)grid_size, (y*2.0) / (float)grid_size))) + 1.5) / 3.0)*max_height);
-			add_block(0, glm::vec3((_cur_next_block.x*grid_size) + x*2.0, 32.0 - height*2.0, (_cur_next_block.y*grid_size) + y*2.0), box_size, 0);
+    // top layer ?
+	for (int y = 0; y < grid_size; y++) {
+		for (int x = 0; x < grid_size; x++) {
+            const glm::vec2 pos0 = glm::vec2(x, y) * grid_size_r;
+            const glm::vec2 pos1 = glm::vec2(x, y) * 2.f * grid_size_r;
+			int height = (int)((((glm::simplex(pos0) + .5f * glm::simplex(pos1)) + 1.5f) / 3.f) * max_height);
+			add_block(
+                glm::vec3(
+                    (_cur_next_block.x*grid_size) + x * 2.f,
+                    32.f - height * 2.f,
+                    (_cur_next_block.y*grid_size) + y * 2.f),
+                box_size,
+                0);
 		}
 	}
 	
