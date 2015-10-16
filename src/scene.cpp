@@ -237,11 +237,13 @@ void scene::init_gpu_stuff(const base::source_location &loc)
         uint nvertices;
         uint nelements;
 
-        gen_cube<int2>(
-            tess_level,
-            vertices_ptr,
-            norm_uv_ptr,
-            elements_ptr,
+		gen_cube<int2>(
+			tess_level,
+			vertices_ptr,
+			norm_uv_ptr,
+			elements_ptr,
+			nullptr,
+			nullptr,
             nelements,
             nvertices);
 

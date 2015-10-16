@@ -4,16 +4,23 @@
 #include "base/types.h"
 #include "base/base.h"
 
+struct voxel_info {
+	uint32 vert_idx;
+	uint32 mask;
+};
+
 void get_face_and_vert_count_for_tess_level(
     uint32 tess_level,
     uint32 & element_count,
     uint32 & vert_count);
 
 void gen_cube_imp(
-    ushort tess_level,
-    float * pos_data,
-    float * norm_uv_data,
-    ushort * index_array,
+	ushort tess_level,
+	float * pos_data,
+	float * norm_uv_data,
+	ushort * index_array,
+	short * voxel_map,
+	voxel_info * voxel_inf,
     uint32 & element_count,
     uint32 & vert_count,
     bool use_int);
@@ -24,7 +31,9 @@ void gen_cube(
     V * const vert_data,
     V * const norm_uv_data,
     ushort * index_array,
-    uint32 & element_count,
+	short * voxel_map,
+	voxel_info * voxel_inf,
+	uint32 & element_count,
     uint32 & vert_count);
 
 template <>
@@ -33,7 +42,9 @@ static void gen_cube<float>(
     float * const vert_data,
     float * const norm_uv_data,
     ushort * index_array,
-    uint32 & element_count,
+	short * voxel_map,
+	voxel_info * voxel_inf,
+	uint32 & element_count,
     uint32 & vert_count)
 {
 	gen_cube_imp(
@@ -41,6 +52,8 @@ static void gen_cube<float>(
         vert_data,
         norm_uv_data,
         index_array,
+		voxel_map,
+		voxel_inf,
         element_count,
         vert_count,
         false);
@@ -52,7 +65,9 @@ static void gen_cube<glm::int2>(
     glm::int2 * const vert_data,
     glm::int2 * const norm_uv_data,
     ushort * index_array,
-    uint32 & element_count,
+	short * voxel_map,
+	voxel_info * voxel_inf,
+	uint32 & element_count,
     uint32 & vert_count)
 {
 	gen_cube_imp(
@@ -60,6 +75,8 @@ static void gen_cube<glm::int2>(
         reinterpret_cast<float*>(vert_data),
         reinterpret_cast<float*>(norm_uv_data),
         index_array,
+		voxel_map,
+		voxel_inf,
         element_count,
         vert_count,
         true);

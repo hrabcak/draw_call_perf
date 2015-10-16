@@ -8,6 +8,21 @@
 
 #define CUBE_FACE_COUNT			6
 
+#define MASK_BIT_0 0x1
+#define MASK_BIT_1 0x2
+#define MASK_BIT_2 0x4
+#define MASK_BIT_3 0x8
+#define MASK_BIT_4 0x10
+#define MASK_BIT_5 0x20
+#define MASK_BIT_6 0x40
+#define MASK_BIT_7 0x80
+
+//#define COORD_TO_IDX(X,Y,Z,MAX_COORD)	(X>=0 && Y >=0 && Z >=0 && X < MAX_COORD && Y < MAX_COORD && Z < MAX_COORD) ?(Z*MAX_COORD*MAX_COORD + Y*MAX_COORD + X) : (-1)
+
+short COORD_TO_IDX(short  X, short Y, short Z, short MAX_COORD) {
+	return(X >= 0 && Y >= 0 && Z >= 0 && X < MAX_COORD && Y < MAX_COORD && Z < MAX_COORD) ? (Z*MAX_COORD*MAX_COORD + Y*MAX_COORD + X) : (-1);
+}
+
 typedef std::vector < glm::u8vec3 >		VertMaskVec;
 typedef std::map< uint32, uint32 >		VertIdxHashMap;
 typedef std::multimap<uint32, uint32>	VertTriangleHashMap;
@@ -27,6 +42,22 @@ namespace gen {
 	const glm::i8vec3 v8(0, 1, 1);
 
 	const glm::i8vec3* faces[6][4] = { { &v1, &v2, &v3, &v4 }, { &v2, &v6, &v7, &v3 }, { &v6, &v5, &v8, &v7 }, { &v5, &v1, &v4, &v8 }, { &v2, &v1, &v5, &v6 }, { &v7, &v8, &v4, &v3 } };
+}
+
+inline void mask_to_idx(unsigned char mask,unsigned char face_mask, ushort & idx1_out, ushort & idx2_out){
+	ushort idx = 0;
+
+	for (unsigned char m = 0x1; m < MASK_BIT_6; m = m << 1){
+		if (mask & face_mask){
+			idx1_out = idx * 4 + 1;
+			idx2_out = idx * 4 + 2;
+			return;
+		}
+
+		if (mask & m){
+			idx++;
+		}
+	}
 }
 
 inline void cpy_unpacked(void * pos_data_ptr, void * norm_uv_data_ptr, const gen::vert & vert_data){
@@ -295,11 +326,271 @@ void gen_cube_imp(
     float * pos_data,
     float * norm_uv_data,
     ushort * index_array,
+	short * voxel_map,
+	voxel_info * voxel_inf,
     uint32 & element_count,
     uint32 & vert_count,
     bool use_int)
 {
-	srand((ushort)time(NULL));
+	short voxel_m[4096];
+	voxel_info voxel_i[4096];
+	short v_idx[4096 * 3];
+
+	const float miss_prob = 0.0f;
+
+	const glm::vec3 norm_right(1.0f, 0.0f, 0.0f);
+	const glm::vec3 norm_left(-1.0f, 0.0f, 0.0f);
+	const glm::vec3 norm_top(0.0f, 0.0f, 1.0f);
+	const glm::vec3 norm_bottom(0.0f, 0.0f, -1.0f);
+	const glm::vec3 norm_far(0.0f, 1.0f, 0.0f);
+	const glm::vec3 norm_near(0.0f, -1.0f, 0.0f);
+
+	memset(&voxel_m[0], 0, 8192);
+	memset(&voxel_i[0], 0, 32768);
+	memset(&v_idx[0], 0, 24576);
+
+	const ushort vert_per_edge_count = (ushort)(2 + tess_level);
+
+	voxel_info * v_i;
+
+	ushort idx = -1;
+
+	short idx_left = -1;
+	short idx_right = -1;
+	short idx_bottom = -1;
+	short idx_top = -1;
+	short idx_near = -1;
+	short idx_far = -1;
+
+	ushort v1_idx;
+	ushort v2_idx;
+	ushort v3_idx;
+	ushort v4_idx;
+
+	ushort cur_vert_count = 0;
+	ushort cur_element_count = 0;
+	ushort cur_vert_idx_count = 0;
+
+	char * cur_pos_data_pos = (char *)pos_data;
+	char * cur_norm_uv_data_pos = (char*)norm_uv_data;
+	ushort * cur_index_array_pos = index_array;
+
+	gen::vert vert1;
+	gen::vert vert2;
+	gen::vert vert3;
+	gen::vert vert4;
+
+	gen::triangle_pair_vert_indices indices;
+
+	for (ushort z = 0; z < vert_per_edge_count-1; ++z){
+		for (ushort y = 0; y < vert_per_edge_count-1; ++y){
+			for (ushort x = 0; x < vert_per_edge_count-1; ++x){
+				idx = COORD_TO_IDX(x, y, z, vert_per_edge_count);
+				
+				// temp voxel miss control
+
+				idx_left = COORD_TO_IDX(x - 1, y, z, vert_per_edge_count);
+				idx_right = COORD_TO_IDX(x + 1, y, z, vert_per_edge_count);
+				idx_bottom = COORD_TO_IDX(x, y - 1, z, vert_per_edge_count);
+				idx_top = COORD_TO_IDX(x, y + 1, z, vert_per_edge_count);
+				idx_near = COORD_TO_IDX(x, y, z - 1, vert_per_edge_count);
+
+				if (idx_left >= 0 && idx_right >= 0 && idx_bottom >= 0 && // have all naighbours control
+					idx_top >= 0 && idx_near >= 0 && voxel_m[idx_left] >= 0 &&
+					voxel_m[idx_right] >= 0 && voxel_m[idx_bottom] >= 0
+					&& voxel_m[idx_top] >= 0 && voxel_m[idx_near] >= 0){
+				
+					voxel_m[idx] = idx;
+				}
+				else{
+					if (base::rndNomalized() <= miss_prob){
+						voxel_m[idx] = -1;
+					}else{
+						voxel_m[idx] = idx;
+					}
+				}
+				////////////////////////// 
+			}
+		}
+	}
+
+
+	for (ushort z = 0; z < vert_per_edge_count-1; ++z){
+		for (ushort y = 0; y < vert_per_edge_count-1; ++y){
+			for (ushort x = 0; x < vert_per_edge_count-1; ++x){
+				idx = COORD_TO_IDX(x, y, z, vert_per_edge_count);
+
+				if (voxel_m[idx] == -1){
+					continue;
+				}
+
+				idx_left = COORD_TO_IDX(x - 1, y, z, vert_per_edge_count); // need for face visibility determination
+				idx_right = COORD_TO_IDX(x + 1, y, z, vert_per_edge_count);
+				idx_bottom = COORD_TO_IDX(x, y - 1, z, vert_per_edge_count);
+				idx_top = COORD_TO_IDX(x, y + 1, z, vert_per_edge_count);
+				idx_near = COORD_TO_IDX(x, y, z - 1, vert_per_edge_count);
+				idx_far = COORD_TO_IDX(x, y, z + 1, vert_per_edge_count);
+
+				ushort cur_idx_offset = 0;
+
+				if (idx_near == -1 || voxel_m[idx_near] == -1){ // if near neigh not exist then process near face
+					if (idx_left >= 0 && voxel_m[idx_left] >= 0){// if left neighbour exist reuse his vertices
+						v_i = &voxel_i[idx_left];
+						mask_to_idx(v_i->mask & 0xff, MASK_BIT_0, v1_idx, v4_idx);
+						v1_idx = v_idx[v_i->vert_idx + v1_idx];
+						v4_idx = v_idx[v_i->vert_idx + v4_idx];
+					}
+					else{
+						v1_idx = cur_vert_count;
+						cur_vert_count++;
+						vert1.pos = (gen::origin + (gen::diag*glm::vec3(x/float(vert_per_edge_count),
+							y / float(vert_per_edge_count), z / float(vert_per_edge_count))));
+
+						vert1.norm = norm_near;
+						vert1.uv.x = x / (float(vert_per_edge_count));
+						vert1.uv.y = z / (float(vert_per_edge_count));
+
+						v4_idx = cur_vert_count;
+						cur_vert_count++;
+						vert4.pos = (gen::origin + (gen::diag*glm::vec3(x / float(vert_per_edge_count),
+							y / float(vert_per_edge_count), (z + 1) / float(vert_per_edge_count))));
+
+						vert4.norm = norm_near;
+						vert4.uv.x = x / (float(vert_per_edge_count));
+						vert4.uv.y = (z + 1) / (float(vert_per_edge_count));
+
+						if (use_int){
+							cpy_packed(cur_pos_data_pos, cur_norm_uv_data_pos, vert1);
+							cur_pos_data_pos += 8;
+							cur_norm_uv_data_pos += 8;
+
+							cpy_packed(cur_pos_data_pos, cur_norm_uv_data_pos, vert4);
+							cur_pos_data_pos += 8;
+							cur_norm_uv_data_pos += 8;
+						}
+						else{
+							cpy_unpacked(cur_pos_data_pos, cur_norm_uv_data_pos, vert1);
+							cur_pos_data_pos += 12;
+							cur_norm_uv_data_pos += 20;
+
+							cpy_unpacked(cur_pos_data_pos, cur_norm_uv_data_pos, vert4);
+							cur_pos_data_pos += 12;
+							cur_norm_uv_data_pos += 20;
+						}
+					}
+
+					// these must create for sure
+
+					v_i = &voxel_i[idx];
+					v_i->mask |= MASK_BIT_0;
+					v_i->vert_idx = cur_vert_idx_count;
+
+					v2_idx = cur_vert_count;
+					cur_vert_count++;
+					vert2.pos = (gen::origin + (gen::diag*glm::vec3( (x + 1) / float(vert_per_edge_count),
+						y / float(vert_per_edge_count), z / float(vert_per_edge_count))));
+
+					vert2.norm = norm_near;
+					vert2.uv.x = (x + 1) / (float(vert_per_edge_count));
+					vert2.uv.y = z / (float(vert_per_edge_count));
+
+					v3_idx = cur_vert_count;
+					cur_vert_count++;
+					vert3.pos = (gen::origin + (gen::diag*glm::vec3( (x + 1) / float(vert_per_edge_count),
+						y / float(vert_per_edge_count), (z + 1) / float(vert_per_edge_count))));
+
+					vert3.norm = norm_near;
+					vert3.uv.x = (x + 1) / (float(vert_per_edge_count));
+					vert3.uv.y = (z + 1) / (float(vert_per_edge_count));
+
+					if (use_int){
+						cpy_packed(cur_pos_data_pos, cur_norm_uv_data_pos, vert2);
+						cur_pos_data_pos += 8;
+						cur_norm_uv_data_pos += 8;
+
+						cpy_packed(cur_pos_data_pos, cur_norm_uv_data_pos, vert3);
+						cur_pos_data_pos += 8;
+						cur_norm_uv_data_pos += 8;
+					}
+					else{
+						cpy_unpacked(cur_pos_data_pos, cur_norm_uv_data_pos, vert2);
+						cur_pos_data_pos += 12;
+						cur_norm_uv_data_pos += 20;
+
+						cpy_unpacked(cur_pos_data_pos, cur_norm_uv_data_pos, vert3);
+						cur_pos_data_pos += 12;
+						cur_norm_uv_data_pos += 20;
+					}
+
+					v_idx[v_i->vert_idx + cur_idx_offset * 4] = v1_idx;
+					v_idx[v_i->vert_idx + cur_idx_offset * 4 + 1] = v2_idx;
+					v_idx[v_i->vert_idx + cur_idx_offset * 4 + 2] = v3_idx;
+					v_idx[v_i->vert_idx + cur_idx_offset * 4 + 3] = v4_idx;
+
+					indices.t1_i1 = v1_idx;
+					indices.t1_i2 = v2_idx;
+					indices.t1_i3 = v3_idx;
+
+					indices.t2_i1 = v1_idx;
+					indices.t2_i2 = v3_idx;
+					indices.t2_i3 = v4_idx;
+
+					memcpy(cur_index_array_pos, &indices, 12);
+					cur_index_array_pos += 6;
+
+					cur_vert_idx_count += 4;
+					cur_element_count += 6;
+					cur_idx_offset++;
+				}
+
+				if (idx_left == -1 || voxel_m[idx_left] == -1){ // if left neigh not exist then process left face
+					/*if (idx_near >= 0 && voxel_m[idx_near] >= 0){ // if near neighbour exist  reuse his vertices
+						v_i = &voxel_i[idx_near];
+						mask_to_idx(v_i->mask & 0xff, MASK_BIT_4, MASK_BIT_7, v2_idx, v3_idx);
+						v2_idx = v_idx[v_i->vert_idx + v2_idx];
+						v3_idx = v_idx[v_i->vert_idx + v3_idx];
+					}
+
+					v_i = &voxel_i[idx];
+					v_i->vert_idx = cur_vert_idx_count;
+					
+					// add v1
+					v1_idx = vert_count;
+					v_i->mask |= MASK_BIT_4;
+					vert_count++;
+
+
+					// add v4 
+					v4_idx = vert_count;
+					v_i->mask |= MASK_BIT_7;
+					vert_count++;
+
+					cur_vert_idx_count += 4;*/
+				}
+				
+				if (idx_right == -1 || voxel_m[idx_right] == -1){ // if visible then process face
+
+				}
+
+				if (idx_bottom == -1 || voxel_m[idx_bottom] == -1){ // if visible then process face
+
+				}
+
+				if (idx_top == -1 || voxel_m[idx_top] == -1){ // if visible then process face
+
+				}
+
+				if (idx_far == -1 || voxel_m[idx_far] == -1){ // if visible then process face
+
+				}
+			}
+		}
+	}
+
+	element_count = cur_element_count;
+	vert_count = cur_vert_count; 
+
+	/*srand((ushort)time(NULL));
 
 	VertMaskVec vertex_list;
 	VertIdxHashMap vertex_hash_map;
@@ -391,10 +682,6 @@ void gen_cube_imp(
 			vert3.uv.y = v3_uv.y;
 		}
 
-		/*memcpy(vert_data + cur_pos * (sizeof(gen::vert) / sizeof(float)), &vert1, sizeof(gen::vert));
-		memcpy(vert_data + (cur_pos + 1) * (sizeof(gen::vert) / sizeof(float)), &vert2, sizeof(gen::vert));
-		memcpy(vert_data + (cur_pos + 2) * (sizeof(gen::vert) / sizeof(float)), &vert3, sizeof(gen::vert));*/
-
 		if (use_int){
 			cpy_packed(cur_pos_data_pos,cur_norm_uv_data_pos, vert1);
 			cur_pos_data_pos += 8;
@@ -428,6 +715,8 @@ void gen_cube_imp(
 	}
 
 	element_count = cur_pos;
-	vert_count = cur_pos;
+	vert_count = cur_pos;*/
+
+	
 }
 
