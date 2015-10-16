@@ -36,13 +36,15 @@ namespace base {
 	class source_location;
 }
 
+class benchmark;
+
 class scene
 {
 public:
 	static const int BUILDING_SIDE_SIZE = 32;
 	static const int MAX_BLOCK_COUNT = BUILDING_SIDE_SIZE * (BUILDING_SIDE_SIZE >> 1) * BUILDING_SIDE_SIZE * 2;
 
-	scene();
+	scene(benchmark * const app);
 	~scene();
 
     void init_gpu_stuff(const base::source_location &loc);
@@ -151,6 +153,8 @@ protected:
 
     BenchmarkMode _bench_mode;
     TexturingMode _tex_mode;
+
+    benchmark * const _app;
 };
 
 #endif // __ASYNC_VBO_TRANSFERS_SCENE_H__
