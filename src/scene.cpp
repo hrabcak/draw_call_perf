@@ -67,7 +67,7 @@ scene::scene(benchmark * const app)
     , _texs()
     , _tex_handles()
 
-    , _bench_mode(BenchBaseVertex)
+    , _bench_mode(BenchIndirect)
     , _tex_mode(BenchTexArray)
 
     , _max_array_layers(1)
@@ -815,9 +815,9 @@ void scene::add_test_block()
     // bottom layer
 	for (int y = 0; y < grid_size; y++) {
 		for (int x = 0; x < grid_size; x++) {
-            const glm::vec2 pos0 = glm::vec2(x, y) * grid_size_r;
-            const glm::vec2 pos1 = glm::vec2(x, y) * 2.f * grid_size_r;
-			const int height = int(((((glm::simplex(pos0) + .5f * glm::simplex(pos1)) + 1.5f) / 3.f) * max_height));
+            const float s0 = glm::simplex(glm::vec2(x, y) * grid_size_r);
+            const float s1 = glm::simplex(glm::vec2(x, y) * 2.f * grid_size_r);
+			const int height = int(((((s0 + .5f * s1) + 1.5f) / 3.f) * max_height));
 
 			add_block(
                 glm::vec3(
