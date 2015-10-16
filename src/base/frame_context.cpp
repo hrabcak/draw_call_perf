@@ -59,7 +59,6 @@ base::frame_context::frame_context()
     , _elements(0)
     , _elements_begin(0)
     , _fence(0)
-    //, _mode(ModePersistent)
 {}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -79,7 +78,9 @@ void base::frame_context::create_buffers()
         _ctx_vbo = __ctx_buffer = create_buffer(1 * POOL_SIZE, &__ctx_data_ptr);
         _ctx_data_ptr = __ctx_data_ptr;
 
-        _scene_vbo = __scene_buffer = create_buffer(scene::MAX_BLOCK_COUNT * POOL_SIZE, &__scene_data_ptr);
+        _scene_vbo = __scene_buffer = create_buffer(
+            scene::MAX_BLOCK_COUNT * POOL_SIZE,
+            &__scene_data_ptr);
         _scene_data_ptr = __scene_data_ptr;
         _scene_data_offset = 0;
 
@@ -88,11 +89,14 @@ void base::frame_context::create_buffers()
             &__drawid_data_ptr);
         _drawid_data_ptr = __drawid_data_ptr;
         _drawid_data_offset = 0;
+        
+        // bind drawid buffer to 13
         glBindBuffer(GL_ARRAY_BUFFER, _drawid_vbo);
         glVertexAttribIPointer(13, 4, GL_INT, 0, (GLvoid*)0);
         glVertexAttribDivisor(13, 1);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+        // create COMMAND buffer for multi draw indirect
         {
             const int size = scene::MAX_BLOCK_COUNT * sizeof(base::cmd) * 4;
             unsigned flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
@@ -103,6 +107,7 @@ void base::frame_context::create_buffers()
                 reinterpret_cast<base::cmd*>(glMapBufferRange(GL_ARRAY_BUFFER, 0, size, flags));
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
+
         // scene buffer
         glGenTextures(1, &__scene_tb);
         _scene_tb = __scene_tb;

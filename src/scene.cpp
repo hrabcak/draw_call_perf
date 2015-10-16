@@ -224,33 +224,44 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 
     get_face_and_vert_count_for_tess_level(tess_level, _nelements, _nvertices);
 
-    std::vector<unsigned short> elements;
-    std::vector<float> vertices;
-    elements.resize(_nelements * scene::MAX_BLOCK_COUNT);
-    vertices.resize(_nvertices * 8 * scene::MAX_BLOCK_COUNT);
+    int2 * vertices_ptr = 0;
+    ushort * elements_ptr = 0;
 
-	unsigned int dummy; // toto som dolpnil len aby sa to dalo skompilovat
+    _buffer_elem = base::create_buffer<ushort>(_nelements * MAX_BLOCK_COUNT, &elements_ptr, 0);
+    _buffer_pos = base::create_buffer<glm::ivec2>(_nvertices * MAX_BLOCK_COUNT, &vertices_ptr, 0);
 
-    gen_cube<float>(tess_level, &vertices[0], &elements[0],dummy,dummy);
+    auto vertices_ptre = vertices_ptr + MAX_BLOCK_COUNT * _nvertices;
+    do {
+        uint nvertices;
+        uint nelements;
 
-    const double scale = (glm::pow(2.0, 20.0) - 1.0) / 1.0;
-    glm::ivec2 * const ptr = reinterpret_cast<glm::ivec2*>(&vertices[0]);
-    for (unsigned i = 0; i < _nvertices; ++i) {
-        const int idx = i * 8;
-        ptr[i] = base::pack_to_pos3x21b(dvec3(vertices[idx], vertices[idx + 1], vertices[idx + 2]), scale);
-    }
+        gen_cube<int2>(tess_level, vertices_ptr, elements_ptr, nelements, nvertices);
 
-    //TODO create second array with normal + uv
+        base::stats()._ntriangles = nelements / 3;
+        base::stats()._nvertices = nvertices;
 
-    // duplicate 
-    for (int i = 1; i < scene::MAX_BLOCK_COUNT; ++i) {
-        memcpy(&elements[i * _nelements], &elements[0], _nelements * sizeof(short));
-        memcpy(&vertices[i * 2 * _nvertices], &vertices[0], _nvertices * sizeof(glm::ivec2));
-    }
+        vertices_ptr += _nvertices;
+        elements_ptr += _nelements;
+    } while (vertices_ptr != vertices_ptre);
 
-    _buffer_elem = base::create_buffer<unsigned short>(_nelements * scene::MAX_BLOCK_COUNT, 0, &elements[0]);
-    _buffer_pos = base::create_buffer<glm::ivec2>(_nvertices * scene::MAX_BLOCK_COUNT, 0, &vertices[0]);
-    //_buffer_nor_uv = base::create_buffer<glm::ivec4>(_nvertices * scene::MAX_BLOCK_COUNT, 0, &vertices[0]);
+    //const double scale = (glm::pow(2.0, 20.0) - 1.0) / 1.0;
+    //glm::ivec2 * const ptr = reinterpret_cast<glm::ivec2*>(&vertices[0]);
+    //for (unsigned i = 0; i < _nvertices; ++i) {
+    //    const int idx = i * 8;
+    //    ptr[i] = base::pack_to_pos3x21b(dvec3(vertices[idx], vertices[idx + 1], vertices[idx + 2]), scale);
+    //}
+
+    ////TODO create second array with normal + uv
+
+    //// duplicate 
+    //for (int i = 1; i < scene::MAX_BLOCK_COUNT; ++i) {
+    //    memcpy(&elements[i * _nelements], &elements[0], _nelements * sizeof(short));
+    //    memcpy(&vertices[i * 2 * _nvertices], &vertices[0], _nvertices * sizeof(glm::ivec2));
+    //}
+
+    //_buffer_elem = base::create_buffer<unsigned short>(_nelements * scene::MAX_BLOCK_COUNT, 0, &elements[0]);
+    //_buffer_pos = base::create_buffer<glm::ivec2>(_nvertices * scene::MAX_BLOCK_COUNT, 0, &vertices[0]);
+    ////_buffer_nor_uv = base::create_buffer<glm::ivec4>(_nvertices * scene::MAX_BLOCK_COUNT, 0, &vertices[0]);
 
     // create texture buffer for vertices
     glGenTextures(1, &_tb_pos);

@@ -25,6 +25,7 @@ THE SOFTWARE.
 
 #include "pixelfmt.h"
 #include "hptimer.h"
+#include "types.h"
 
 #include <string>
 #include <stdio.h>
@@ -34,14 +35,28 @@ THE SOFTWARE.
 
 #include <gl/glew.h>
 
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-
 #define TMP_STR_BUF_SIZE 64
 
 namespace base {
 
-	class app;
+class app;
+
+struct stats_data
+{
+    uint32 _buffer_mem;
+    uint32 _texture_mem;
+    uint32 _ntriangles;
+    uint32 _nvertices;
+
+    stats_data()
+        : _buffer_mem(0)
+        , _texture_mem(0)
+        , _ntriangles(0)
+        , _nvertices(0)
+    {}
+};
+
+inline stats_data& stats() { static stats_data s; return s; }
 
 ///
 class source_location
@@ -228,6 +243,8 @@ unsigned create_buffer(const unsigned nelem, T** const ptr, void * const data = 
         ? GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
         : 0;
     const unsigned size = sizeof(T) * nelem;
+
+    stats()._buffer_mem += size;
 
     glBufferStorage(GL_ARRAY_BUFFER, size, data, flags);
 

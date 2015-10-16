@@ -25,8 +25,6 @@ THE SOFTWARE.
 
 #include <vector>
 
-#include <glm/glm.hpp>
-
 #include <gl/glew.h>
 
 #include "base/types.h"
@@ -41,8 +39,7 @@ class benchmark;
 class scene
 {
 public:
-	static const int BUILDING_SIDE_SIZE = 32;
-	static const int MAX_BLOCK_COUNT = BUILDING_SIDE_SIZE * (BUILDING_SIDE_SIZE >> 1) * BUILDING_SIDE_SIZE * 2;
+	static const int MAX_BLOCK_COUNT = 0x08000;
 
 	scene(benchmark * const app);
 	~scene();
