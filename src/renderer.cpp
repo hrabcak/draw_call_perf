@@ -135,20 +135,6 @@ void renderer::draw_frame(base::frame_context * const ctx)
 {
     base::hptimer timer;
     
-    static double start_time = timer.elapsed_time();
-
-    double current_time = timer.elapsed_time();
-    if (current_time - start_time > 1000.0) {
-        __int64 result[3] = { 0, };
-        glGetQueryObjecti64v(ctx->_time_queries[0], GL_QUERY_RESULT, result);
-        glGetQueryObjecti64v(ctx->_time_queries[1], GL_QUERY_RESULT, result + 1);
-        const double coef_n2m = 1.0 / 1000000.0;
-        const double time = double(result[1] - result[0]) * coef_n2m;
-        printf("cpu render time: %.2f gpu render time: %.2f\n", ctx->_cpu_render_time, time);
-        start_time = current_time;
-    }
-
-
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
     glClearColor(0.3f, 0.2f, 0.4f, 1.0f);
@@ -157,6 +143,34 @@ void renderer::draw_frame(base::frame_context * const ctx)
     _app->gpu_draw_frame(ctx);
 
 	base::swap_buffers();
+
+    static double start_time = timer.elapsed_time();
+    static float frame = 0;
+
+    double current_time = timer.elapsed_time();
+    const float t = float(current_time - start_time);
+    if (t > 1000.f) {
+        __int64 result[3] = { 0, };
+        glGetQueryObjecti64v(ctx->_time_queries[0], GL_QUERY_RESULT, result);
+        glGetQueryObjecti64v(ctx->_time_queries[1], GL_QUERY_RESULT, result + 1);
+        const double coef_n2m = 1.0 / 1000000.0;
+        const double time = double(result[1] - result[0]) * coef_n2m;
+        const float fps = frame / (t * 0.001f);
+
+        printf("fps: %.0f cpu: %.2f gpu: %.2f tps: %.0fM tris: %uk vtx: %uk mem: %uM\n",
+            fps,
+            ctx->_cpu_render_time,
+            time,
+            float(base::stats()._ntriangles) * fps * (1.f / (1024.f * 1024.f)),
+            base::stats()._ntriangles >> 10,
+            base::stats()._nvertices >> 10,
+            base::stats()._buffer_mem >> 20);
+
+        start_time = current_time;
+        frame = 0;
+    }
+
+    frame += 1.f;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

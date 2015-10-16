@@ -68,7 +68,7 @@ scene::scene(benchmark * const app)
     , _tex_handles()
 
     , _bench_mode(BenchIndirect)
-    , _tex_mode(BenchTexArray)
+    , _tex_mode(BenchTexBindless)
 
     , _max_array_layers(1)
 
@@ -224,34 +224,63 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 
     get_face_and_vert_count_for_tess_level(tess_level, _nelements, _nvertices);
 
-    int2 * vertices_ptr = 0;
-    int2 * norm_uv_ptr = 0;
-    ushort * elements_ptr = 0;
+    int2 * vertices_ptr = 0, * vertices_base_ptr = 0;
+    int2 * norm_uv_ptr = 0, * norm_uv_base_ptr = 0;
+    ushort * elements_ptr = 0, * elements_base_ptr = 0;
 
     _buffer_elem = base::create_buffer<ushort>(_nelements * MAX_BLOCK_COUNT, &elements_ptr, 0);
     _buffer_pos = base::create_buffer<glm::ivec2>(_nvertices * MAX_BLOCK_COUNT, &vertices_ptr, 0);
     _buffer_nor_uv = base::create_buffer<glm::ivec2>(_nvertices * MAX_BLOCK_COUNT, &norm_uv_ptr, 0);
+
+    elements_base_ptr = elements_ptr;
+    vertices_base_ptr = vertices_ptr;
+    norm_uv_base_ptr = norm_uv_ptr;
 
     auto vertices_ptre = vertices_ptr + MAX_BLOCK_COUNT * _nvertices;
     do {
         uint nvertices;
         uint nelements;
 
-		gen_cube<int2>(
-			tess_level,
-			vertices_ptr,
-			norm_uv_ptr,
-			elements_ptr,
-			nullptr,
-			nullptr,
-            nelements,
-            nvertices);
+        if (0) {
+            gen_cube<int2>(
+                tess_level,
+                vertices_ptr,
+                norm_uv_ptr,
+                elements_ptr,
+				nullptr,
+				nullptr,
+                nelements,
+                nvertices);
+        }
+        else {
+            if (vertices_ptr == vertices_base_ptr) {
+                gen_cube<int2>(
+                    tess_level,
+                    vertices_ptr,
+                    norm_uv_ptr,
+                    elements_ptr,
+					nullptr,
+					nullptr,
+                    nelements,
+                    nvertices);
+            }
+            else {
+                memcpy(elements_ptr, elements_base_ptr, _nelements);
+                memcpy(vertices_ptr, vertices_base_ptr, _nvertices);
+                memcpy(norm_uv_ptr, norm_uv_base_ptr, _nvertices);
+            }
 
-        base::stats()._ntriangles = nelements / 3;
-        base::stats()._nvertices = nvertices;
+            nelements = _nelements;
+            nvertices = _nvertices;
+        }
 
-        vertices_ptr += _nvertices;
+
+        base::stats()._ntriangles += nelements / 3;
+        base::stats()._nvertices += nvertices;
+
         elements_ptr += _nelements;
+        vertices_ptr += _nvertices;
+        norm_uv_ptr += _nvertices;
     } while (vertices_ptr != vertices_ptre);
 
     //const double scale = (glm::pow(2.0, 20.0) - 1.0) / 1.0;
@@ -646,15 +675,28 @@ void scene::gpu_draw(base::frame_context * const ctx)
                 count,
                 GL_UNSIGNED_SHORT,
                 0,
-                ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1]);
+                nblocks);
         }
         else {
-            glMultiDrawElementsIndirect(
-                GL_TRIANGLES,
-                GL_UNSIGNED_SHORT,
-                (void*)((ctx->_scene_data_offset) * sizeof(base::cmd)),
-                ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1],
-                0);
+            if (_tex_mode == BenchTexBindless) {
+                glMultiDrawElementsIndirect(
+                    GL_TRIANGLES,
+                    GL_UNSIGNED_SHORT,
+                    (void*)((ctx->_scene_data_offset) * sizeof(base::cmd)),
+                    nblocks,
+                    0);
+            }
+            else if (_tex_mode == BenchTexArray) {
+                for (int i = 0; i < nblocks; i += _max_array_layers) {
+                    bind_texture(i);
+                    glMultiDrawElementsIndirect(
+                        GL_TRIANGLES,
+                        GL_UNSIGNED_SHORT,
+                        (void*)((ctx->_scene_data_offset + i) * sizeof(base::cmd)),
+                        _max_array_layers,
+                        0);
+                }
+            }
         }
     }
     else {

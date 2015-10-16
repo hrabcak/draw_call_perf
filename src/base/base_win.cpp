@@ -350,10 +350,10 @@ void base::run_app_win(base::app *a, const bool initgl)
 
 		double current_time = timer.elapsed_time();
 		if (current_time - start_time > 1000.0){
-			printf(
+			/*printf(
 				"%.3f ms/frame, %.1f FPS\n",
 				(current_time-start_time) / double(nb_frames),
-				double(nb_frames) * (current_time-start_time) * 0.001);
+				double(nb_frames) * (current_time-start_time) * 0.001);*/
 			nb_frames = 0;
 			start_time = current_time;
 		}
