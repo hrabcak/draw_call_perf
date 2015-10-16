@@ -73,8 +73,8 @@ public:
 
 	virtual void activated(const bool state);
 
-	void create_perspective_matrix(frame_context *fc);
-	void update_camera(frame_context *fc);
+	void create_perspective_matrix(frame_context * const fc);
+	void update_camera(frame_context * const fc);
 
 	/// it is called in base::run_app_win...
 	void inc_frame_number() { ++_frame_number; }
@@ -94,6 +94,9 @@ public:
 	}
 
 	void create_frame_context_pool();
+
+    float get_fovy() const { return _fovy; }
+    float get_aspect() const { return _aspect; }
 
 protected:
 	static app *_app;
@@ -115,6 +118,9 @@ protected:
 
 	/// frame context pool
 	std::list<base::frame_context*> _pool;
+
+    float _fovy;
+    float _aspect;
 
 private:
 	app(const app&);

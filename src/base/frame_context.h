@@ -140,6 +140,9 @@ struct frame_context
 	bool check_fence();
 
 	bool first;
+
+    float _fovy;
+    float _aspect;
 };
 
 } // end of namespace base

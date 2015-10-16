@@ -39,6 +39,8 @@ base::app::app()
 	: _velocity_boost(false)
     , _position(46.5, 40.3, 190)
 	, _frame_number(0)
+    , _fovy(45.f)
+    , _aspect(float(get_wnd_width()) / float(get_wnd_height()))
 { 
 	assert(_app == 0);
     _app = this; 
@@ -85,18 +87,18 @@ void base::app::begin_frame()
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void base::app::create_perspective_matrix(frame_context *fc)
+void base::app::create_perspective_matrix(frame_context * const fc)
 {
-	fc->_mprj=glm::perspective(
-		45.0f,
-		float(get_wnd_width()) / float(get_wnd_height()),
+	fc->_mprj = glm::perspective(
+		_fovy,
+		_aspect,
 		0.1f,
 		500.0f);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void base::app::update_camera(frame_context *fc)
+void base::app::update_camera(frame_context * const fc)
 {
 	fc->_view = glm::rotate(
 		glm::rotate(
@@ -109,6 +111,9 @@ void base::app::update_camera(frame_context *fc)
 
 	fc->_view[3] = glm::vec4(_position, 1);
 	fc->_mvp = fc->_mprj * glm::inverse(fc->_view);
+
+    fc->_fovy = _fovy;
+    fc->_aspect = _aspect;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
