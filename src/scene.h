@@ -82,7 +82,7 @@ protected:
     void create_test_scene();
 	void create_test_scene(unsigned short obj_count);
 	
-	int get_perspective_block_bound(int depth);
+	int get_perspective_block_bound(int row, float scale);
 	
     int frustum_check(base::frame_context *fc);
     void create_frustum_planes(glm::vec4 *planes, const glm::mat4 &mvp);
@@ -94,6 +94,7 @@ protected:
 
 protected:
 	glm::ivec2 _cur_next_block;
+	uint32 _cur_block;
 	
 	static const int NumTypes = 4;
 
