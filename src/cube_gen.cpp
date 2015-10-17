@@ -610,7 +610,7 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 		cur_index_array = (index_array + out_added_elems);
 	}
 
-	/*if (idx_bottom == -1 || voxel_map[idx_bottom] == -1){ // if near neigh not exist then process near face
+	if (idx_bottom == -1 || voxel_map[idx_bottom] == -1){ // if near neigh not exist then process near face
 		if (idx_left != -1 && voxel_map[idx_left] != -1){
 			left_vox_info = &voxel_inf_arr[idx_left];
 		}
@@ -705,7 +705,7 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 
 		out_added_elems += 6;
 		cur_idx_offset += 4;
-	}*/
+	}
 
 	out_added_voxel_idx += cur_idx_offset;
 }
