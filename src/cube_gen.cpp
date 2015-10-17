@@ -436,7 +436,7 @@ void gen_cube_imp(
 				ushort cur_idx_offset = 0;
 
 				if (idx_near == -1 || voxel_m[idx_near] == -1){ // if near neigh not exist then process near face
-					if (idx_left >= 0 && voxel_m[idx_left] >= 0){// if left neighbour exist reuse his vertices
+					if (idx_left >= 0 && voxel_m[idx_left] >= 0 && (voxel_i[idx_left].mask & MASK_BIT_0)){// if left neighbour exist and have required face reuse his vertices
 						v_i = &voxel_i[idx_left];
 						mask_to_idx(v_i->mask & 0xff, MASK_BIT_0, v1_idx, v4_idx);
 						v1_idx = v_idx[v_i->vert_idx + v1_idx];
@@ -450,7 +450,7 @@ void gen_cube_imp(
 
 						vert1.norm = norm_near;
 						vert1.uv.x = x / (float(vox_per_edge_count));
-						vert1.uv.y = z / (float(vox_per_edge_count));
+						vert1.uv.y = y / (float(vox_per_edge_count));
 
 						v4_idx = cur_vert_count;
 						cur_vert_count++;
@@ -459,7 +459,7 @@ void gen_cube_imp(
 
 						vert4.norm = norm_near;
 						vert4.uv.x = x / (float(vox_per_edge_count));
-						vert4.uv.y = (z + 1) / (float(vox_per_edge_count));
+						vert4.uv.y = (y + 1) / (float(vox_per_edge_count));
 
 						if (use_int){
 							cpy_packed(cur_pos_data_pos, cur_norm_uv_data_pos, vert1);
@@ -494,7 +494,7 @@ void gen_cube_imp(
 
 					vert2.norm = norm_near;
 					vert2.uv.x = (x + 1) / (float(vox_per_edge_count));
-					vert2.uv.y = z / (float(vox_per_edge_count));
+					vert2.uv.y = y / (float(vox_per_edge_count));
 
 					v3_idx = cur_vert_count;
 					cur_vert_count++;
@@ -503,7 +503,7 @@ void gen_cube_imp(
 
 					vert3.norm = norm_near;
 					vert3.uv.x = (x + 1) / (float(vox_per_edge_count));
-					vert3.uv.y = (z + 1) / (float(vox_per_edge_count));
+					vert3.uv.y = (y + 1) / (float(vox_per_edge_count));
 
 					if (use_int){
 						cpy_packed(cur_pos_data_pos, cur_norm_uv_data_pos, vert2);
@@ -591,6 +591,7 @@ void gen_cube_imp(
 
 	element_count = cur_element_count;
 	vert_count = cur_vert_count;
+
 
 
 	/*srand((ushort)time(NULL));
