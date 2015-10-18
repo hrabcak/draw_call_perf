@@ -45,7 +45,6 @@ scene::scene(benchmark * const app)
 	, _bboxes()
 	, _hws()
 	, _flags()
-	, _blocks()
 
     , _prg(0)
     , _prg_tb_blocks(-1)
@@ -58,28 +57,27 @@ scene::scene(benchmark * const app)
     , _buffer_nor_uv(0)
     , _buffer_tex_handles(0)
 
-    , _nelements(0)
-    , _nvertices(0)
-
     , _tb_pos(0)
     , _tb_tex_handles(0)
 
     , _texs()
     , _tex_handles()
 
-    , _bench_mode(BenchIndirect)
-    , _tex_mode(BenchTexBindless)
+    , _bench_mode(BenchInstancing)
+    , _tex_mode(BenchTexArray)
 
     , _max_array_layers(1)
 
     , _app(app)
+
+    , _vertices_base_ptr(0)
+    , _norm_uv_base_ptr(0)
+    , _elements_base_ptr(0)
 {
 	_tms.reserve(MAX_BLOCK_COUNT);
 	_bboxes.reserve(MAX_BLOCK_COUNT);
 	_hws.reserve(MAX_BLOCK_COUNT);
 	_flags.reserve(MAX_BLOCK_COUNT);
-
-    create_test_scene();
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -88,7 +86,7 @@ scene::~scene() {}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-scene::block* scene::add_block(
+void scene::add_block(
 	const glm::vec3 &pos,
 	const glm::vec3 &size,
 	const float heading)
@@ -109,14 +107,6 @@ scene::block* scene::add_block(
 
 	_hws.push_back(size * 0.5f);
 	_flags.push_back(0);
-
-	_blocks.push_back(
-		block(
-			(_tms.end()-1)._Ptr,
-			(_flags.end()-1)._Ptr,
-			(_hws.end()-1)._Ptr));
-	
-	return (_blocks.end()-1)._Ptr;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -220,87 +210,16 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 
     load_and_init_shaders(loc);
 
-    const int tess_level = 2;
+    const int tess_level = 3;
 
-    get_face_and_vert_count_for_tess_level(tess_level, _nelements, _nvertices);
+    uint nvertices = 384;// 216;// 150;// 96;
+    uint nelements = 1764;// 900;// 576;// 324;
 
-    int2 * vertices_ptr = 0, * vertices_base_ptr = 0;
-    int2 * norm_uv_ptr = 0, * norm_uv_base_ptr = 0;
-    ushort * elements_ptr = 0, * elements_base_ptr = 0;
+    //get_face_and_vert_count_for_tess_level(tess_level, nelements, nvertices);
 
-    _buffer_elem = base::create_buffer<ushort>(_nelements * MAX_BLOCK_COUNT, &elements_ptr, 0);
-    _buffer_pos = base::create_buffer<glm::ivec2>(_nvertices * MAX_BLOCK_COUNT, &vertices_ptr, 0);
-    _buffer_nor_uv = base::create_buffer<glm::ivec2>(_nvertices * MAX_BLOCK_COUNT, &norm_uv_ptr, 0);
-
-    elements_base_ptr = elements_ptr;
-    vertices_base_ptr = vertices_ptr;
-    norm_uv_base_ptr = norm_uv_ptr;
-
-    auto vertices_ptre = vertices_ptr + MAX_BLOCK_COUNT * _nvertices;
-    do {
-        uint nvertices;
-        uint nelements;
-
-        if (0) {
-            gen_cube<int2>(
-                tess_level,
-                vertices_ptr,
-                norm_uv_ptr,
-                elements_ptr,
-				nullptr,
-				nullptr,
-                nelements,
-                nvertices);
-        }
-        else {
-            if (vertices_ptr == vertices_base_ptr) {
-                gen_cube<int2>(
-                    tess_level,
-                    vertices_ptr,
-                    norm_uv_ptr,
-                    elements_ptr,
-					nullptr,
-					nullptr,
-                    nelements,
-                    nvertices);
-            }
-            else {
-                memcpy(elements_ptr, elements_base_ptr, _nelements*sizeof(*elements_ptr));
-                memcpy(vertices_ptr, vertices_base_ptr, _nvertices*sizeof(*vertices_ptr));
-                memcpy(norm_uv_ptr, norm_uv_base_ptr, _nvertices*sizeof(*norm_uv_ptr));
-            }
-
-            nelements = _nelements;
-            nvertices = _nvertices;
-        }
-
-
-        base::stats()._ntriangles += nelements / 3;
-        base::stats()._nvertices += nvertices;
-
-        elements_ptr += _nelements;
-        vertices_ptr += _nvertices;
-        norm_uv_ptr += _nvertices;
-    } while (vertices_ptr != vertices_ptre);
-
-    //const double scale = (glm::pow(2.0, 20.0) - 1.0) / 1.0;
-    //glm::ivec2 * const ptr = reinterpret_cast<glm::ivec2*>(&vertices[0]);
-    //for (unsigned i = 0; i < _nvertices; ++i) {
-    //    const int idx = i * 8;
-    //    ptr[i] = base::pack_to_pos3x21b(dvec3(vertices[idx], vertices[idx + 1], vertices[idx + 2]), scale);
-    //}
-
-    ////TODO create second array with normal + uv
-
-    //// duplicate 
-    //for (int i = 1; i < scene::MAX_BLOCK_COUNT; ++i) {
-    //    memcpy(&elements[i * _nelements], &elements[0], _nelements * sizeof(short));
-    //    memcpy(&vertices[i * 2 * _nvertices], &vertices[0], _nvertices * sizeof(glm::ivec2));
-    //}
-
-    //_buffer_elem = base::create_buffer<unsigned short>(_nelements * scene::MAX_BLOCK_COUNT, 0, &elements[0]);
-    //_buffer_pos = base::create_buffer<glm::ivec2>(_nvertices * scene::MAX_BLOCK_COUNT, 0, &vertices[0]);
-    ////_buffer_nor_uv = base::create_buffer<glm::ivec4>(_nvertices * scene::MAX_BLOCK_COUNT, 0, &vertices[0]);
+    _buffer_elem = base::create_buffer<ushort>(nelements * MAX_BLOCK_COUNT, &_elements_base_ptr, 0);
+    _buffer_pos = base::create_buffer<glm::ivec2>(nvertices * MAX_BLOCK_COUNT, &_vertices_base_ptr, 0);
+    _buffer_nor_uv = base::create_buffer<glm::ivec2>(nvertices * MAX_BLOCK_COUNT, &_norm_uv_base_ptr, 0);
 
     // create texture buffer for vertices
     glGenTextures(1, &_tb_pos);
@@ -311,8 +230,47 @@ void scene::init_gpu_stuff(const base::source_location &loc)
         _buffer_pos);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
 
-    if (_tex_mode != BenchTexNone)
+    //if (_tex_mode != BenchTexNone)
         create_textures(loc);
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void scene::post_gpu_init()
+{
+    const int tess_level = 2;
+    uint nvertices;
+    uint nelements;
+
+    ushort * elements_ptr = _elements_base_ptr;
+    int2 * vertices_ptr = _vertices_base_ptr;
+    int2 * norm_uv_ptr = _norm_uv_base_ptr;
+
+    int i = 0;
+    int e = MAX_BLOCK_COUNT;
+    do {
+        gen_cube<int2>(
+            tess_level,
+            vertices_ptr,
+            norm_uv_ptr,
+            elements_ptr,
+            nullptr,
+            nullptr,
+            nelements,
+            nvertices);
+
+        _dc_data.push_back(dc_data(
+            nelements,
+            uint(elements_ptr - _elements_base_ptr),
+            nvertices,
+            uint(vertices_ptr - _vertices_base_ptr)));
+
+        elements_ptr += nelements;
+        vertices_ptr += nvertices;
+        norm_uv_ptr += nvertices;
+    } while (++i != e);
+
+    create_test_scene();
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -320,9 +278,9 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 void scene::create_textures(const base::source_location &)
 {
     const int width = 64;
-    const int tex_size = 64 * 64;
+    const int tex_size = width * width;
     glm::u8vec4 * data = 0;
-    const int ntex = 32768;
+    const int ntex = MAX_BLOCK_COUNT;
     const base::pixelfmt pf = base::PF_BGRA8_SRGB;
     const int tex_size_bytes = tex_size * base::get_pfd(pf)->_size;
 
@@ -343,12 +301,6 @@ void scene::create_textures(const base::source_location &)
                 buf);
 
             _texs.push_back(tex);
-        }
-
-        for (int i = 0; i < ntex; ++i) {
-            const GLuint64 handle = glGetTextureHandleARB(_texs[i]);
-            _tex_handles.push_back(handle);
-            glMakeTextureHandleResidentARB(handle);
         }
     }
     else {
@@ -454,7 +406,7 @@ int scene::frustum_check(base::frame_context * const ctx)
 	glm::vec4 planes[num_planes];
 	create_frustum_planes(planes,ctx->_mvp);
 
-	glm::vec4 * const planes_end = planes +num_planes;
+	glm::vec4 * const planes_end = planes + num_planes;
 
 	const mat4 *bbox = &_bboxes[0];
 	const vec3 *hw = &_hws[0];
@@ -463,7 +415,7 @@ int scene::frustum_check(base::frame_context * const ctx)
 
     const bool dont_check = true;
 
-	memset(ctx->_num_visible_blocks, 0, sizeof(ctx->_num_visible_blocks));
+	ctx->_num_visible_blocks[0] = 0;
 
 	for( ; flags != e; ++hw, ++bbox, ++flags) {
 		const vec4 *plane = planes;
@@ -487,7 +439,7 @@ int scene::frustum_check(base::frame_context * const ctx)
 
 		if(plane == planes_end || dont_check) {
 			*flags |= Visible;
-			++ctx->_num_visible_blocks[*flags & TypeMask];
+			++ctx->_num_visible_blocks[0];
 		}
 	}
 
@@ -503,8 +455,7 @@ void scene::upload_blocks_to_gpu(
     static int counter = 0;
 
 	ctx->_scene_data_ptr_size = 0;
-	for(int i = 0; i < NumTypes; ++i)
-		ctx->_scene_data_ptr_size += ctx->_num_visible_blocks[i];
+	ctx->_scene_data_ptr_size = ctx->_num_visible_blocks[0];
 	ctx->_scene_data_ptr_size *= sizeof(base::block_data);
 
 	if(ctx->_scene_data_ptr_size > 0) {
@@ -524,23 +475,25 @@ void scene::upload_blocks_to_gpu(
 		unsigned int *flags = &_flags[0];
         base::cmd * cmd = ctx->_cmd_data_ptr;
 
-        int * const drawid = ctx->_drawid_data_ptr + ctx->_drawid_data_offset;
+        base::dc_gpu_data * dc_gpu = ctx->_drawid_data_ptr + ctx->_drawid_data_offset;
+        dc_data * dc = &_dc_data[0];
 
 		// transform visible blocks to screen and add to VBO 
-        for (; tm != e; ++tm, ++flags) {
-            const char type = char(*flags & TypeMask);
+        for (; tm != e; ++tm, ++flags, ++dc, ++dc_gpu, ++cmd) {
+            const char type = 0;
             const uint offset = uint(ptr[type] - ctx->_scene_data_ptr);
 
             ptr[type]->_tm = *tm;
 
-            drawid[offset * 4] = ctx->_scene_data_offset + offset;
-            drawid[offset * 4 + 1] = _nvertices * offset;
-            drawid[offset * 4 + 2] = offset;
+            new (dc_gpu) base::dc_gpu_data(
+                ctx->_scene_data_offset + offset,
+                dc->_first_vertex,
+                offset);
 
-            new (cmd + offset) base::cmd(
-                _nelements,
+            new (cmd) base::cmd(
+                dc->_nelements,
                 1,
-                _nelements * offset,
+                dc->_fist_index,
                 0,
                 ctx->_scene_data_offset + offset);
 
@@ -579,6 +532,7 @@ void scene::gpu_draw(base::frame_context * const ctx)
 {
 	glUseProgram(_prg);
 
+    //glColorMask(false, false, false, false);
     //glPolygonMode(GL_FRONT, GL_LINE);
 
     base::hptimer timer;
@@ -593,7 +547,6 @@ void scene::gpu_draw(base::frame_context * const ctx)
     bool use_instancing = false;
 
     glVertexAttribI4i(13, 0, 0, 0, 0);
-    glVertexAttribI1i(14, 0);
     glBindBufferRange(
         GL_UNIFORM_BUFFER,
         _prg_ctx,
@@ -662,23 +615,40 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
     glQueryCounter(ctx->_time_queries[0], GL_TIMESTAMP);
 
-    const int count = _nelements;
-    const uint nblocks = ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1];
+    const uint nblocks = ctx->_num_visible_blocks[0];
 
     if (nblocks == 0)
         return;
     
     if (!fast_drawcall) {
         if (use_instancing) {
-            glDrawElementsInstanced(
-                GL_TRIANGLES,
-                count,
-                GL_UNSIGNED_SHORT,
-                0,
-                nblocks);
+            if (_tex_mode == BenchTexBindless || _tex_mode == BenchTexNone) {
+                glDrawElementsInstanced(
+                    GL_TRIANGLES,
+                    _dc_data[0]._nelements,
+                    GL_UNSIGNED_SHORT,
+                    0,
+                    nblocks);
+            }
+            else if (_tex_mode == BenchTexArray) {
+                for (uint i = 0; i < nblocks; i += _max_array_layers) {
+                    bind_texture(i);
+                    glVertexAttribI3i(
+                        13,
+                        ctx->_scene_data_offset + i,
+                        _dc_data[i]._first_vertex,
+                        i);
+                    glDrawElementsInstanced(
+                        GL_TRIANGLES,
+                        _dc_data[i]._nelements,
+                        GL_UNSIGNED_SHORT,
+                        (void*)(_dc_data[i]._fist_index * sizeof(*_elements_base_ptr)),
+                        _max_array_layers);
+                }
+            }
         }
         else {
-            if (_tex_mode == BenchTexBindless) {
+            if (_tex_mode == BenchTexBindless || _tex_mode == BenchTexNone) {
                 glMultiDrawElementsIndirect(
                     GL_TRIANGLES,
                     GL_UNSIGNED_SHORT,
@@ -687,7 +657,7 @@ void scene::gpu_draw(base::frame_context * const ctx)
                     0);
             }
             else if (_tex_mode == BenchTexArray) {
-                for (int i = 0; i < nblocks; i += _max_array_layers) {
+                for (uint i = 0; i < nblocks; i += _max_array_layers) {
                     bind_texture(i);
                     glMultiDrawElementsIndirect(
                         GL_TRIANGLES,
@@ -702,26 +672,31 @@ void scene::gpu_draw(base::frame_context * const ctx)
     else {
         int counter = 0;
         int offset = 0;
-        const int offset_e = ctx->_num_visible_blocks[0] + ctx->_num_visible_blocks[1];
+        const int offset_e = ctx->_num_visible_blocks[0];
+        dc_data * dc = _dc_data.begin()._Ptr;
         while (offset != offset_e) {
             if (fast_drawcall_old_way) {
                 if (use_tex)
                     bind_texture(counter);
-                glVertexAttribI1i(14, offset);
+                glVertexAttribI3i(
+                    13,
+                    ctx->_scene_data_offset + offset,
+                    dc->_first_vertex,
+                    offset);
                 glDrawElements(
                     GL_TRIANGLES,
-                    count,
+                    dc->_nelements,
                     GL_UNSIGNED_SHORT,
-                    0);
+                    (void*)(dc->_fist_index * sizeof(*_elements_base_ptr)));
             }
             else if (fast_draw_call_gl33) {
                 if (use_tex)
                     bind_texture(counter);
                 glDrawElementsBaseVertex(
                     GL_TRIANGLES,
-                    count,
+                    dc->_nelements,
                     GL_UNSIGNED_SHORT,
-                    0,
+                    (void*)(dc->_fist_index * sizeof(*_elements_base_ptr)),
                     offset << 12);
             }
             else {
@@ -729,14 +704,15 @@ void scene::gpu_draw(base::frame_context * const ctx)
                     bind_texture(counter);
                 glDrawElementsInstancedBaseInstance(
                     GL_TRIANGLES,
-                    count,
+                    dc->_nelements,
                     GL_UNSIGNED_SHORT,
-                    0,
+                    (void*)(dc->_fist_index * sizeof(*_elements_base_ptr)),
                     1,
                     offset);
             }
             offset++;
             counter++;
+            dc++;
         }
     }
 
@@ -750,116 +726,8 @@ void scene::gpu_draw(base::frame_context * const ctx)
 void scene::create_test_scene()
 {
 	_cur_block = get_perspective_block_bound(1,2.0f)*2;
-	for (int i = 0; i < 32; ++i)
+	for (int i = 0; i < 64; ++i)
 	    add_test_block();
-
-	/*const int grid_size = BUILDING_SIDE_SIZE;
-	const glm::vec3 pillar_size(0.25f, 2.6f, 0.25f);
-	const glm::vec3 box_size(3.0f, 0.2f, 4.0f);
-
-	// create floor's pillars
-	for(int z = 0; z < grid_size; ++z)
-		for(int y = 0; y < (grid_size >> 1); ++y)
-			for(int x = 0; x < grid_size; ++x) {
-				if(z < grid_size-1) 
-					add_block(
-						0, glm::vec3(x * 3, 0.2 + z * 2.8, y * 4), pillar_size, 0);
-				add_block(
-					1, glm::vec3(x * 3, z * 2.8, y * 4), box_size, 0);
-			}*/
-}
-
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-void scene::create_test_scene(unsigned short obj_count)
-{
-	
-	
-	/*
-	std::vector<bool> height_map;
-	voxel_plane.resize(grid_size*grid_size, true);
-
-	unsigned short obj_to_place = obj_count >> 1;
-	short level = 0;
-	int num_plane_falses = 0;
-	// lower half
-	while (obj_to_place && (num_plane_falses < grid_size * grid_size) && (level < grid_size/2))
-	{
-		for (int z = 0; z < grid_size; z++) {
-			for (int x = 0; x < grid_size; x++) {
-				if (voxel_plane[z*grid_size + x]  && base::rndNomalized() <= prob) {
-					obj_to_place--;
-					add_block(base::rndFromInterval(0, 1), glm::vec3(x, level, z), box_size, 0);
-					if (obj_to_place == 0) {
-						x = grid_size;
-						z = grid_size;
-					}
-				}
-				else {
-					num_plane_falses += (voxel_plane[z*grid_size + x]) ? 1 : 0;
-					voxel_plane[z*grid_size + x] = false;
-				}
-			}
-		}
-		level++;
-	}
-	level = -1;
-	while (obj_to_place) {
-		for (int z = 0; z < grid_size; z++) {
-			for (int x = 0; x < grid_size; x++) {
-					obj_to_place--;
-					add_block(base::rndFromInterval(0, 1), glm::vec3(x, level, z), box_size, 0);
-					if (obj_to_place == 0) {
-						z = grid_size;
-						x = grid_size;
-					}
-			}
-		}
-		level--;
-	}
-
-	//upper half
-	voxel_plane.resize(0, true);
-	voxel_plane.resize(grid_size2, true);
-	obj_to_place = obj_count >> 1;
-	level = grid_size;
-	num_plane_falses = 0;
-	
-	while (obj_to_place && (num_plane_falses < grid_size * grid_size) && (level > grid_size / 2))
-	{
-		for (int z = 0; z < grid_size; z++) {
-			for (int x = 0; x < grid_size; x++) {
-				if (voxel_plane[z*grid_size + x] && base::rndNomalized() <= prob) {
-					obj_to_place--;
-					add_block(base::rndFromInterval(0,1), glm::vec3(x, level, z), box_size, 0);
-					if (obj_to_place == 0) {
-						x = grid_size;
-						z = grid_size;
-					}
-				}
-				else {
-					num_plane_falses += (voxel_plane[z*grid_size + x]) ? 1 : 0;
-					voxel_plane[z*grid_size + x] = false;
-				}
-			}
-		}
-		level--;
-	}
-	level = grid_size;
-	while (obj_to_place) {
-		for (int z = 0; z < grid_size; z++) {
-			for (int x = 0; x < grid_size; x++) {
-				obj_to_place--;
-				add_block(base::rndFromInterval(0, 1), glm::vec3(x, level, z), box_size, 0);
-				if (obj_to_place == 0) {
-					z = grid_size;
-					x = grid_size;
-				}
-			}
-		}
-		level++;
-	}
-	*/
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -879,41 +747,39 @@ void scene::add_test_block()
 	height_map.resize(grid_size2, 0);
     
     const float grid_size_r = 1.f / float(grid_size);
+    base::stats_data & const stats = base::stats();
 
     // bottom layer
 	for (int y = 0; y < grid_size; y++) {
 		for (int x = 0; x < grid_size; x++) {
+            // create instances
             const float s0 = glm::simplex(glm::vec2(x, y) * grid_size_r);
             const float s1 = glm::simplex(glm::vec2(x, y) * 2.f * grid_size_r);
 			const int height = int(((((s0 + .5f * s1) + 1.5f) / 3.f) * max_height));
 			 
+            const float xpos = ((cur_x * grid_size) + x) * 2.f;
+            const float zpos = ((cur_z * grid_size) + y) * 2.f;
+
+            int idx = int(_tms.size());
 
 			add_block(
-                glm::vec3(
-                    ((cur_x * grid_size) + x) * 2.f,
-                    height * 2.f,
-                    ((cur_z * grid_size) + y) * 2.f),
+                glm::vec3(xpos, height * 2.f, zpos),
                 box_size,
                 0);
-			}
-		}
+        
+            add_block(
+                glm::vec3(xpos, 32.f - height * 2.f, zpos),
+                box_size,
+                0);
 
-    // top layer ?
-	for (int y = 0; y < grid_size; y++) {
-		for (int x = 0; x < grid_size; x++) {
-            const glm::vec2 pos0 = glm::vec2(x, y) * grid_size_r;
-            const glm::vec2 pos1 = glm::vec2(x, y) * 2.f * grid_size_r;
-			int height = (int)((((glm::simplex(pos0) + .5f * glm::simplex(pos1)) + 1.5f) / 3.f) * max_height);
-			add_block(
-                glm::vec3(
-                    ((cur_x*grid_size) + x) * 2.f,
-                    32.f - height * 2.f,
-                    ((cur_z*grid_size) + y) * 2.f),
-                box_size,
-                0);
-		}
+            const int idx_e = idx + 2;
+            do {
+                stats._ndrawcalls += 1;
+                stats._ntriangles += _dc_data[idx]._nelements / 3;
+                stats._nvertices += _dc_data[idx]._nvertices;
+            } while (++idx != idx_e);
+        }
 	}
-	
 
 	// set next block coords
 	if (cur_x - 1 < -cur_bound){

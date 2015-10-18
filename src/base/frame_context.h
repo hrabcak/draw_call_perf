@@ -23,10 +23,9 @@ THE SOFTWARE.
 #ifndef __ASYNC_VBO_TRANSFERS_FRAME_CONTEXT_H__
 #define __ASYNC_VBO_TRANSFERS_FRAME_CONTEXT_H__
 
+#include "types.h"
 #include <glm/glm.hpp>
-
 #include <vector>
-
 #include <GL/glew.h>
 
 namespace base {
@@ -89,6 +88,25 @@ struct batch {
 
 typedef std::vector<batch> batches_t;
 
+// draw call gpu data
+struct dc_gpu_data
+{
+    const glm::uint _inst_data_index;
+    const glm::uint _first_vertex;
+    const glm::uint _inst_id;
+    const glm::uint _res;
+
+    dc_gpu_data(
+        const glm::uint inst_data_index,
+        const glm::uint first_vertex,
+        const glm::uint inst_id)
+        : _inst_data_index(inst_data_index)
+        , _first_vertex(first_vertex)
+        , _inst_id(inst_id)
+        , _res(0)
+    {}
+};
+
 struct frame_context
 {
 	static const int POOL_SIZE;
@@ -112,7 +130,7 @@ struct frame_context
     base::cmd* _cmd_data_ptr;
 
     base::ctx_data* _ctx_data_ptr;
-    int * _drawid_data_ptr;
+    dc_gpu_data * _drawid_data_ptr;
     unsigned _drawid_data_offset;
 
 	base::block_data* _scene_data_ptr;

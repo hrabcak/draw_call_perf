@@ -46,12 +46,16 @@
     <ClInclude Include="..\..\src\cube_gen.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\gen_tex.h" />
-    <ClInclude Include="..\..\src\base\utils.h" />
     <ClInclude Include="..\..\src\base\types.h">
       <Filter>src\base</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\benchmark.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\gen_tex.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\base\utils.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
@@ -101,8 +105,10 @@
     <ClCompile Include="..\..\src\cube_gen.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\gen_tex.cpp" />
     <ClCompile Include="..\..\src\benchmark.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\gen_tex.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

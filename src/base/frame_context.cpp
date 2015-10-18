@@ -45,7 +45,7 @@ GLuint __ctx_buffer = 0;
 GLuint __drawid_buffer = 0;
 GLuint __cmd_buffer = 0;
 base::cmd * __cmd_data_ptr = 0;
-int * __drawid_data_ptr = 0;
+base::dc_gpu_data * __drawid_data_ptr = 0;
 base::block_data * __scene_data_ptr = 0;
 base::ctx_data * __ctx_data_ptr = 0;
 
@@ -84,8 +84,8 @@ void base::frame_context::create_buffers()
         _scene_data_ptr = __scene_data_ptr;
         _scene_data_offset = 0;
 
-        _drawid_vbo = __drawid_buffer = create_buffer<int>(
-            scene::MAX_BLOCK_COUNT * 4 * POOL_SIZE,
+        _drawid_vbo = __drawid_buffer = create_buffer<dc_gpu_data>(
+            scene::MAX_BLOCK_COUNT * POOL_SIZE,
             &__drawid_data_ptr);
         _drawid_data_ptr = __drawid_data_ptr;
         _drawid_data_offset = 0;
@@ -137,7 +137,7 @@ void base::frame_context::create_buffers()
         _ctx_data_ptr = __ctx_data_ptr + _ctx_id;
 
         _drawid_data_ptr = __drawid_data_ptr;
-        _drawid_data_offset = scene::MAX_BLOCK_COUNT * _ctx_id * 4/*int4*/;
+        _drawid_data_offset = scene::MAX_BLOCK_COUNT * _ctx_id;
     }
     
     // canvas buffer

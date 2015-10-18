@@ -49,6 +49,8 @@ void benchmark::start()
     _renderer.reset(new renderer(this, SRC_LOCATION));
    
     app::start();
+
+    _scene->post_gpu_init();
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -56,8 +58,6 @@ void benchmark::start()
 void benchmark::gpu_init()
 {
     app::gpu_init();
-
-    //base::canvas::load_and_init_shaders(SRC_LOCATION);
 
     _scene->init_gpu_stuff(SRC_LOCATION);
 }

@@ -41,16 +41,24 @@ layout(std140) uniform context
 };
 
 layout(location = 13) in ivec4 index_start;
-layout(location = 14) in int index2;
 uniform samplerBuffer tb_blocks;
 
 #ifdef USE_TB_FOR_VERTEX_DATA
     uniform isamplerBuffer tb_pos;
     uniform isamplerBuffer tb_nor_uv;
 #else
-    uniform samplerBuffer tb_pos;
-    uniform samplerBuffer tb_nor_uv;
+    layout(location = 0) in ivec2 in_pos;    // NOT IMPLEMENTED YET
+    layout(location = 1) in ivec2 in_nor_uv;
 #endif
+
+ivec2 get_vertex_pos_data(int vertex_id)
+{
+#ifdef USE_TB_FOR_VERTEX_DATA
+    return texelFetch(tb_pos, vertex_id).xy;
+#else
+    return in_pos;
+#endif
+}
 
 #if defined(USE_BINDLESS_TEX)
     uniform usamplerBuffer tb_tex_handles;
@@ -75,10 +83,9 @@ vec3 unpack_position(ivec2 pack_pos, float coef)
 void main()
 {
 	int vertex_id = gl_VertexID;
-
-    int index = (vertex_id >> 12) + index2;
+    int index = vertex_id >> 12;
     vertex_id &= 0xfff;
-    int idx = (index_start.x + index + gl_InstanceID) * 16;
+    int idx = (index_start.x + gl_InstanceID) * 16;
 	mat4 tm = _ctx._mvp * mat4(
 		texelFetch(tb_blocks, idx),
 		texelFetch(tb_blocks, idx + 1),
@@ -88,15 +95,14 @@ void main()
 #if defined(USE_BASE_INSTANCE) || defined(USE_INDIRECT_DRAW)
     int inst_id = index_start.z;
 #else
-    int inst_id = index;
+    int inst_id = index_start.x + gl_InstanceID;
 #endif
 
-    ivec2 tmp0 = texelFetch(tb_pos, gl_InstanceID * 96 + index_start.y + vertex_id).xy;
-
+    ivec2 tmp0 = get_vertex_pos_data(gl_InstanceID * 96/*54*/ + index_start.y + vertex_id);
     vec3 pos = unpack_position(tmp0.xy, 1.0 / 1048575.0);
     uv = pos.xy * 0.5 + 0.5;
 
-    inst_id >>= 2;
+    //inst_id >>= 2;
 
 #if defined(USE_BINDLESS_TEX)
     tex_handle = texelFetch(tb_tex_handles, inst_id).xy;

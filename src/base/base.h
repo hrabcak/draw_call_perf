@@ -47,12 +47,14 @@ struct stats_data
     uint32 _texture_mem;
     uint32 _ntriangles;
     uint32 _nvertices;
+    uint32 _ndrawcalls;
 
     stats_data()
         : _buffer_mem(0)
         , _texture_mem(0)
         , _ntriangles(0)
         , _nvertices(0)
+        , _ndrawcalls(0)
     {}
 };
 

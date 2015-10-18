@@ -135,9 +135,10 @@ void renderer::draw_frame(base::frame_context * const ctx)
 {
     base::hptimer timer;
     
+    glEnable(GL_FRAMEBUFFER_SRGB);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
-    glClearColor(0.3f, 0.2f, 0.4f, 1.0f);
+    glClearColor(1.0f, 0.9725f, 0.9490f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     _app->gpu_draw_frame(ctx);
@@ -157,10 +158,12 @@ void renderer::draw_frame(base::frame_context * const ctx)
         const double time = double(result[1] - result[0]) * coef_n2m;
         const float fps = frame / (t * 0.001f);
 
-        printf("fps: %.0f cpu: %.2f gpu: %.2f tps: %.0fM tris: %uk vtx: %uk mem: %uM\n",
+        printf("fps: %.0f cpu: %.2f gpu: %.2f dc: %u dc/s: %.0fk tri/s: %.0fM tris: %uk vtx: %uk mem: %uM\n",
             fps,
             ctx->_cpu_render_time,
             time,
+            base::stats()._ndrawcalls,
+            base::stats()._ndrawcalls * fps * (1.f / (1024.f)),
             float(base::stats()._ntriangles) * fps * (1.f / (1024.f * 1024.f)),
             base::stats()._ntriangles >> 10,
             base::stats()._nvertices >> 10,

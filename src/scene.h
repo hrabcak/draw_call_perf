@@ -45,6 +45,7 @@ public:
 	~scene();
 
     void init_gpu_stuff(const base::source_location &loc);
+    void post_gpu_init();
     void update(base::frame_context * const ctx);
     void gpu_draw(base::frame_context * const ctx);
 
@@ -52,32 +53,16 @@ public:
 
     void add_test_block();
 
-    struct block {
-        glm::mat4 *_tm;
-        unsigned int *_flags;
-        glm::vec3 *_hw;
-
-        block(
-            glm::mat4 *tm,
-            unsigned int *flags,
-            glm::vec3 *hw)
-            : _tm(tm)
-            , _flags(flags)
-            , _hw(hw)
-        {}
-    };
-
 protected:
 
     // heading is in degrees
-    block* add_block(
+    void add_block(
         const glm::vec3 &pos,
         const glm::vec3 &size,
         const float heading);
 
     void create_textures(const base::source_location &loc);
     void create_test_scene();
-	void create_test_scene(unsigned short obj_count);
 	
 	int get_perspective_block_bound(int row, float scale);
 	
@@ -105,17 +90,11 @@ protected:
 	std::vector<glm::vec3> _hws;			//< half width for every block
 	std::vector<unsigned int> _flags;		//<
 
-	typedef std::vector<block> blocks_t;
-	blocks_t _blocks;
-
     GLuint _prg;
     GLint _prg_tb_blocks;
     GLint _prg_ctx;
     GLint _prg_tb_pos;
     GLint _prg_tex;
-
-    unsigned _nelements;
-    unsigned _nvertices;
 
     GLuint _tb_pos;
     GLuint _tb_nor_uv;
@@ -130,6 +109,31 @@ protected:
     std::vector<GLuint64> _tex_handles;
 
     GLint _max_array_layers;
+
+    glm::int2 * _vertices_base_ptr;
+    glm::int2 * _norm_uv_base_ptr;
+    ushort * _elements_base_ptr;
+
+    struct dc_data
+    {
+        const glm::uint _nelements;
+        const glm::uint _fist_index;
+        const glm::uint _nvertices;
+        const glm::uint _first_vertex;
+
+        dc_data(
+            const glm::uint nelements,
+            const glm::uint first_index,
+            const glm::uint nvertices,
+            const glm::uint first_vertex)
+            : _nelements(nelements)
+            , _fist_index(first_index)
+            , _nvertices(nvertices)
+            , _first_vertex(first_vertex)
+            {}
+    };
+
+    std::vector<dc_data> _dc_data;
 
     enum BenchmarkMode
     {

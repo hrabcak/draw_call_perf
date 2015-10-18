@@ -52,5 +52,13 @@ void main()
     tex_color = vec3(0.5);
 #endif
 
-    _retval = tex_color;
+
+    float density = 0.02;
+    float dist = 1.0 / gl_FragCoord.w;
+    float fog = exp2(-density * dist);
+    
+    fog = clamp(fog, 0.0, 1.0);
+
+    _retval = mix(vec3(1.0f, 0.9725f, 0.9490f), tex_color, fog);
+    //_retval = tex_color * 0.0000001 + vec3(fog);
 }
