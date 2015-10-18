@@ -265,9 +265,9 @@ void scene::init_gpu_stuff(const base::source_location &loc)
                     nvertices);
             }
             else {
-                memcpy(elements_ptr, elements_base_ptr, _nelements);
-                memcpy(vertices_ptr, vertices_base_ptr, _nvertices);
-                memcpy(norm_uv_ptr, norm_uv_base_ptr, _nvertices);
+                memcpy(elements_ptr, elements_base_ptr, _nelements*2);
+                memcpy(vertices_ptr, vertices_base_ptr, _nvertices*8);
+                memcpy(norm_uv_ptr, norm_uv_base_ptr, _nvertices*8);
             }
 
             nelements = _nelements;
