@@ -101,12 +101,13 @@ void main()
 
     ivec2 tmp0 = get_vertex_pos_data(gl_InstanceID * 96/*54*/ + index_start.y + vertex_id);
     vec3 pos = unpack_position(tmp0.xy, 1.0 / 1048575.0);
-    if (pos.z == -1 || pos.z == 1)
+    /*if (pos.z == -1 || pos.z == 1)
         uv = pos.xy;
     else if (pos.x == -1 || pos.x == 1)
         uv = pos.zy;
     else if (pos.y == -1 || pos.y == 1)
-        uv = pos.xz;
+        uv = pos.xz;*/
+    uv = pos.xy;
     uv = uv * 0.5 + 0.5;
 
     //inst_id >>= 2;
