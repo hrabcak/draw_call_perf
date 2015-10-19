@@ -230,7 +230,7 @@ void scene::init_gpu_stuff(const base::source_location &loc)
         _buffer_pos);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
 
-    //if (_tex_mode != BenchTexNone)
+    if (_tex_mode != BenchTexNone)
         create_textures(loc);
 }
 
