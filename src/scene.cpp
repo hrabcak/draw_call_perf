@@ -753,8 +753,8 @@ void scene::add_test_block()
 	for (int y = 0; y < grid_size; y++) {
 		for (int x = 0; x < grid_size; x++) {
             // create instances
-            const float s0 = glm::simplex(glm::vec2(x, y) * grid_size_r);
-            const float s1 = glm::simplex(glm::vec2(x, y) * 2.f * grid_size_r);
+			const float s0 = glm::simplex(glm::vec2(x + cur_x*grid_size, y + cur_z*grid_size) * grid_size_r);
+			const float s1 = glm::simplex(glm::vec2(x + cur_x*grid_size, y + cur_z*grid_size) * 2.f * grid_size_r);
 			const int height = int(((((s0 + .5f * s1) + 1.5f) / 3.f) * max_height));
 			 
             const float xpos = ((cur_x * grid_size) + x) * 2.f;
