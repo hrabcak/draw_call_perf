@@ -42,6 +42,8 @@ namespace gen {
 	const glm::i8vec3 v8(0, 1, 1);
 
 	const glm::i8vec3* faces[6][4] = { { &v1, &v2, &v3, &v4 }, { &v2, &v6, &v7, &v3 }, { &v6, &v5, &v8, &v7 }, { &v5, &v1, &v4, &v8 }, { &v2, &v1, &v5, &v6 }, { &v7, &v8, &v4, &v3 } };
+
+	base::rnd_int _rnd(4239);
 }
 
 inline void cpy_unpacked(void * pos_data_ptr, void * norm_uv_data_ptr, const gen::vert & vert_data){
@@ -125,37 +127,44 @@ void generate_voxel_map(short * voxel_map, const ushort & voxels_per_edge, const
 
 	short idx;
 
-	float miss_prob = 0.0;
+	const float miss_prob_whole = 0.05f;
+	const float miss_prob_half = 0.1f;
+	const float miss_prob_one = 0.15f;
+
+	const float miss_half_bound = miss_prob_whole + miss_prob_half;
+	const float miss_one_bound = miss_half_bound + miss_prob_one;
 
 	for (ushort z = 0; z < voxels_per_edge; ++z){
 		for (ushort y = 0; y < voxels_per_edge; ++y){
 			for (ushort x = 0; x < voxels_per_edge; ++x){
 				idx = COORD_TO_IDX(x, y, z, voxels_per_edge);
 
-				// temp voxel miss control
+				voxel_map[idx] = idx;
+			}
+		}
+	}
 
-				idx_left = COORD_TO_IDX(x - 1, y, z, voxels_per_edge);
-				idx_right = COORD_TO_IDX(x + 1, y, z, voxels_per_edge);
-				idx_bottom = COORD_TO_IDX(x, y - 1, z, voxels_per_edge);
-				idx_top = COORD_TO_IDX(x, y + 1, z, voxels_per_edge);
-				idx_near = COORD_TO_IDX(x, y, z - 1, voxels_per_edge);
+	for (ushort z = 0; z < voxels_per_edge; ++z){
+		for (ushort x = 0; x < voxels_per_edge; ++x){
+			float miss = base::rndNomalized(gen::_rnd);
 
-				if (idx_left >= 0 && idx_right >= 0 && idx_bottom >= 0 && // have all naighbours control
-					idx_top >= 0 && idx_near >= 0 && voxel_map[idx_left] >= 0 &&
-					voxel_map[idx_right] >= 0 && voxel_map[idx_bottom] >= 0
-					&& voxel_map[idx_top] >= 0 && voxel_map[idx_near] >= 0){
+			short idx;
 
-					voxel_map[idx] = idx;
+			if (miss >= 0.0f && miss < miss_prob_whole){
+				for (short y = 0; y < voxels_per_edge; ++y){
+					idx = COORD_TO_IDX(x, y, z, voxels_per_edge);
+					voxel_map[idx] = -1;
 				}
-				else{
-					if (base::rndNomalized() <= miss_prob){
-						voxel_map[idx] = -1;
-					}
-					else{
-						voxel_map[idx] = idx;
-					}
+			}
+			else if (miss >= miss_prob_whole && miss < miss_half_bound){
+				for (short y = voxels_per_edge-1; y > (voxels_per_edge>>1); --y){
+					idx = COORD_TO_IDX(x, y, z, voxels_per_edge);
+					voxel_map[idx] = -1;
 				}
-				////////////////////////// 
+			}
+			else if (miss >= miss_half_bound && miss < miss_one_bound){
+				idx = COORD_TO_IDX(x, voxels_per_edge - 1,z, voxels_per_edge);
+				voxel_map[idx] = -1;
 			}
 		}
 	}

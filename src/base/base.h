@@ -260,11 +260,6 @@ unsigned create_buffer(const unsigned nelem, T** const ptr, void * const data = 
     return handle;
 }
 
-
-int rndFromInterval(int min, int max);
-float rndNomalized();
-
-
 inline glm::ivec2 pack_to_pos3x21b(const glm::dvec3 &pos, const double scale)
 {
     const glm::ivec3 pos21(pos * scale);
@@ -294,6 +289,52 @@ inline void unpack_from_norm2x16b_uv2x15b(const glm::ivec2 &norm_uv, const float
 	uv_out = glm::vec2(norm_uv.y >> 17, (norm_uv.y << 15) >> 17)*scale_uv;
 }
 
+class rnd_int
+{
+	uint32 _uval;
+
+public:
+	void seed(uint32 useed) {
+		_uval = useed;
+		rand3();
+	}
+
+	uint32 rand()         { return rand0(); }
+
+	uint32 rand0()        { return _uval = 3141592653UL * _uval + 1; }
+	uint32 rand1()        { return _uval = 3267000013UL * _uval + 1; }
+	uint32 rand2()        { return _uval = 3628273133UL * _uval + 1; }
+	uint32 rand3()        { return _uval = 3367900313UL * _uval + 1; }
+
+	void nrand(uint32 n, uint32 *puval) {
+		uint32 utv = _uval;
+		for (uint32 i = 0; i<n; ++i) {
+			utv = 3141592653UL * utv + 1;
+			puval[i] = utv;
+		}
+		_uval = utv;
+	}
+
+	uint32 get_old() const        { return _uval; }
+
+
+	static uint32 get_multiplier()    { return 3141592653UL; }
+
+	static rnd_int * init(uint32 useed) {
+		rnd_int *ornd = new rnd_int(useed);
+		return ornd;
+	}
+
+	rnd_int(uint32 sd = 0)
+	{
+		if (sd == 0)
+			sd = (uint32)::time(0);
+		seed(sd);
+	}
+};
+
+int rndFromInterval(rnd_int & rnd,int min, int max);
+float rndNomalized(rnd_int & rnd);
 
 } // end of namespace base
 
