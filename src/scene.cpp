@@ -64,7 +64,7 @@ scene::scene(benchmark * const app)
     , _tex_handles()
 
     , _bench_mode(BenchIndirect)
-    , _tex_mode(BenchTexArray)
+    , _tex_mode(BenchTexBindless)
 
     , _max_array_layers(1)
 
@@ -323,6 +323,12 @@ void scene::create_textures(const base::source_location &)
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
     if (_tex_mode == BenchTexBindless) {
+        for (int i = 0; i < ntex; ++i) {
+            const GLuint64 handle = glGetTextureHandleARB(_texs[i]);
+            glMakeTextureHandleResidentARB(handle);
+            _tex_handles.push_back(handle);
+        }
+
         _buffer_tex_handles = base::create_buffer<GLuint64>(ntex, 0, &_tex_handles[0]);
 
         // create texture buffer for vertices
