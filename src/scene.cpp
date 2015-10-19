@@ -69,7 +69,7 @@ scene::scene(benchmark * const app)
     , _tex_handles()
 
     , _bench_mode(BenchIndirect)
-    , _tex_mode(BenchTexArray)
+    , _tex_mode(BenchTexNone)
 
     , _max_array_layers(1)
 
@@ -235,48 +235,22 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 
     load_and_init_shaders(loc);
 
-    const int tess_level = 3;
-
-    uint nvertices = 96;
-    uint nelements = 324;
-
-    //get_face_and_vert_count_for_tess_level(tess_level, nelements, nvertices);
-
-    _buffer_elem = base::create_buffer<ushort>(nelements * MAX_BLOCK_COUNT, &_elements_base_ptr, 0);
-    _buffer_pos = base::create_buffer<glm::ivec2>(nvertices * MAX_BLOCK_COUNT, &_vertices_base_ptr, 0);
-    _buffer_nor_uv = base::create_buffer<glm::ivec2>(nvertices * MAX_BLOCK_COUNT, &_norm_uv_base_ptr, 0);
-
-    // create VBO for vertices positions
-    if (_use_vbo) {
-        glBindBuffer(GL_ARRAY_BUFFER, _buffer_pos);
-        glVertexAttribIPointer(0, 2, GL_INT, 0, (GLvoid*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-    
-    // create texture buffer for vertices
-    glGenTextures(1, &_tb_pos);
-    glBindTexture(GL_TEXTURE_BUFFER, _tb_pos);
-    glTexBuffer(
-        GL_TEXTURE_BUFFER,
-        base::get_pfd(base::PF_RG32I)->_internal,
-        _buffer_pos);
-    glBindTexture(GL_TEXTURE_BUFFER, 0);
-
-    //if (_tex_mode != BenchTexNone)
-        create_textures(loc);
-}
-
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-void scene::post_gpu_init()
-{
     const int tess_level = 2;
-    uint nvertices;
-    uint nelements;
 
-    ushort * elements_ptr = _elements_base_ptr;
-    int2 * vertices_ptr = _vertices_base_ptr;
-    int2 * norm_uv_ptr = _norm_uv_base_ptr;
+    uint nvertices = 96 * 3;
+    uint nelements = 324 * 3;
+
+    std::vector<ushort> elements;
+    std::vector<int2> vertices;
+    std::vector<int2> norm_uv;
+
+    elements.resize(nelements * MAX_BLOCK_COUNT);
+    vertices.resize(nvertices * MAX_BLOCK_COUNT);
+    norm_uv.resize(nvertices * MAX_BLOCK_COUNT);
+
+    ushort * elements_ptr = elements.begin()._Ptr;
+    int2 * vertices_ptr = vertices.begin()._Ptr;
+    int2 * norm_uv_ptr = norm_uv.begin()._Ptr;
 
     int i = 0;
     int e = MAX_BLOCK_COUNT;
@@ -296,17 +270,17 @@ void scene::post_gpu_init()
 
             _dc_data.push_back(dc_data(
                 nelements,
-                uint(elements_ptr - _elements_base_ptr),
+                uint(elements_ptr - elements.begin()._Ptr),
                 nvertices,
-                uint(vertices_ptr - _vertices_base_ptr)));
+                uint(vertices_ptr - vertices.begin()._Ptr)));
             elements_ptr += nelements;
             vertices_ptr += nvertices;
             norm_uv_ptr += nvertices;
         }
         else {
-            memcpy(elements_ptr, _elements_base_ptr, _dc_data[0]._nelements * sizeof(*elements_ptr));
-            memcpy(vertices_ptr, _vertices_base_ptr, _dc_data[0]._nvertices * sizeof(*vertices_ptr));
-            memcpy(norm_uv_ptr, _norm_uv_base_ptr, _dc_data[0]._nvertices * sizeof(*norm_uv_ptr));
+            memcpy(elements_ptr, elements.begin()._Ptr, _dc_data[0]._nelements * sizeof(*elements_ptr));
+            memcpy(vertices_ptr, vertices.begin()._Ptr, _dc_data[0]._nvertices * sizeof(*vertices_ptr));
+            memcpy(norm_uv_ptr, norm_uv.begin()._Ptr, _dc_data[0]._nvertices * sizeof(*norm_uv_ptr));
 
             _dc_data.push_back(_dc_data[0]);
 
@@ -316,6 +290,37 @@ void scene::post_gpu_init()
         }
     } while (++i != e);
 
+    nelements = uint(elements_ptr - elements.begin()._Ptr);
+    nvertices = uint(vertices_ptr - vertices.begin()._Ptr);
+
+    _buffer_elem = base::create_buffer<ushort>(nelements, 0, elements.begin()._Ptr);
+    _buffer_pos = base::create_buffer<glm::ivec2>(nvertices, 0, vertices.begin()._Ptr);
+    _buffer_nor_uv = base::create_buffer<glm::ivec2>(nvertices, 0, norm_uv.begin()._Ptr);
+
+    // create VBO for vertices positions
+    if (_use_vbo) {
+        glBindBuffer(GL_ARRAY_BUFFER, _buffer_pos);
+        glVertexAttribIPointer(0, 2, GL_INT, 0, (GLvoid*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+    
+    // create texture buffer for vertices
+    glGenTextures(1, &_tb_pos);
+    glBindTexture(GL_TEXTURE_BUFFER, _tb_pos);
+    glTexBuffer(
+        GL_TEXTURE_BUFFER,
+        base::get_pfd(base::PF_RG32I)->_internal,
+        _buffer_pos);
+    glBindTexture(GL_TEXTURE_BUFFER, 0);
+
+    if (_tex_mode != BenchTexNone)
+        create_textures(loc);
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void scene::post_gpu_init()
+{
     create_test_scene();
 }
 
