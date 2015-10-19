@@ -55,13 +55,13 @@ struct cmd
 struct ctx_data
 {
     glm::mat4 _mvp;
-    char _res[256 - 64];
+    int _mesh_size;
+    char _res[256 - 64 - 4];
 };
 
 struct block_data
 {
     glm::mat4 _tm;
-    char _res[256 - 64];
 };
 
 /// batch represents group of canvas elements using same texture/font

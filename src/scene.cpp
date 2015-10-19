@@ -69,7 +69,7 @@ scene::scene(benchmark * const app)
     , _tex_handles()
 
     , _bench_mode(BenchIndirect)
-    , _tex_mode(BenchTexBindless)
+    , _tex_mode(BenchTexArray)
 
     , _max_array_layers(1)
 
@@ -78,6 +78,9 @@ scene::scene(benchmark * const app)
     , _vertices_base_ptr(0)
     , _norm_uv_base_ptr(0)
     , _elements_base_ptr(0)
+
+    , _use_vbo(false)
+    , _one_mesh(true)
 {
 	_tms.reserve(MAX_BLOCK_COUNT);
 	_bboxes.reserve(MAX_BLOCK_COUNT);
@@ -136,8 +139,10 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 
     std::string cfg;
 
-    cfg += "#version 430\n"
-           "#define USE_TB_FOR_VERTEX_DATA 1\n";
+    cfg += "#version 430\n";
+
+    if (!_use_vbo)
+           cfg += "#define USE_TB_FOR_VERTEX_DATA 1\n";
 
     switch (_bench_mode) {
     case BenchNaive:
@@ -190,7 +195,8 @@ void scene::load_and_init_shaders(const base::source_location &loc)
     // GET UNIFORM STUFF
 
     _prg_tb_blocks = get_uniform_location(loc, _prg, "tb_blocks");
-    _prg_tb_pos = get_uniform_location(loc, _prg, "tb_pos");
+    if (!_use_vbo)
+        _prg_tb_pos = get_uniform_location(loc, _prg, "tb_pos");
     _prg_ctx = glGetUniformBlockIndex(_prg, "context");
 
     switch (_bench_mode) {
@@ -231,8 +237,8 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 
     const int tess_level = 3;
 
-    uint nvertices = 384;// 216;// 150;// 96;
-    uint nelements = 1764;// 900;// 576;// 324;
+    uint nvertices = 96;
+    uint nelements = 324;
 
     //get_face_and_vert_count_for_tess_level(tess_level, nelements, nvertices);
 
@@ -240,16 +246,23 @@ void scene::init_gpu_stuff(const base::source_location &loc)
     _buffer_pos = base::create_buffer<glm::ivec2>(nvertices * MAX_BLOCK_COUNT, &_vertices_base_ptr, 0);
     _buffer_nor_uv = base::create_buffer<glm::ivec2>(nvertices * MAX_BLOCK_COUNT, &_norm_uv_base_ptr, 0);
 
+    // create VBO for vertices positions
+    if (_use_vbo) {
+        glBindBuffer(GL_ARRAY_BUFFER, _buffer_pos);
+        glVertexAttribIPointer(0, 2, GL_INT, 0, (GLvoid*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+    
     // create texture buffer for vertices
     glGenTextures(1, &_tb_pos);
     glBindTexture(GL_TEXTURE_BUFFER, _tb_pos);
     glTexBuffer(
         GL_TEXTURE_BUFFER,
-        base::get_pfd(base::PF_RG32F)->_internal,
+        base::get_pfd(base::PF_RG32I)->_internal,
         _buffer_pos);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
 
-    if (_tex_mode != BenchTexNone)
+    //if (_tex_mode != BenchTexNone)
         create_textures(loc);
 }
 
@@ -268,26 +281,38 @@ void scene::post_gpu_init()
     int i = 0;
     int e = MAX_BLOCK_COUNT;
     do {
-        gen_cube<int2>(
-            tess_level,
-            vertices_ptr,
-            norm_uv_ptr,
-            elements_ptr,
-            nullptr,
-            nullptr,
-            nelements,
-            nvertices,
-			true); // argument true if deform cube
+        if (_bench_mode != BenchInstancing || i == 0) {
+            gen_cube<int2>(
+                tess_level,
+                vertices_ptr,
+                norm_uv_ptr,
+                elements_ptr,
+                nullptr,
+                nullptr,
+                nelements,
+                nvertices,
+                true);
 
-        _dc_data.push_back(dc_data(
-            nelements,
-            uint(elements_ptr - _elements_base_ptr),
-            nvertices,
-            uint(vertices_ptr - _vertices_base_ptr)));
+            _dc_data.push_back(dc_data(
+                nelements,
+                uint(elements_ptr - _elements_base_ptr),
+                nvertices,
+                uint(vertices_ptr - _vertices_base_ptr)));
+            elements_ptr += nelements;
+            vertices_ptr += nvertices;
+            norm_uv_ptr += nvertices;
+        }
+        else {
+            memcpy(elements_ptr, _elements_base_ptr, _dc_data[0]._nelements * sizeof(*elements_ptr));
+            memcpy(vertices_ptr, _vertices_base_ptr, _dc_data[0]._nvertices * sizeof(*vertices_ptr));
+            memcpy(norm_uv_ptr, _norm_uv_base_ptr, _dc_data[0]._nvertices * sizeof(*norm_uv_ptr));
 
-        elements_ptr += nelements;
-        vertices_ptr += nvertices;
-        norm_uv_ptr += nvertices;
+            _dc_data.push_back(_dc_data[0]);
+
+            elements_ptr += _dc_data[0]._nelements;
+            vertices_ptr += _dc_data[0]._nvertices;
+            norm_uv_ptr += _dc_data[0]._nvertices;
+        }
     } while (++i != e);
 
     create_test_scene();
@@ -341,6 +366,7 @@ void scene::create_textures(const base::source_location &)
     }
 
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    glDeleteBuffers(0, &buf);
 
     if (_tex_mode == BenchTexBindless) {
         for (int i = 0; i < ntex; ++i) {
@@ -511,23 +537,37 @@ void scene::upload_blocks_to_gpu(
 
             ptr[type]->_tm = *tm;
 
-            new (dc_gpu) base::dc_gpu_data(
-                ctx->_scene_data_offset + offset,
-                dc->_first_vertex,
-                offset);
-
-            new (cmd) base::cmd(
-                dc->_nelements,
-                1,
-                dc->_fist_index,
-                0,
-                ctx->_scene_data_offset + offset);
+            if (!_one_mesh) {
+                new (dc_gpu)base::dc_gpu_data(
+                    ctx->_scene_data_offset + offset,
+                    dc->_first_vertex,
+                    offset);
+                new (cmd)base::cmd(
+                    dc->_nelements,
+                    1,
+                    dc->_first_index,
+                    _use_vbo ? dc->_first_vertex : 0,
+                    ctx->_scene_data_offset + offset);
+            }
+            else {
+                new (dc_gpu)base::dc_gpu_data(
+                    ctx->_scene_data_offset + offset,
+                    _dc_data[0]._first_vertex,
+                    offset);
+                new (cmd)base::cmd(
+                    _dc_data[0]._nelements,
+                    1,
+                    _dc_data[0]._first_index,
+                    _use_vbo ? _dc_data[0]._first_vertex : 0,
+                    ctx->_scene_data_offset + offset);
+            }
 
             ptr[type]++;
         }
 	}
 
     ctx->_ctx_data_ptr->_mvp = ctx->_mvp;
+    ctx->_ctx_data_ptr->_mesh_size = _one_mesh ? 0 : _dc_data[0]._nvertices;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -604,7 +644,7 @@ void scene::gpu_draw(base::frame_context * const ctx)
         break;
     case BenchInstancing:
         use_instancing = true;
-        glVertexAttribI1i(13, ctx->_scene_data_offset);
+        glVertexAttribI4i(13, ctx->_scene_data_offset, 0, 0, 0);
         break;
     case BenchIndirect:
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, ctx->_cmd_vbo);
@@ -639,6 +679,10 @@ void scene::gpu_draw(base::frame_context * const ctx)
         break;
     }
 
+    if (_use_vbo)
+        glEnableVertexAttribArray(0);
+
+
     glQueryCounter(ctx->_time_queries[0], GL_TIMESTAMP);
 
     const uint nblocks = ctx->_num_visible_blocks[0];
@@ -662,13 +706,13 @@ void scene::gpu_draw(base::frame_context * const ctx)
                     glVertexAttribI3i(
                         13,
                         ctx->_scene_data_offset + i,
-                        _dc_data[i]._first_vertex,
+                        _dc_data[_one_mesh ? 0 : i]._first_vertex,
                         i);
                     glDrawElementsInstanced(
                         GL_TRIANGLES,
-                        _dc_data[i]._nelements,
+                        _dc_data[_one_mesh ? 0 : i]._nelements,
                         GL_UNSIGNED_SHORT,
-                        (void*)(_dc_data[i]._fist_index * sizeof(*_elements_base_ptr)),
+                        (void*)(_dc_data[_one_mesh ? 0 : i]._first_index * sizeof(*_elements_base_ptr)),
                         _max_array_layers);
                 }
             }
@@ -713,7 +757,7 @@ void scene::gpu_draw(base::frame_context * const ctx)
                     GL_TRIANGLES,
                     dc->_nelements,
                     GL_UNSIGNED_SHORT,
-                    (void*)(dc->_fist_index * sizeof(*_elements_base_ptr)));
+                    (void*)(dc->_first_index * sizeof(*_elements_base_ptr)));
             }
             else if (fast_draw_call_gl33) {
                 if (use_tex)
@@ -722,19 +766,31 @@ void scene::gpu_draw(base::frame_context * const ctx)
                     GL_TRIANGLES,
                     dc->_nelements,
                     GL_UNSIGNED_SHORT,
-                    (void*)(dc->_fist_index * sizeof(*_elements_base_ptr)),
+                    (void*)(dc->_first_index * sizeof(*_elements_base_ptr)),
                     offset << 12);
             }
             else {
                 if (use_tex)
                     bind_texture(counter);
-                glDrawElementsInstancedBaseInstance(
-                    GL_TRIANGLES,
-                    dc->_nelements,
-                    GL_UNSIGNED_SHORT,
-                    (void*)(dc->_fist_index * sizeof(*_elements_base_ptr)),
-                    1,
-                    offset);
+                if (!_use_vbo) {
+                    glDrawElementsInstancedBaseInstance(
+                        GL_TRIANGLES,
+                        dc->_nelements,
+                        GL_UNSIGNED_SHORT,
+                        (void*)(dc->_first_index * sizeof(*_elements_base_ptr)),
+                        1,
+                        offset);
+                }
+                else {
+                    glDrawElementsInstancedBaseVertexBaseInstance(
+                        GL_TRIANGLES,
+                        dc->_nelements,
+                        GL_UNSIGNED_SHORT,
+                        (void*)(dc->_first_index * sizeof(*_elements_base_ptr)),
+                        1,
+                        dc->_first_vertex,
+                        offset);
+                }
             }
             offset++;
             counter++;

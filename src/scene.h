@@ -118,7 +118,7 @@ protected:
     struct dc_data
     {
         const glm::uint _nelements;
-        const glm::uint _fist_index;
+        const glm::uint _first_index;
         const glm::uint _nvertices;
         const glm::uint _first_vertex;
 
@@ -128,7 +128,7 @@ protected:
             const glm::uint nvertices,
             const glm::uint first_vertex)
             : _nelements(nelements)
-            , _fist_index(first_index)
+            , _first_index(first_index)
             , _nvertices(nvertices)
             , _first_vertex(first_vertex)
             {}
@@ -161,6 +161,9 @@ protected:
     TexturingMode _tex_mode;
 
     benchmark * const _app;
+
+    bool _use_vbo;
+    bool _one_mesh;
 };
 
 #endif // __ASYNC_VBO_TRANSFERS_SCENE_H__
