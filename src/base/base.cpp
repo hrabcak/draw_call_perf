@@ -353,7 +353,7 @@ int base::rndFromInterval(rnd_int & rnd,int min, int max){
 
 float base::rndNomalized(rnd_int & rnd)
 {
-	return ((rnd.rand() & 0x0000ffff) / 65535.0);
+	return ((rnd.rand() & 0x0000ffff) / 65535.0f);
 }
 
 base::config& base::cfg() { static config ___c; return ___c; }

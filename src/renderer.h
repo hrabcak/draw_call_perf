@@ -47,7 +47,8 @@ protected:
 	base::app *_app;
 	std::string _graphic_card_name;
 
-	bool write_test_data_csv(const char * file_name, const base::stats_data & stats, float fps, float cpu_render_time);
+	base::stats_data_buf _stat_data_buf;
+	bool write_test_data_csv(const char * file_name, const base::stats_data & stats,const base::stats_data_buf & stats_buf);
 public:
 
     renderer(base::app * const a, const base::source_location &loc);

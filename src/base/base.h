@@ -58,6 +58,33 @@ struct stats_data
     {}
 };
 
+struct stats_data_buf{
+	float _fps;
+	double _cpu_render_time;
+	double _gpu_render_time;
+	float _dc_per_sec;
+	float _tri_per_sec;
+	ushort _count;
+
+	stats_data_buf()
+		:_fps(0.0f),
+		_cpu_render_time(0.0f),
+		_gpu_render_time(0.0f),
+		_dc_per_sec(0.0f),
+		_tri_per_sec(0.0f),
+		_count(0)
+	{}
+
+	void mean(){
+		_fps /= _count;
+		_cpu_render_time /= _count;
+		_gpu_render_time /= _count;
+		_dc_per_sec /= _count;
+		_tri_per_sec /= _count;
+		_count = 1;
+	}
+};
+
 inline stats_data& stats() { static stats_data s; return s; }
 
 ///

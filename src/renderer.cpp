@@ -160,22 +160,33 @@ void renderer::draw_frame(base::frame_context * const ctx)
 		const double coef_n2m = 1.0 / 1000000.0;
 		const double time = double(result[1] - result[0]) * coef_n2m;
 		const float fps = frame / (t * 0.001f);
-
+		
 		base::stats_data & stats = base::stats();
+
+		float dc_per_sec = stats._ndrawcalls * fps * (1.f / (1024.f));
+		float tri_per_sec = float(stats._ntriangles) * fps * (1.f / (1024.f * 1024.f));
 
 		printf("fps: %.0f cpu: %.2f gpu: %.2f dc: %u dc/s: %.0fk tri/s: %.0fM tris: %uk vtx: %uk mem: %uM\n",
 			fps,
 			ctx->_cpu_render_time,
 			time,
 			stats._ndrawcalls,
-			stats._ndrawcalls * fps * (1.f / (1024.f)),
-			float(stats._ntriangles) * fps * (1.f / (1024.f * 1024.f)),
+			dc_per_sec,
+			tri_per_sec,
 			stats._ntriangles >> 10,
 			stats._nvertices >> 10,
 			stats._buffer_mem >> 20);
 
-		if (t > 5.0){
-			write_test_data_csv("test_data.csv", stats, fps, ctx->_cpu_render_time);
+		_stat_data_buf._fps += fps;
+		_stat_data_buf._cpu_render_time += ctx->_cpu_render_time;
+		_stat_data_buf._gpu_render_time += time;
+		_stat_data_buf._dc_per_sec += dc_per_sec;
+		_stat_data_buf._tri_per_sec += tri_per_sec;
+		_stat_data_buf._count++;
+
+		if (t > 3.0){
+			_stat_data_buf.mean();
+			write_test_data_csv("test_data.csv", stats, _stat_data_buf);
 		}
 		
 		start_time = current_time;
@@ -194,7 +205,7 @@ base::frame_context* renderer::pop_frame_context_from_pool() {
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-bool renderer::write_test_data_csv(const char * file_name, const base::stats_data & stats,float fps,float cpu_render_time){
+bool renderer::write_test_data_csv(const char * file_name, const base::stats_data & stats, const base::stats_data_buf & stats_buf){
 	FILE * pFile;
 	pFile = fopen(file_name,"r+");
 	
@@ -228,17 +239,19 @@ bool renderer::write_test_data_csv(const char * file_name, const base::stats_dat
 		"Some_TEST",
 		_graphic_card_name.c_str(),
 		0,0,0,0,
-		fps,
-		cpu_render_time,
-		time,
+		stats_buf._fps,
+		stats_buf._cpu_render_time,
+		stats_buf._gpu_render_time,
 		stats._ndrawcalls,
-		stats._ndrawcalls * fps * (1.f / (1024.f)),
-		float(stats._ntriangles) * fps * (1.f / (1024.f * 1024.f)),
+		stats_buf._dc_per_sec,
+		stats_buf._tri_per_sec,
 		stats._ntriangles >> 10,
 		stats._nvertices >> 10,
 		stats._buffer_mem >> 20);
 
 	fclose(pFile);
+
+	return true;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
