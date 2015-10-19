@@ -70,6 +70,7 @@ ivec2 get_vertex_pos_data(int vertex_id)
 //OUT 
 out vec3 color;
 out vec2 uv;
+out vec3 wpos;
 
 vec3 unpack_position(ivec2 pack_pos, float coef)
 {
@@ -86,7 +87,7 @@ void main()
     int index = vertex_id >> 12;
     vertex_id &= 0xfff;
     int idx = (index_start.x + gl_InstanceID) * 16;
-	mat4 tm = _ctx._mvp * mat4(
+	mat4 tm = mat4(
 		texelFetch(tb_blocks, idx),
 		texelFetch(tb_blocks, idx + 1),
 		texelFetch(tb_blocks, idx + 2),
@@ -110,6 +111,7 @@ void main()
     tex_slice = inst_id & 0x7ff;
 #endif
 
-    gl_Position = tm * vec4(pos, 1);
-	color=pos * 0.5 + 0.5;
+    wpos = (tm * vec4(pos, 1)).xyz;
+    gl_Position = _ctx._mvp * vec4(wpos,1);
+	color = pos * 0.5 + 0.5;
 }

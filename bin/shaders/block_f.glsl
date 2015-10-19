@@ -25,6 +25,7 @@ precision highp int;
 
 in vec3 color;
 in vec2 uv;
+in vec3 wpos;
 
 #if defined(USE_NAIVE_TEX)
     uniform sampler2D mat_tex;
@@ -52,6 +53,8 @@ void main()
     tex_color = vec3(0.5);
 #endif
 
+    vec3 nor = normalize(cross(dFdx(wpos), dFdy(wpos)));
+
 
     float density = 0.02;
     float dist = 1.0 / gl_FragCoord.w;
@@ -59,6 +62,9 @@ void main()
     
     fog = clamp(fog, 0.0, 1.0);
 
-    _retval = mix(vec3(1.0f, 0.9725f, 0.9490f), tex_color, fog);
-    //_retval = tex_color * 0.0000001 + vec3(fog);
+    float d = clamp(dot(nor, normalize(vec3(-1, 1, 0.5))), 0, 1);
+
+    tex_color = tex_color * d + tex_color * 0.25;
+
+    _retval = tex_color + (vec3(1.0f, 0.9725f, 0.9490f) * (1.0 - fog));
 }

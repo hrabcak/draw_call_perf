@@ -21,7 +21,7 @@ void gen_texture(glm::u8vec4 * tex_data, ushort dim, ushort grid_dim, unsigned s
 
 	int lattice_dim = dim / grid_dim;
 
-    glm::u8vec4 base_color(0.5551, 0.4549, 0.3368, 255);
+    glm::u8vec4 base_color(86, 116, 142, 255);
 	glm::u8vec4 complement_color1(100, 100, 100, 0);
 	glm::u8vec4 complement_color2(234, 223, 205, 0);
 
