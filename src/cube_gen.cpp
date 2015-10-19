@@ -118,7 +118,7 @@ inline void uvw_by_mask(const glm::vec3 & uvw, glm::vec2 & uv, unsigned char mas
 	}
 }
 
-void generate_voxel_map(short * voxel_map, const ushort & voxels_per_edge, const ushort & vert_per_edge){
+void generate_voxel_map(short * voxel_map, const ushort & voxels_per_edge, const ushort & vert_per_edge,bool deform){
 	short idx_left = -1;
 	short idx_right = -1;
 	short idx_bottom = -1;
@@ -144,27 +144,29 @@ void generate_voxel_map(short * voxel_map, const ushort & voxels_per_edge, const
 		}
 	}
 
-	for (ushort z = 0; z < voxels_per_edge; ++z){
-		for (ushort x = 0; x < voxels_per_edge; ++x){
-			float miss = base::rndNomalized(gen::_rnd);
+	if (deform){
+		for (ushort z = 0; z < voxels_per_edge; ++z){
+			for (ushort x = 0; x < voxels_per_edge; ++x){
+				float miss = base::rndNomalized(gen::_rnd);
 
-			short idx;
+				short idx;
 
-			if (miss >= 0.0f && miss < miss_prob_whole){
-				for (short y = 0; y < voxels_per_edge; ++y){
-					idx = COORD_TO_IDX(x, y, z, voxels_per_edge);
+				if (miss >= 0.0f && miss < miss_prob_whole){
+					for (short y = 0; y < voxels_per_edge; ++y){
+						idx = COORD_TO_IDX(x, y, z, voxels_per_edge);
+						voxel_map[idx] = -1;
+					}
+				}
+				else if (miss >= miss_prob_whole && miss < miss_half_bound){
+					for (short y = voxels_per_edge - 1; y >= (voxels_per_edge >> 1); --y){
+						idx = COORD_TO_IDX(x, y, z, voxels_per_edge);
+						voxel_map[idx] = -1;
+					}
+				}
+				else if (miss >= miss_half_bound && miss < miss_one_bound){
+					idx = COORD_TO_IDX(x, voxels_per_edge - 1, z, voxels_per_edge);
 					voxel_map[idx] = -1;
 				}
-			}
-			else if (miss >= miss_prob_whole && miss < miss_half_bound){
-				for (short y = voxels_per_edge-1; y >= (voxels_per_edge>>1); --y){
-					idx = COORD_TO_IDX(x, y, z, voxels_per_edge);
-					voxel_map[idx] = -1;
-				}
-			}
-			else if (miss >= miss_half_bound && miss < miss_one_bound){
-				idx = COORD_TO_IDX(x, voxels_per_edge - 1,z, voxels_per_edge);
-				voxel_map[idx] = -1;
 			}
 		}
 	}
@@ -729,7 +731,8 @@ void gen_cube_imp(
 	voxel_info * voxel_inf,
 	uint32 & element_count,
 	uint32 & vert_count,
-	bool use_int)
+	bool use_int,
+	bool deform)
 {
 	short voxel_m[4096];
 	voxel_info voxel_i[4096];
@@ -756,7 +759,7 @@ void gen_cube_imp(
 	char * cur_norm_uv_data_pos = (char*)norm_uv_data;
 	ushort * cur_index_array_pos = index_array;
 	short * cur_voxel_vert_idx_pos = voxel_vert_idx;
-	generate_voxel_map(voxel_m, vox_per_edge_count, vert_per_edge_count);
+	generate_voxel_map(voxel_m, vox_per_edge_count, vert_per_edge_count,deform);
 
 	for (ushort z = 0; z < vox_per_edge_count; ++z){
 		for (ushort y = 0; y < vox_per_edge_count; ++y){

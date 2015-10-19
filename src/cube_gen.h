@@ -23,7 +23,8 @@ void gen_cube_imp(
 	voxel_info * voxel_inf,
     uint32 & element_count,
     uint32 & vert_count,
-    bool use_int);
+	bool use_int,
+	bool deform);
 
 template < class V >
 void gen_cube(
@@ -34,7 +35,8 @@ void gen_cube(
 	short * voxel_map,
 	voxel_info * voxel_inf,
 	uint32 & element_count,
-    uint32 & vert_count);
+	uint32 & vert_count,
+	bool deform);
 
 template <>
 static void gen_cube<float>(
@@ -45,7 +47,8 @@ static void gen_cube<float>(
 	short * voxel_map,
 	voxel_info * voxel_inf,
 	uint32 & element_count,
-    uint32 & vert_count)
+	uint32 & vert_count,
+	bool deform)
 {
 	gen_cube_imp(
         tess_level,
@@ -56,7 +59,8 @@ static void gen_cube<float>(
 		voxel_inf,
         element_count,
         vert_count,
-        false);
+        false,
+		deform);
 }
 
 template<>
@@ -68,7 +72,8 @@ static void gen_cube<glm::int2>(
 	short * voxel_map,
 	voxel_info * voxel_inf,
 	uint32 & element_count,
-    uint32 & vert_count)
+	uint32 & vert_count, 
+	bool deform)
 {
 	gen_cube_imp(
         tess_level,
@@ -79,7 +84,8 @@ static void gen_cube<glm::int2>(
 		voxel_inf,
         element_count,
         vert_count,
-        true);
+		true, 
+		deform);
 }
 
 
