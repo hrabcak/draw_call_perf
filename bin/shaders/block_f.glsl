@@ -56,7 +56,7 @@ void main()
     const vec3 sun_color = vec3(1.0f, 0.9725f, 0.9490f);
 
     vec3 nor = normalize(cross(dFdx(wpos), dFdy(wpos)));
-    float fog = clamp(exp2(-0.02 * (1.0 / gl_FragCoord.w)), 0.0, 1.0);
+    float fog = clamp(exp2(-0.01 * (1.0 / gl_FragCoord.w)), 0.0, 1.0);
     float LdN = clamp(dot(nor, normalize(vec3(-1, 1, -0.5))), 0, 1);
     tex_color = tex_color * LdN * sun_color + tex_color * 0.25;
 

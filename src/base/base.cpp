@@ -186,7 +186,7 @@ GLuint base::create_texture(
 	const int width, 
 	const int height,
 	const base::pixelfmt pf,
-	const void *data,
+	const void * const data,
 	const unsigned buffer)
 {
 	const base::pfd* pfd=base::get_pfd(pf);
@@ -213,7 +213,7 @@ GLuint base::create_texture(
 			height,
 			0,
 			pitch * rows,
-			buffer ? 0 : data);
+			data);
 	}
 	else {
 		glTexImage2D(
@@ -229,8 +229,56 @@ GLuint base::create_texture(
 	}
 
     glGenerateMipmap(GL_TEXTURE_2D);
+
 	glBindTexture(GL_TEXTURE_2D,0);
     
+    return handle;
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+GLuint base::create_texture_storage(
+    const int width,
+    const int height,
+    const base::pixelfmt pf,
+    const void * const data,
+    const unsigned buffer,
+    const bool generate_mips)
+{
+    const base::pfd * const pfd = base::get_pfd(pf);
+
+    GLuint handle;
+    glGenTextures(1, &handle);
+
+    const int nmips = 1 + glm::floor(glm::log2(glm::max(width, height)));
+
+    glBindTexture(GL_TEXTURE_2D, handle);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTextureStorage2D(
+        handle,
+        nmips,
+        pfd->_internal,
+        width,
+        height);
+
+    glTextureSubImage2D(
+        handle,
+        0,
+        0, 0,
+        width, height,
+        GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+        data);
+
+    if (generate_mips) {
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     return handle;
 }
 
@@ -267,22 +315,6 @@ GLuint base::create_texture_array(
             width,
             height,
             nslices);
-
-        for (int i = 0; i < nslices; ++i) {
-            glTextureSubImage3DEXT(
-                handle,
-                GL_TEXTURE_2D_ARRAY,
-                0,
-                0,
-                0,
-                i,
-                width,
-                height,
-                1,
-                pfd->_format,
-                pfd->_type,
-                (void*)(i * width * height * pfd->_size));
-        }
     }
 
     return handle;

@@ -201,9 +201,19 @@ GLuint create_texture(
 	const int width, 
 	const int height,
 	const base::pixelfmt pf,
-	const void *data,
-	const unsigned buffer = 0);
+	const void * const data,
+    const unsigned buffer = 0);
 
+///
+GLuint create_texture_storage(
+    const int width,
+    const int height,
+    const base::pixelfmt pf,
+    const void * const data,
+    const unsigned buffer = 0,
+    const bool generate_mips = false);
+
+///
 GLuint create_texture_array(
     const int width,
     const int height,

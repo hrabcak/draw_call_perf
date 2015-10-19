@@ -69,7 +69,7 @@ scene::scene(benchmark * const app)
     , _tex_handles()
 
     , _bench_mode(BenchIndirect)
-    , _tex_mode(BenchTexNone)
+    , _tex_mode(BenchTexArray)
 
     , _max_array_layers(1)
 
@@ -330,31 +330,29 @@ void scene::create_textures(const base::source_location &)
 {
     const int width = 64;
     const int tex_size = width * width;
-    glm::u8vec4 * data = 0;
     const int ntex = MAX_BLOCK_COUNT;
     const base::pixelfmt pf = base::PF_BGRA8_SRGB;
     const int tex_size_bytes = tex_size * base::get_pfd(pf)->_size;
-
-    const GLuint buf = base::create_buffer<u8vec4>(tex_size * ntex, &data);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
-    
-    for (int i = 0; i < ntex; ++i) {
-        gen_texture(data + i * tex_size, width, 16, i);
-    }
+ 
+    std::vector<uchar4> data;
+    data.resize(tex_size);
 
     if (_tex_mode != BenchTexArray) {
         for (int i = 0; i < ntex; ++i) {
-            const GLint tex = create_texture(
+            gen_texture(data.begin()._Ptr, width, 16, i);
+            const GLint tex = create_texture_storage(
                 width,
                 width,
                 pf,
-                (void*)(i * tex_size_bytes),
-                buf);
+                data.begin()._Ptr,
+                0,
+                true);
 
             _texs.push_back(tex);
         }
     }
     else {
+        const base::pfd * const pfd = base::get_pfd(pf);
         for (int i = 0; i < ntex; i += _max_array_layers) {
             const GLint tex = create_texture_array(
                 width,
@@ -362,7 +360,25 @@ void scene::create_textures(const base::source_location &)
                 _max_array_layers,
                 pf,
                 (void*)(i * tex_size_bytes),
-                buf);
+                0);
+
+            for (int j = 0; j < _max_array_layers; ++j) {
+                gen_texture(data.begin()._Ptr, width, 16, j);
+                glTextureSubImage3DEXT(
+                    tex,
+                    GL_TEXTURE_2D_ARRAY,
+                    0,
+                    0,
+                    0,
+                    j,
+                    width,
+                    width,
+                    1,
+                    pfd->_format,
+                    pfd->_type,
+                    data.begin()._Ptr);
+            }
+
             _texs.push_back(tex);
 
             glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
@@ -370,10 +386,7 @@ void scene::create_textures(const base::source_location &)
         }
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     }
-
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glDeleteBuffers(0, &buf);
-
+    
     if (_tex_mode == BenchTexBindless) {
         for (int i = 0; i < ntex; ++i) {
             const GLuint64 handle = glGetTextureHandleARB(_texs[i]);
@@ -388,7 +401,7 @@ void scene::create_textures(const base::source_location &)
         glBindTexture(GL_TEXTURE_BUFFER, _tb_tex_handles);
         glTexBuffer(
             GL_TEXTURE_BUFFER,
-            base::get_pfd(base::PF_RG32F)->_internal,
+            base::get_pfd(base::PF_RG32I)->_internal,
             _buffer_tex_handles);
         glBindTexture(GL_TEXTURE_BUFFER, 0);
     }
