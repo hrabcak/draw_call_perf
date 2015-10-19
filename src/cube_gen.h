@@ -24,7 +24,8 @@ void gen_cube_imp(
     uint32 & element_count,
     uint32 & vert_count,
 	bool use_int,
-	bool deform);
+	bool deform,
+	bool multipass);
 
 template < class V >
 void gen_cube(
@@ -36,7 +37,8 @@ void gen_cube(
 	voxel_info * voxel_inf,
 	uint32 & element_count,
 	uint32 & vert_count,
-	bool deform);
+	bool deform,
+	bool multipass);
 
 template <>
 static void gen_cube<float>(
@@ -48,7 +50,8 @@ static void gen_cube<float>(
 	voxel_info * voxel_inf,
 	uint32 & element_count,
 	uint32 & vert_count,
-	bool deform)
+	bool deform,
+	bool multipass)
 {
 	gen_cube_imp(
         tess_level,
@@ -60,7 +63,8 @@ static void gen_cube<float>(
         element_count,
         vert_count,
         false,
-		deform);
+		deform,
+		multipass);
 }
 
 template<>
@@ -73,7 +77,8 @@ static void gen_cube<glm::int2>(
 	voxel_info * voxel_inf,
 	uint32 & element_count,
 	uint32 & vert_count, 
-	bool deform)
+	bool deform,
+	bool multipass)
 {
 	gen_cube_imp(
         tess_level,
@@ -85,7 +90,8 @@ static void gen_cube<glm::int2>(
         element_count,
         vert_count,
 		true, 
-		deform);
+		deform,
+		multipass);
 }
 
 

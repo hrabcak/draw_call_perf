@@ -277,7 +277,8 @@ void scene::post_gpu_init()
             nullptr,
             nelements,
             nvertices,
-			true); // argument true if deform cube
+			true, // argument true if deform cube
+			false); // argument true if multipass
 
         _dc_data.push_back(dc_data(
             nelements,
