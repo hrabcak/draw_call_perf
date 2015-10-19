@@ -127,9 +127,9 @@ void generate_voxel_map(short * voxel_map, const ushort & voxels_per_edge, const
 
 	short idx;
 
-	const float miss_prob_whole = 0.05f;
-	const float miss_prob_half = 0.1f;
-	const float miss_prob_one = 0.15f;
+	const float miss_prob_whole = 0.1f;
+	const float miss_prob_half = 0.3f;
+	const float miss_prob_one = 0.5f;
 
 	const float miss_half_bound = miss_prob_whole + miss_prob_half;
 	const float miss_one_bound = miss_half_bound + miss_prob_one;
@@ -157,7 +157,7 @@ void generate_voxel_map(short * voxel_map, const ushort & voxels_per_edge, const
 				}
 			}
 			else if (miss >= miss_prob_whole && miss < miss_half_bound){
-				for (short y = voxels_per_edge-1; y > (voxels_per_edge>>1); --y){
+				for (short y = voxels_per_edge-1; y >= (voxels_per_edge>>1); --y){
 					idx = COORD_TO_IDX(x, y, z, voxels_per_edge);
 					voxel_map[idx] = -1;
 				}
