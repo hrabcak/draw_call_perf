@@ -48,6 +48,8 @@ public:
     virtual const char* get_wnd_name() const override { return get_app_name(); }
     virtual const char* get_wnd_cls() const override { return "benchmark class"; }
 
+	virtual void set_benchmark_mode(bool mode) override { _benchmark_mode = mode; }
+
 	virtual void key(const int key, const bool down)override;
 
 	virtual void start() override;

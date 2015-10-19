@@ -57,6 +57,8 @@ public:
     void end_frame();
 	virtual void stop();
 
+	virtual void set_benchmark_mode(bool mode) = 0;
+
 	// desired client area size / OpenGL frame buffer size
 	virtual int get_wnd_width() const { return 1280; }
 	virtual int get_wnd_height() const { return 720; }
@@ -100,6 +102,8 @@ public:
 
 protected:
 	static app *_app;
+
+	bool _benchmark_mode;
 
 	std::auto_ptr<base::font> _fnt_mono;
 	std::auto_ptr<base::font> _fnt_arial;
