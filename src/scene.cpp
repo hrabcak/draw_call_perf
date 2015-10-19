@@ -80,7 +80,7 @@ scene::scene(benchmark * const app)
     , _elements_base_ptr(0)
 
     , _use_vbo(false)
-    , _one_mesh(true)
+    , _one_mesh(false)
 {
 	_tms.reserve(MAX_BLOCK_COUNT);
 	_bboxes.reserve(MAX_BLOCK_COUNT);
@@ -281,7 +281,6 @@ void scene::post_gpu_init()
     int i = 0;
     int e = MAX_BLOCK_COUNT;
     do {
-<<<<<<< HEAD
         if (_bench_mode != BenchInstancing || i == 0) {
             gen_cube<int2>(
                 tess_level,
@@ -292,7 +291,8 @@ void scene::post_gpu_init()
                 nullptr,
                 nelements,
                 nvertices,
-                true);
+                true,  // argument true if deform cube
+                false); // argument true if multipass
 
             _dc_data.push_back(dc_data(
                 nelements,
@@ -314,29 +314,6 @@ void scene::post_gpu_init()
             vertices_ptr += _dc_data[0]._nvertices;
             norm_uv_ptr += _dc_data[0]._nvertices;
         }
-=======
-        gen_cube<int2>(
-            tess_level,
-            vertices_ptr,
-            norm_uv_ptr,
-            elements_ptr,
-            nullptr,
-            nullptr,
-            nelements,
-            nvertices,
-			true, // argument true if deform cube
-			false); // argument true if multipass
-
-        _dc_data.push_back(dc_data(
-            nelements,
-            uint(elements_ptr - _elements_base_ptr),
-            nvertices,
-            uint(vertices_ptr - _vertices_base_ptr)));
-
-        elements_ptr += nelements;
-        vertices_ptr += nvertices;
-        norm_uv_ptr += nvertices;
->>>>>>> 233b4ff95756abe1cc9ebf174a1c754bb2f2ea64
     } while (++i != e);
 
     create_test_scene();
@@ -730,7 +707,7 @@ void scene::gpu_draw(base::frame_context * const ctx)
                     glVertexAttribI3i(
                         13,
                         ctx->_scene_data_offset + i,
-                        _dc_data[_one_mesh ? 0 : i]._first_vertex,
+                        _dc_data[i]._first_vertex,
                         i);
                     glDrawElementsInstanced(
                         GL_TRIANGLES,
