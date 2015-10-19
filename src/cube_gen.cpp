@@ -17,6 +17,17 @@
 #define MASK_BIT_6 0x40
 #define MASK_BIT_7 0x80
 
+enum en_voxel_pass
+{
+	vpNear = 0,
+	vpRight = 1,
+	vpFar,
+	vpLeft,
+	vpBottom,
+	vpTop,
+	vpPassCount
+};
+
 //#define COORD_TO_IDX(X,Y,Z,MAX_COORD)	(X>=0 && Y >=0 && Z >=0 && X < MAX_COORD && Y < MAX_COORD && Z < MAX_COORD) ?(Z*MAX_COORD*MAX_COORD + Y*MAX_COORD + X) : (-1)
 
 short COORD_TO_IDX(short  X, short Y, short Z, short MAX_COORD) {
@@ -364,7 +375,8 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 	ushort & out_added_elems,
 	ushort & out_added_voxel_idx,
 	ushort & out_cur_vert_count,
-	bool use_int)
+	bool use_int,
+	en_voxel_pass pass)
 {
 	const glm::vec3 norm_right(1.0f, 0.0f, 0.0f);
 	const glm::vec3 norm_left(-1.0f, 0.0f, 0.0f);
@@ -405,7 +417,7 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 	float * cur_norm_uv_data = norm_uv_data;
 	ushort * cur_index_array = index_array;
 
-	if (idx_near == -1 || voxel_map[idx_near] == -1){ // if near neigh not exist then process near face
+	if ((idx_near == -1 || voxel_map[idx_near] == -1) && (pass == vpNear || pass == vpPassCount)){ // if near neigh not exist then process near face
 		if (idx_left != -1 && voxel_map[idx_left] != -1){
 			left_vox_info = &voxel_inf_arr[idx_left];
 		}
@@ -457,7 +469,7 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 		cur_index_array = (index_array + out_added_elems);
 	}
 
-	if (idx_right == -1 || voxel_map[idx_right] == -1){ // if near neigh not exist then process near face
+	if ((idx_right == -1 || voxel_map[idx_right] == -1) & (pass == vpRight || pass == vpPassCount)){ // if near neigh not exist then process near face
 		if (idx_near != -1 && voxel_map[idx_near] != -1){
 			left_vox_info = &voxel_inf_arr[idx_near];
 		}
@@ -513,7 +525,7 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 		cur_index_array = (index_array + out_added_elems);
 	}
 
-	if (idx_far == -1 || voxel_map[idx_far] == -1){ // if near neigh not exist then process near face
+	if ((idx_far == -1 || voxel_map[idx_far] == -1) && (pass == vpFar || pass == vpPassCount)){ // if near neigh not exist then process near face
 		if (idx_left != -1 && voxel_map[idx_left] != -1){
 			left_vox_info = &voxel_inf_arr[idx_left];
 		}
@@ -569,7 +581,7 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 		cur_index_array = (index_array + out_added_elems);
 	}
 
-	if (idx_left == -1 || voxel_map[idx_left] == -1){ // if near neigh not exist then process near face
+	if ((idx_left == -1 || voxel_map[idx_left] == -1) && (pass == vpLeft || pass == vpPassCount)){ // if near neigh not exist then process near face
 		if (idx_near != -1 && voxel_map[idx_near] != -1){
 			left_vox_info = &voxel_inf_arr[idx_near];
 		}
@@ -621,7 +633,7 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 		cur_index_array = (index_array + out_added_elems);
 	}
 
-	if (idx_bottom == -1 || voxel_map[idx_bottom] == -1){ // if near neigh not exist then process near face
+	if ((idx_bottom == -1 || voxel_map[idx_bottom] == -1) && (pass == vpBottom || pass == vpPassCount)){ // if near neigh not exist then process near face
 		if (idx_left != -1 && voxel_map[idx_left] != -1){
 			left_vox_info = &voxel_inf_arr[idx_left];
 		}
@@ -673,7 +685,7 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 		cur_index_array = (index_array + out_added_elems);
 	}
 
-	if (idx_top == -1 || voxel_map[idx_top] == -1){ // if near neigh not exist then process near face
+	if ((idx_top == -1 || voxel_map[idx_top] == -1) && (pass == vpTop || pass == vpPassCount)){ // if near neigh not exist then process near face
 		if (idx_left != -1 && voxel_map[idx_left] != -1){
 			left_vox_info = &voxel_inf_arr[idx_left];
 		}
@@ -732,7 +744,8 @@ void gen_cube_imp(
 	uint32 & element_count,
 	uint32 & vert_count,
 	bool use_int,
-	bool deform)
+	bool deform,
+	bool multipass)
 {
 	short voxel_m[4096];
 	voxel_info voxel_i[4096];
@@ -761,49 +774,108 @@ void gen_cube_imp(
 	short * cur_voxel_vert_idx_pos = voxel_vert_idx;
 	generate_voxel_map(voxel_m, vox_per_edge_count, vert_per_edge_count,deform);
 
-	for (ushort z = 0; z < vox_per_edge_count; ++z){
-		for (ushort y = 0; y < vox_per_edge_count; ++y){
-			for (ushort x = 0; x < vox_per_edge_count; ++x){
-				ushort added_vertices = 0;
-				ushort added_elements = 0;
-				ushort added_vox_idx = 0;
-				idx = COORD_TO_IDX(x, y, z, vox_per_edge_count);
+	if (multipass){
+		for (ushort pass = ushort(vpNear); pass < ushort(vpPassCount); pass++){
+			if (pass > 0){
+				memset(&voxel_i[0], 0, 32768);
+				memset(&voxel_vert_idx[0], 0, 24576);
+			}
+			for (ushort z = 0; z < vox_per_edge_count; ++z){
+				for (ushort y = 0; y < vox_per_edge_count; ++y){
+					for (ushort x = 0; x < vox_per_edge_count; ++x){
+						ushort added_vertices = 0;
+						ushort added_elements = 0;
+						ushort added_vox_idx = 0;
+						idx = COORD_TO_IDX(x, y, z, vox_per_edge_count);
 
-				if (voxel_m[idx] == -1){
-					continue;
+						if (voxel_m[idx] == -1){
+							continue;
+						}
+
+						voxel_i[idx].vert_idx = cur_vox_idx_count;
+
+						triangulate_voxel(glm::uvec3(x, y, z),
+							voxel_m,
+							voxel_i,
+							voxel_vert_idx,
+							vox_per_edge_count,
+							vert_per_edge_count,
+							(float*)cur_pos_data_pos,
+							(float*)cur_norm_uv_data_pos,
+							cur_index_array_pos,
+							added_vertices,
+							added_elements,
+							added_vox_idx,
+							cur_vert_count,
+							use_int,
+							en_voxel_pass(pass));
+
+						cur_element_count += added_elements;
+						cur_vox_idx_count += added_vox_idx;
+
+						cur_index_array_pos += added_elements;
+						cur_voxel_vert_idx_pos += added_vox_idx;
+
+						if (use_int){
+							cur_pos_data_pos += 8 * added_vertices;
+							cur_norm_uv_data_pos += 8 * added_vertices;
+						}
+						else{
+							cur_pos_data_pos += 12 * added_vertices;
+							cur_norm_uv_data_pos += 20 * added_vertices;
+
+						}
+					}
 				}
+			}
+		}
+	}
+	else{
+		for (ushort z = 0; z < vox_per_edge_count; ++z){
+			for (ushort y = 0; y < vox_per_edge_count; ++y){
+				for (ushort x = 0; x < vox_per_edge_count; ++x){
+					ushort added_vertices = 0;
+					ushort added_elements = 0;
+					ushort added_vox_idx = 0;
+					idx = COORD_TO_IDX(x, y, z, vox_per_edge_count);
 
-				voxel_i[idx].vert_idx = cur_vox_idx_count;
+					if (voxel_m[idx] == -1){
+						continue;
+					}
 
-				triangulate_voxel(glm::uvec3(x, y, z),
-					voxel_m,
-					voxel_i,
-					voxel_vert_idx,
-					vox_per_edge_count,
-					vert_per_edge_count,
-					(float*)cur_pos_data_pos,
-					(float*)cur_norm_uv_data_pos,
-					cur_index_array_pos,
-					added_vertices,
-					added_elements,
-					added_vox_idx,
-					cur_vert_count,
-					use_int);
+					voxel_i[idx].vert_idx = cur_vox_idx_count;
 
-				cur_element_count += added_elements;
-				cur_vox_idx_count += added_vox_idx;
+					triangulate_voxel(glm::uvec3(x, y, z),
+						voxel_m,
+						voxel_i,
+						voxel_vert_idx,
+						vox_per_edge_count,
+						vert_per_edge_count,
+						(float*)cur_pos_data_pos,
+						(float*)cur_norm_uv_data_pos,
+						cur_index_array_pos,
+						added_vertices,
+						added_elements,
+						added_vox_idx,
+						cur_vert_count,
+						use_int,
+						vpPassCount);
 
-				cur_index_array_pos += added_elements;
-				cur_voxel_vert_idx_pos += added_vox_idx;
+					cur_element_count += added_elements;
+					cur_vox_idx_count += added_vox_idx;
 
-				if (use_int){
-					cur_pos_data_pos += 8 * added_vertices;
-					cur_norm_uv_data_pos += 8 * added_vertices;
-				}
-				else{
-					cur_pos_data_pos += 12 * added_vertices;
-					cur_norm_uv_data_pos += 20 * added_vertices;
+					cur_index_array_pos += added_elements;
+					cur_voxel_vert_idx_pos += added_vox_idx;
 
+					if (use_int){
+						cur_pos_data_pos += 8 * added_vertices;
+						cur_norm_uv_data_pos += 8 * added_vertices;
+					}
+					else{
+						cur_pos_data_pos += 12 * added_vertices;
+						cur_norm_uv_data_pos += 20 * added_vertices;
+
+					}
 				}
 			}
 		}

@@ -41,6 +41,7 @@ base::app::app()
 	, _frame_number(0)
     , _fovy(45.f)
     , _aspect(float(get_wnd_width()) / float(get_wnd_height()))
+	, _benchmark_mode(false)
 { 
 	assert(_app == 0);
     _app = this; 
@@ -79,7 +80,7 @@ void base::app::gpu_init()
 
 void base::app::begin_frame()
 {
-	if(_active) {
+	if(_active && !_benchmark_mode) {
 		_mouse_pos += glm::vec2(base::get_mouse_pos() - _last_mouse_pos) * 0.2f;
 		base::set_mouse_pos(glm::ivec2(200));
 	}
