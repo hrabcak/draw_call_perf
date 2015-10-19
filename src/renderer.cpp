@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include "base/hptimer.h"
 
 #include <iostream>
+#include <fstream>
 
 #include <glm/glm.hpp>
 
@@ -62,6 +63,8 @@ void renderer::run()
 {
 	base::init_opengl_win();
 	base::init_opengl_dbg_win();
+
+	_graphic_card_name = (char*)glGetString(GL_RENDERER);
 
 	// create frame_context pool
 	{
@@ -150,26 +153,32 @@ void renderer::draw_frame(base::frame_context * const ctx)
 
     double current_time = timer.elapsed_time();
     const float t = float(current_time - start_time);
-    if (t > 1000.f) {
-        __int64 result[3] = { 0, };
-        glGetQueryObjecti64v(ctx->_time_queries[0], GL_QUERY_RESULT, result);
-        glGetQueryObjecti64v(ctx->_time_queries[1], GL_QUERY_RESULT, result + 1);
-        const double coef_n2m = 1.0 / 1000000.0;
-        const double time = double(result[1] - result[0]) * coef_n2m;
-        const float fps = frame / (t * 0.001f);
+	if (t > 1000.f) {
+		__int64 result[3] = { 0, };
+		glGetQueryObjecti64v(ctx->_time_queries[0], GL_QUERY_RESULT, result);
+		glGetQueryObjecti64v(ctx->_time_queries[1], GL_QUERY_RESULT, result + 1);
+		const double coef_n2m = 1.0 / 1000000.0;
+		const double time = double(result[1] - result[0]) * coef_n2m;
+		const float fps = frame / (t * 0.001f);
 
-        printf("fps: %.0f cpu: %.2f gpu: %.2f dc: %u dc/s: %.0fk tri/s: %.0fM tris: %uk vtx: %uk mem: %uM\n",
-            fps,
-            ctx->_cpu_render_time,
-            time,
-            base::stats()._ndrawcalls,
-            base::stats()._ndrawcalls * fps * (1.f / (1024.f)),
-            float(base::stats()._ntriangles) * fps * (1.f / (1024.f * 1024.f)),
-            base::stats()._ntriangles >> 10,
-            base::stats()._nvertices >> 10,
-            base::stats()._buffer_mem >> 20);
+		base::stats_data & stats = base::stats();
 
-        start_time = current_time;
+		printf("fps: %.0f cpu: %.2f gpu: %.2f dc: %u dc/s: %.0fk tri/s: %.0fM tris: %uk vtx: %uk mem: %uM\n",
+			fps,
+			ctx->_cpu_render_time,
+			time,
+			stats._ndrawcalls,
+			stats._ndrawcalls * fps * (1.f / (1024.f)),
+			float(stats._ntriangles) * fps * (1.f / (1024.f * 1024.f)),
+			stats._ntriangles >> 10,
+			stats._nvertices >> 10,
+			stats._buffer_mem >> 20);
+
+		if (t > 5.0){
+			write_test_data_csv("test_data.csv", stats, fps, ctx->_cpu_render_time);
+		}
+		
+		start_time = current_time;
         frame = 0;
     }
 
@@ -181,6 +190,55 @@ void renderer::draw_frame(base::frame_context * const ctx)
 base::frame_context* renderer::pop_frame_context_from_pool() {
 	base::mutex_guard g(_mx_queue);
 	return base::app::get()->pop_frame_context_from_pool();
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+bool renderer::write_test_data_csv(const char * file_name, const base::stats_data & stats,float fps,float cpu_render_time){
+	FILE * pFile;
+	pFile = fopen(file_name,"r+");
+	
+
+	if (pFile == NULL){
+		pFile = fopen(file_name,"w");
+		if (pFile == NULL){
+			return false;
+		}
+
+		fputs("test_name,"
+			"gpu_gl_name,"
+			 "texture_buffer_vbo,"
+			   "texture_binds,"
+			   "mesh_size,"
+			   "single_mesh_data,"
+			   "fps,"
+			   "cpu_render_time,"
+			   "gpu_render_time,"
+			   "dc,dc_per_sec,"
+			   "tri_per_sec,"
+			   "ntri,"
+			   "nvert,"
+			   "buf_mem",pFile);
+	}
+	else{
+		fseek(pFile, 0, SEEK_END);
+	}
+
+	fprintf(pFile, "\n%s,%s,%i,%i,%i,%i,%f,%f,%f,%u,%f,%f,%u,%u,%u",
+		"Some_TEST",
+		_graphic_card_name.c_str(),
+		0,0,0,0,
+		fps,
+		cpu_render_time,
+		time,
+		stats._ndrawcalls,
+		stats._ndrawcalls * fps * (1.f / (1024.f)),
+		float(stats._ntriangles) * fps * (1.f / (1024.f * 1024.f)),
+		stats._ntriangles >> 10,
+		stats._nvertices >> 10,
+		stats._buffer_mem >> 20);
+
+	fclose(pFile);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

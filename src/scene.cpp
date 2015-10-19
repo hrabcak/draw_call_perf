@@ -39,6 +39,11 @@ using namespace glm;
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
 scene::scene(benchmark * const app)
 	:_cur_next_block(0,0)
 	,_tms()
@@ -78,6 +83,20 @@ scene::scene(benchmark * const app)
 	_bboxes.reserve(MAX_BLOCK_COUNT);
 	_hws.reserve(MAX_BLOCK_COUNT);
 	_flags.reserve(MAX_BLOCK_COUNT);
+
+	_test_names.push_back("TEST_1");
+	_test_names.push_back("TEST_2");
+	_test_names.push_back("TEST_3");
+	_test_names.push_back("TEST_4");
+	_test_names.push_back("TEST_5");
+	_test_names.push_back("TEST_6");
+	_test_names.push_back("TEST_7");
+	_test_names.push_back("TEST_8");
+	_test_names.push_back("TEST_9");
+	_test_names.push_back("TEST_10");
+	_test_names.push_back("TEST_11");
+	_test_names.push_back("TEST_12");
+	_test_names.push_back("TEST_13");
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

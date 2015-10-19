@@ -45,7 +45,9 @@ protected:
 	base::mutex _mx_queue;
 	bool _shutdown;
 	base::app *_app;
+	std::string _graphic_card_name;
 
+	bool write_test_data_csv(const char * file_name, const base::stats_data & stats, float fps, float cpu_render_time);
 public:
 
     renderer(base::app * const a, const base::source_location &loc);
