@@ -37,7 +37,7 @@ base::app* base::app::_app = 0;
 
 base::app::app()
 	: _velocity_boost(false)
-    , _position(46.5, 10.3, 190)
+    , _position(0.0, 10.3, 0.0)
 	, _frame_number(0)
     , _fovy(45.f)
     , _aspect(float(get_wnd_width()) / float(get_wnd_height()))
@@ -99,13 +99,13 @@ void base::app::create_perspective_matrix(frame_context * const fc)
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 void base::app::update_camera(frame_context * const fc)
-{
+{	
 	fc->_view = glm::rotate(
 		glm::rotate(
 			glm::mat4(1),
-			glm::radians(-_mouse_pos.x),
+			glm::radians(-_mouse_pos.x)+glm::pi<float>(),
 			glm::vec3(0,1,0)),
-			glm::radians (-_mouse_pos.y), glm::vec3(1, 0, 0));
+			glm::radians (- _mouse_pos.y), glm::vec3(1, 0, 0));
 
 	_position += glm::mat3(fc->_view) * _velocity * (_velocity_boost ? 3.0f : 1.0f);
 

@@ -784,7 +784,7 @@ void scene::add_test_block()
 	// set next block coords
 	if (cur_x - 1 < -cur_bound){
 		cur_z += 1;
-		cur_x = get_perspective_block_bound(cur_z + 1,2.0f) * 2;
+		cur_x = get_perspective_block_bound(cur_z + 1,2.0f) * 2 - 1;
 		_cur_block = (cur_z << 16) | ushort(cur_x);
 	}
 	else{
