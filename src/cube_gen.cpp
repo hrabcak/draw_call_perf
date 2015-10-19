@@ -127,9 +127,9 @@ void generate_voxel_map(short * voxel_map, const ushort & voxels_per_edge, const
 
 	short idx;
 
-	const float miss_prob_whole = 0.1f;
-	const float miss_prob_half = 0.3f;
-	const float miss_prob_one = 0.5f;
+	const float miss_prob_whole = 0.0f;
+	const float miss_prob_half = 0.2f;
+	const float miss_prob_one = 0.3f;
 
 	const float miss_half_bound = miss_prob_whole + miss_prob_half;
 	const float miss_one_bound = miss_half_bound + miss_prob_one;

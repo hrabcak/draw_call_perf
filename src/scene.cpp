@@ -769,12 +769,12 @@ void scene::add_test_block()
             int idx = int(_tms.size());
 
 			add_block(
-                glm::vec3(xpos, height * 2.f, zpos),
+				glm::vec3(xpos, height*1.3333333f, zpos),
                 box_size,
                 0);
         
             add_block(
-                glm::vec3(xpos, 32.f - height * 2.f, zpos),
+                glm::vec3(xpos, 32.f - height*1.33333f, zpos),
                 box_size,
                 0);
 
