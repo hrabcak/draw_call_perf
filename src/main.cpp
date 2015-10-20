@@ -24,13 +24,9 @@ THE SOFTWARE.
 #include "base/app.h"
 #include "benchmark.h"
 
-#include <iostream>
-
 int main(int argc, char* argv[])
 {
 	try {
-		std::cout << "Hello OpenGL Insights reader!" << std::endl;
-
 		benchmark myapp;
 		
 		for(int i = 1; i < argc; ++i) {

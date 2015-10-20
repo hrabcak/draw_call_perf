@@ -144,9 +144,6 @@ protected:
         BenchInstancing,
         BenchIndirect,
         BenchBaseInstance,
-        
-        BenchTexBufvsVBO,
-        BenchProceduralVertices,
     };
 
     enum TexturingMode
@@ -157,13 +154,14 @@ protected:
         BenchTexBindless,
     };
 
+    bool _use_vbo;
+    bool _one_mesh;
+
     BenchmarkMode _bench_mode;
     TexturingMode _tex_mode;
 
     benchmark * const _app;
 
-    bool _use_vbo;
-    bool _one_mesh;
 };
 
 #endif // __ASYNC_VBO_TRANSFERS_SCENE_H__

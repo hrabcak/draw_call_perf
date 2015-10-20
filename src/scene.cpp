@@ -39,11 +39,6 @@ using namespace glm;
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-
-
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-
 scene::scene(benchmark * const app)
 	:_cur_next_block(0,0)
 	,_tms()
@@ -87,19 +82,19 @@ scene::scene(benchmark * const app)
 	_hws.reserve(MAX_BLOCK_COUNT);
 	_flags.reserve(MAX_BLOCK_COUNT);
 
-	_test_names.push_back("TEST_1");
-	_test_names.push_back("TEST_2");
-	_test_names.push_back("TEST_3");
-	_test_names.push_back("TEST_4");
-	_test_names.push_back("TEST_5");
-	_test_names.push_back("TEST_6");
-	_test_names.push_back("TEST_7");
-	_test_names.push_back("TEST_8");
-	_test_names.push_back("TEST_9");
-	_test_names.push_back("TEST_10");
-	_test_names.push_back("TEST_11");
-	_test_names.push_back("TEST_12");
-	_test_names.push_back("TEST_13");
+    _test_names.push_back("Test 1: Draw Naive");
+	_test_names.push_back("Test 2: Draw with base instance");
+	_test_names.push_back("Test 3: Instancing");
+	_test_names.push_back("Test 4: Multi draw indirect");
+
+    // set modes
+
+    //BenchTexNone,
+    //BenchTexNaive,
+    //BenchTexArray,
+    //BenchTexBindless,
+    //_use_vbo;
+    //_one_mesh;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -160,10 +155,6 @@ void scene::load_and_init_shaders(const base::source_location &loc)
     case BenchBaseInstance:
         cfg += "#define USE_BASE_INSTANCE 1\n";
         break;
-    case BenchTexBufvsVBO:
-        break;
-    case BenchProceduralVertices:
-        break;
     }
     
     switch (_tex_mode) {
@@ -209,10 +200,6 @@ void scene::load_and_init_shaders(const base::source_location &loc)
     case BenchIndirect:
         break;
     case BenchBaseInstance:
-        break;
-    case BenchTexBufvsVBO:
-        break;
-    case BenchProceduralVertices:
         break;
     }
 
@@ -266,7 +253,7 @@ void scene::init_gpu_stuff(const base::source_location &loc)
                 nelements,
                 nvertices,
                 true,  // argument true if deform cube
-                false); // argument true if multipass
+                true); // argument true if multipass
 
             _dc_data.push_back(dc_data(
                 nelements,
@@ -673,10 +660,6 @@ void scene::gpu_draw(base::frame_context * const ctx)
         fast_drawcall = true;
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, ctx->_cmd_vbo);
         glEnableVertexAttribArray(13);
-        break;
-    case BenchTexBufvsVBO:
-        break;
-    case BenchProceduralVertices:
         break;
     }
 

@@ -31,8 +31,6 @@ THE SOFTWARE.
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-#define GL_EXTERNAL_VIRTUAL_MEMORY_AMD 37216 // AMD_pinned_memory
-
 const int base::frame_context::POOL_SIZE = 4;
 
 bool __buffers_created = false;
