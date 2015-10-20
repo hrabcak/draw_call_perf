@@ -166,7 +166,7 @@ void renderer::draw_frame(base::frame_context * const ctx)
 		float dc_per_sec = stats._ndrawcalls * fps * (1.f / (1024.f));
 		float tri_per_sec = float(stats._ntriangles) * fps * (1.f / (1024.f * 1024.f));
 
-		printf("fps: %.0f cpu: %.2f gpu: %.2f dc: %u dc/s: %.0fk tri/s: %.0fM tris: %uk vtx: %uk mem: %uM\n",
+		printf("fps: %.0f cpu: %.2f gpu: %.2f dc: %u dc/s: %.0fk tri/s: %.0fM tris: %uk vtx: %uk buf: %uM\n",
 			fps,
 			ctx->_cpu_render_time,
 			time,

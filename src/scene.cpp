@@ -76,25 +76,29 @@ scene::scene(benchmark * const app)
 
     , _use_vbo(false)
     , _one_mesh(false)
+
+    , _mesh_size(2)
+    , _tex_freq(1)
 {
 	_tms.reserve(MAX_BLOCK_COUNT);
 	_bboxes.reserve(MAX_BLOCK_COUNT);
 	_hws.reserve(MAX_BLOCK_COUNT);
 	_flags.reserve(MAX_BLOCK_COUNT);
 
-    _test_names.push_back("Test 1: Draw Naive");
-	_test_names.push_back("Test 2: Draw with base instance");
-	_test_names.push_back("Test 3: Instancing");
-	_test_names.push_back("Test 4: Multi draw indirect");
+    _test_names.push_back("Test 0: Naive");
+	_test_names.push_back("Test 1: Base instance");
+	_test_names.push_back("Test 2: Indirect");
+    _test_names.push_back("Test 3: Instancing");
 
-    // set modes
-
-    //BenchTexNone,
-    //BenchTexNaive,
-    //BenchTexArray,
-    //BenchTexBindless,
-    //_use_vbo;
-    //_one_mesh;
+    // set modes from cfg
+    if (base::cfg().test != -1) {
+        _bench_mode = BenchmarkMode(base::cfg().test);
+        _tex_mode = TexturingMode(base::cfg().tex_mode);
+        _mesh_size = base::cfg().mesh_size;
+        _tex_freq = base::cfg().tex_freq;
+        _use_vbo = base::cfg().use_vbo;
+        _one_mesh = base::cfg().one_mesh;
+    }
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -222,10 +226,11 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 
     load_and_init_shaders(loc);
 
-    const int tess_level = 2;
+    const int vtx_tbl[] = { 24, 54, 96, 150, 216, 294 };
+    const int ele_tbl[] = { 26, 144, 324, 576, 900, 1296 };
 
-    uint nvertices = 96 * 3;
-    uint nelements = 324 * 3;
+    uint nvertices = vtx_tbl[_mesh_size] * 2;
+    uint nelements = ele_tbl[_mesh_size] * 2;
 
     std::vector<ushort> elements;
     std::vector<int2> vertices;
@@ -244,7 +249,7 @@ void scene::init_gpu_stuff(const base::source_location &loc)
     do {
         if (_bench_mode != BenchInstancing || i == 0) {
             gen_cube<int2>(
-                tess_level,
+                _mesh_size,
                 vertices_ptr,
                 norm_uv_ptr,
                 elements_ptr,
@@ -252,7 +257,7 @@ void scene::init_gpu_stuff(const base::source_location &loc)
                 nullptr,
                 nelements,
                 nvertices,
-                true,  // argument true if deform cube
+                false,  // argument true if deform cube
                 true); // argument true if multipass
 
             _dc_data.push_back(dc_data(
@@ -573,7 +578,14 @@ void scene::upload_blocks_to_gpu(
 	}
 
     ctx->_ctx_data_ptr->_mvp = ctx->_mvp;
-    ctx->_ctx_data_ptr->_mesh_size = _one_mesh ? 0 : _dc_data[0]._nvertices;
+    if (_bench_mode == BenchInstancing) {
+        ctx->_ctx_data_ptr->_mesh_size = _dc_data[0]._nvertices;
+    }
+    else {
+        ctx->_ctx_data_ptr->_mesh_size = _one_mesh
+            ? 0
+            : _dc_data[0]._nvertices;
+    }
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

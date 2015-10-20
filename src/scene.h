@@ -140,10 +140,10 @@ protected:
     {
         // no textures (depth prepass, shadow mapping)
         BenchNaive,
-        BenchBaseVertex,
-        BenchInstancing,
-        BenchIndirect,
         BenchBaseInstance,
+        BenchIndirect,
+        BenchInstancing,
+        BenchBaseVertex,
     };
 
     enum TexturingMode
@@ -159,6 +159,8 @@ protected:
 
     BenchmarkMode _bench_mode;
     TexturingMode _tex_mode;
+    int _mesh_size;
+    int _tex_freq;
 
     benchmark * const _app;
 

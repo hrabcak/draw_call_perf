@@ -27,8 +27,6 @@ THE SOFTWARE.
 int main(int argc, char* argv[])
 {
 	try {
-		benchmark myapp;
-		
 		for(int i = 1; i < argc; ++i) {
 			if(stricmp(argv[i], "--debug-ctx") == 0) {
 				base::cfg().use_debug_context = true;
@@ -47,7 +45,43 @@ int main(int argc, char* argv[])
 			else if(stricmp(argv[i], "--use-async-readback") == 0) {
 				base::cfg().use_async_readback = true;
 			}
-			else {
+            else if (
+                   stricmp(argv[i], "--test0") == 0
+                || stricmp(argv[i], "--test1") == 0
+                || stricmp(argv[i], "--test2") == 0
+                || stricmp(argv[i], "--test3") == 0) {
+                base::cfg().test = argv[i][6] - '0';
+            }
+            else if (
+                   stricmp(argv[i], "--tex-mode0") == 0
+                || stricmp(argv[i], "--tex-mode1") == 0
+                || stricmp(argv[i], "--tex-mode2") == 0
+                || stricmp(argv[i], "--tex-mode3") == 0) {
+                base::cfg().tex_mode = argv[i][10] - '0';
+            }
+            else if (
+                   stricmp(argv[i], "--mesh-size0") == 0
+                || stricmp(argv[i], "--mesh-size1") == 0
+                || stricmp(argv[i], "--mesh-size2") == 0
+                || stricmp(argv[i], "--mesh-size3") == 0
+                || stricmp(argv[i], "--mesh-size4") == 0) {
+                base::cfg().mesh_size = argv[i][11] - '0';
+            }
+            else if (
+                   stricmp(argv[i], "--tex-freq0") == 0
+                || stricmp(argv[i], "--tex-freq1") == 0
+                || stricmp(argv[i], "--tex-freq2") == 0
+                || stricmp(argv[i], "--tex-freq4") == 0
+                || stricmp(argv[i], "--tex-freq8") == 0) {
+                base::cfg().tex_freq = argv[i][10] - '0';
+            }
+            else if (stricmp(argv[i], "--one-mesh") == 0) {
+                base::cfg().one_mesh = true;
+            }
+            else if (stricmp(argv[i], "--use-vbo") == 0) {
+                base::cfg().use_vbo = true;
+            }
+            else {
 				printf(
 					"--debug-ctx  Enable debug contex and GL_ARB_debug_output / GL_AMD_debug_output\n"
 					"--debug-ctx-sync  Same as --debug-ctx but enable GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB\n"
@@ -57,8 +91,14 @@ int main(int argc, char* argv[])
 				return -1;
 				
 			}
-
 		}
+
+        if (base::cfg().tex_mode == 1 && (base::cfg().test == 2 || base::cfg().test == 3)) {
+            printf("test mode and texture mode combination is invalid!");
+            return -1;
+        }
+
+        benchmark myapp;
 
 		base::run_app_win(&myapp, false);
 	}

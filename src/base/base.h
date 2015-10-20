@@ -260,6 +260,13 @@ struct config {
 		, use_pinned_memory(false)
 		, use_nvidia_fast_download(false)
 		, use_async_readback(false)
+
+        , test(-1)
+        , mesh_size(2)
+        , tex_mode(3)
+        , tex_freq(1)
+        , use_vbo(false)
+        , one_mesh(false)
 	{}
 
 	bool use_debug_context : 1;
@@ -267,6 +274,14 @@ struct config {
 	bool use_pinned_memory : 1;
 	bool use_nvidia_fast_download : 1;
 	bool use_async_readback : 1;
+    bool use_vbo : 1;
+    bool one_mesh : 1;
+
+    // tests
+    int test;
+    int mesh_size;
+    int tex_mode;
+    int tex_freq;
 };
 
 config& cfg();
