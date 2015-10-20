@@ -89,7 +89,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)..\..\bin\</OutDir>
     <IntDir>$(OutDir)..\obj\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <TargetName>$(ProjectName)64</TargetName>
+    <TargetName>dctest64</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

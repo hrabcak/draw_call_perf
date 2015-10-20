@@ -586,6 +586,8 @@ void scene::upload_blocks_to_gpu(
             ? 0
             : _dc_data[0]._nvertices;
     }
+
+    ctx->_ctx_data_ptr->_tex_freq = _tex_freq;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -598,7 +600,9 @@ void scene::bind_texture(int counter)
     //glUniformHandleui64ARB(_prg_tex, _tex_handles[counter]);
     
     if (_tex_mode == BenchTexNaive) {
-        glBindMultiTextureEXT(GL_TEXTURE2, GL_TEXTURE_2D, _texs[counter]);
+        if ((_tex_freq != -1 && (counter & ((1 << _tex_freq) - 1)) == 0)
+            || (_tex_freq == -1 && counter == 0))
+            glBindMultiTextureEXT(GL_TEXTURE2, GL_TEXTURE_2D, _texs[counter]);
     }
     else if (_tex_mode == BenchTexArray && (counter & 0x7ff) == 0) {
         glBindMultiTextureEXT(GL_TEXTURE2, GL_TEXTURE_2D, _texs[counter >> 11]);

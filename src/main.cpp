@@ -71,9 +71,8 @@ int main(int argc, char* argv[])
                    stricmp(argv[i], "--tex-freq0") == 0
                 || stricmp(argv[i], "--tex-freq1") == 0
                 || stricmp(argv[i], "--tex-freq2") == 0
-                || stricmp(argv[i], "--tex-freq4") == 0
-                || stricmp(argv[i], "--tex-freq8") == 0) {
-                base::cfg().tex_freq = argv[i][10] - '0';
+                || stricmp(argv[i], "--tex-freq3") == 0) {
+                base::cfg().tex_freq = (argv[i][10] - '0') - 1;
             }
             else if (stricmp(argv[i], "--one-mesh") == 0) {
                 base::cfg().one_mesh = true;

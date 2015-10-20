@@ -34,6 +34,7 @@ struct context_data
 {
 	mat4 _mvp;
     int _mesh_size;
+    int _tex_freq;
 };
 
 layout(std140) uniform context
@@ -105,7 +106,7 @@ void main()
     uv = pos.xy;
     uv = uv * 0.5 + 0.5;
 
-    //inst_id >>= 2;
+    inst_id = _ctx._tex_freq == -1 ? 0 : inst_id >> _ctx._tex_freq;
 
 #if defined(USE_BINDLESS_TEX)
     tex_handle = texelFetch(tb_tex_handles, inst_id).xy;
