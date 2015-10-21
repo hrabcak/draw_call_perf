@@ -39,7 +39,7 @@ class benchmark;
 class scene
 {
 public:
-	static const int MAX_BLOCK_COUNT = 0x08000;
+	static const int MAX_BLOCK_COUNT = 0x10000;
 	std::vector<std::string> _test_names;
 
 	scene(benchmark * const app);

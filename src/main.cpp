@@ -140,6 +140,12 @@ int WINAPI WinMain(
                 base::cfg().tex_mode = argv[i][10] - '0';
             }
             else if (
+                   stricmp(argv[i], "--tex-size32") == 0
+                || stricmp(argv[i], "--tex-size64") == 0
+                || stricmp(argv[i], "--tex-size128") == 0) {
+                base::cfg().tex_size = atoi(argv[i] + 10);
+            }
+            else if (
                    stricmp(argv[i], "--mesh-size0") == 0
                 || stricmp(argv[i], "--mesh-size1") == 0
                 || stricmp(argv[i], "--mesh-size2") == 0
@@ -160,13 +166,40 @@ int WINAPI WinMain(
             else if (stricmp(argv[i], "--use-vbo") == 0) {
                 base::cfg().use_vbo = true;
             }
+            else if (stricmp(argv[i], "--dont-rnd-cubes") == 0) {
+                base::cfg().dont_rnd_cubes = true;
+            }
             else {
-				printf(
-					"--debug-ctx  Enable debug contex and GL_ARB_debug_output / GL_AMD_debug_output\n"
-					"--debug-ctx-sync  Same as --debug-ctx but enable GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB\n"
-					"--use-pinned-memory Will use GL_AMD_pinned_memory extension\n"
-					"--use-nvidia-fast-download Will call glReadpixel into GPU mem buffer and then glCopyBufferSubData to drv mem\n"
-					"--use-sync-readback\n\n");
+				MessageBoxA(
+                    NULL,
+					"--debug-ctx  Enable debug contex and GL_ARB_debug_output\n"
+					"--debug-ctx-sync  Same as --debug-ctx but enable\n"
+                    "                  GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB\n\n"
+                    "--test0 - glVertexAttribI3i + glDrawElements\n"
+                    "--test1 - glDrawElementsBaseInstance\n"
+                    "--test2 - glMultiDrawIndirect (default)\n"
+                    "--test3 - glMultiDrawElementsIndirect\n\n"
+                    "--tex-mode0 - No textures\n"
+                    "--tex-mode1 - Classis texture binding with glBindMultiTextureEXT\n"
+                    "--tex-mode2 - Texture arrays with max possible slices (default)\n"
+                    "--tex-mode3 - Bindless texturing handles are stored in texture buffer\n\n"
+                    "--tex-size32 - Texture 32x32 BGRA8\n"
+                    "--tex-size64 - Texture 64x64 BGRA8 (default)\n"
+                    "--tex-size128 - Texture 128x128 BGRA8\n\n"
+                    "--mesh-size0 - Meshes with 12 faces\n"
+                    "--mesh-size1 - Meshes with ~48 faces\n"
+                    "--mesh-size2 - Meshes with ~108 faces (default)\n"
+                    "--mesh-size3 - Meshes with ~192 faces\n"
+                    "--mesh-size4 - Meshes with ~300 faces\n\n"
+                    "--tex-freq0 - One texture for all meshes\n"
+                    "--tex-freq1 - One unique texture for each mesh (default)\n"
+                    "--tex-freq2 - One unique texture for two meshes\n"
+                    "--tex-freq3 - One unique texture for four meshes\n\n"
+                    "--one-mesh - Use one geometry for all meshes\n"
+                    "--use-vbo - Use classic buffer for vertex data instead of texture buffer\n"
+                    "--dont-rnd-cubes - Turn off cube randomization (better utilization of post-transform cache)\n\n",
+                    "Command line options",
+                    MB_APPLMODAL);
 				return -1;
 				
 			}

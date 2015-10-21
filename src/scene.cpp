@@ -93,12 +93,12 @@ scene::scene(benchmark * const app)
     // set modes from cfg
     if (base::cfg().test != -1) {
         _bench_mode = BenchmarkMode(base::cfg().test);
-        _tex_mode = TexturingMode(base::cfg().tex_mode);
-        _mesh_size = base::cfg().mesh_size;
-        _tex_freq = base::cfg().tex_freq;
-        _use_vbo = base::cfg().use_vbo;
-        _one_mesh = base::cfg().one_mesh;
     }
+    _tex_mode = TexturingMode(base::cfg().tex_mode);
+    _mesh_size = base::cfg().mesh_size;
+    _tex_freq = base::cfg().tex_freq;
+    _use_vbo = base::cfg().use_vbo;
+    _one_mesh = base::cfg().one_mesh;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -257,7 +257,7 @@ void scene::init_gpu_stuff(const base::source_location &loc)
                 nullptr,
                 nelements,
                 nvertices,
-                false,  // argument true if deform cube
+                !base::cfg().dont_rnd_cubes,  // argument true if deform cube
                 true); // argument true if multipass
 
             _dc_data.push_back(dc_data(
@@ -305,8 +305,9 @@ void scene::init_gpu_stuff(const base::source_location &loc)
         _buffer_pos);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
 
-    if (_tex_mode != BenchTexNone)
+    if (_tex_mode != BenchTexNone) {
         create_textures(loc);
+    }
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -320,7 +321,7 @@ void scene::post_gpu_init()
 
 void scene::create_textures(const base::source_location &)
 {
-    const int width = 64;
+    const int width = base::cfg().tex_size;
     const int tex_size = width * width;
     const int ntex = MAX_BLOCK_COUNT;
     const base::pixelfmt pf = base::PF_BGRA8_SRGB;
@@ -328,10 +329,12 @@ void scene::create_textures(const base::source_location &)
  
     std::vector<uchar4> data;
     data.resize(tex_size);
+    std::vector<glm::uint32> tmp;
+    tmp.resize(tex_size);
 
     if (_tex_mode != BenchTexArray) {
         for (int i = 0; i < ntex; ++i) {
-            gen_texture(data.begin()._Ptr, width, 16, i);
+            gen_texture(data.begin()._Ptr, width, width >> 2, i, &tmp[0]);
             const GLint tex = create_texture_storage(
                 width,
                 width,
@@ -351,11 +354,10 @@ void scene::create_textures(const base::source_location &)
                 width,
                 _max_array_layers,
                 pf,
-                (void*)(i * tex_size_bytes),
                 0);
 
             for (int j = 0; j < _max_array_layers; ++j) {
-                gen_texture(data.begin()._Ptr, width, 16, j);
+                gen_texture(&data[0], width, width >> 2, i+j, &tmp[0]);
                 glTextureSubImage3DEXT(
                     tex,
                     GL_TEXTURE_2D_ARRAY,
@@ -368,7 +370,7 @@ void scene::create_textures(const base::source_location &)
                     1,
                     pfd->_format,
                     pfd->_type,
-                    data.begin()._Ptr);
+                    &data[0]);
             }
 
             _texs.push_back(tex);
@@ -826,11 +828,8 @@ void scene::gpu_draw(base::frame_context * const ctx)
 void scene::create_test_scene()
 {
 	_cur_block = get_perspective_block_bound(1,2.0f)*2;
-	for (int i = 0; i < 64; ++i){
+	for (int i = 0; i < 112; ++i){
 	    add_test_block(true);
-		if (_tms.size() >= 32687){
-			break;
-		}
 	 }
 }
 
@@ -886,46 +885,36 @@ void scene::add_test_block(bool add_peaks)
             int idx = int(_tms.size());
 			int idx_e = idx;
 
-			if (idx_e < 32767){
-				add_block(
-					glm::vec3(xpos, ypos_b, zpos),
-					box_size,
-					0);
+			add_block(
+				glm::vec3(xpos, ypos_b, zpos),
+				box_size,
+				0);
 
-				idx_e++;
-			}
+			idx_e++;
 
-			if (idx_e < 32767){
-				add_block(
-					glm::vec3(xpos, 32.f - ypos_t, zpos),
-					box_size,
-					0);
-				idx_e++;
-			}
+			add_block(
+				glm::vec3(xpos, 32.f - ypos_t, zpos),
+				box_size,
+				0);
+			idx_e++;
 			
-			if (add_peaks && peak_b > 1.0f && idx_e < 32767){
+			if (add_peaks && peak_b > 1.0f){
 				for (float peak_ypos = ypos_b + 2.0f; peak_ypos < peak_t*2.0f; peak_ypos += box_size.y){
 					add_block(
 						glm::vec3(xpos, peak_ypos, zpos),
 						box_size,
 						0);
 					idx_e++;
-					if (idx_e >= 32767){
-						break;
-					}
 				}
 			}
 
-			if (add_peaks &&  peak_t > 1.0f && idx_e < 32767){
+			if (add_peaks &&  peak_t > 1.0f){
 				for (float peak_ypos = ypos_t + 2.0f; peak_ypos < peak_t*2.0f; peak_ypos += box_size.y){
 					add_block(
 						glm::vec3(xpos,32 - peak_ypos, zpos),
 						box_size,
 						0);
 					idx_e++;
-					if (idx_e >= 32767){
-						break;
-					}
 				}
 			}
 
@@ -934,7 +923,7 @@ void scene::add_test_block(bool add_peaks)
                 stats._ndrawcalls += 1;
                 stats._ntriangles += _dc_data[idx]._nelements / 3;
                 stats._nvertices += _dc_data[idx]._nvertices;
-            } while (++idx != idx_e && idx < 32768);
+            } while (++idx != idx_e);
         }
 	}
 

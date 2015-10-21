@@ -10,7 +10,13 @@ uint32 u8vec4_to_uint32(const glm::u8vec4 & color){
 	return uint32(color.x) | uint32(color.y << 8) | uint32(color.z << 16) | uint32(color.w << 24);
 }
 
-void gen_texture(glm::u8vec4 * tex_data, ushort dim, ushort grid_dim, unsigned seed){
+void gen_texture(
+    glm::u8vec4 * const  tex_data,
+    const ushort dim,
+    const ushort grid_dim,
+    const unsigned seed,
+    uint32 * const grid)
+{
 	if (grid_dim <= 0){
 		return;
 	}
@@ -27,10 +33,13 @@ void gen_texture(glm::u8vec4 * tex_data, ushort dim, ushort grid_dim, unsigned s
 
 	const uint32 bc = u8vec4_to_uint32(base_color);
 	const uint32 cc1 = u8vec4_to_uint32(complement_color1);
-	const uint32 cc2 = u8vec4_to_uint32(complement_color2);
+    const uint32 cc2 = u8vec4_to_uint32(complement_color2);
 
-	std::vector<uint32> grid;
-	grid.resize(grid_dim*grid_dim, bc);
+    {
+        uint32 * i = grid;
+        uint32 * const e = i + grid_dim * grid_dim;
+        do { *i++ = bc; } while (i != e);
+    }
 
 	for (int i = 0; i < grid_dim*grid_dim; i++){
 		int rnd = util::rndFromInterval(1, max);
@@ -42,19 +51,18 @@ void gen_texture(glm::u8vec4 * tex_data, ushort dim, ushort grid_dim, unsigned s
 		}
 	}
 
-	uint32 * row = new uint32[dim];
+	uint32 * row = grid + grid_dim * grid_dim;
 
-	for (ushort y = 0; y < dim; y++){
-		if (y%lattice_dim){
-			for (ushort x = 0; x < dim; x++){
-				row[x] = grid[(y / lattice_dim)*grid_dim + (x / lattice_dim)];
-			}
+	for (ushort y = 0; y < dim; y += 4){
+		for (ushort x = 0; x < dim; x++){
+			row[x] = grid[(y / lattice_dim)*grid_dim + (x / lattice_dim)];
 		}
 
 		memcpy(tex_data + y*dim, row, dim * 4);
-	}
-
-	delete[] row;
+        memcpy(tex_data + (y+1)*dim, row, dim * 4);
+        memcpy(tex_data + (y+2)*dim, row, dim * 4);
+        memcpy(tex_data + (y+3)*dim, row, dim * 4);
+    }
 }
 
 ushort rgb888_to_rgb565(uint8 r, uint8 g, uint8 b) {

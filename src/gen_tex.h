@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
-void gen_texture(glm::u8vec4 * tex_data, ushort dim, ushort grid_dim, unsigned seed);
+void gen_texture(glm::u8vec4 * tex_data, ushort dim, ushort grid_dim, unsigned seed, uint32 * const tmp);
 glm::ivec2 gen_dxt1_block(ushort r, ushort g, ushort b, ushort a);
 
 #endif

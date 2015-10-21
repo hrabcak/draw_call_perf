@@ -237,7 +237,6 @@ GLuint create_texture_array(
     const int height,
     const int nslices,
     const base::pixelfmt pf,
-    const void *data,
     const unsigned buffer);
 
 /// The only supported format is TGA 32bit RGBA8 uncompressed
@@ -245,6 +244,8 @@ GLuint create_texture_from_file(
 	const base::source_location &loc,
 	const char *filename,
     bool srgb);
+
+void set_win_title(const char* const str);
 
 /// AMD attr0 workaround stuff
 void set_attr0_vbo_amd_wa();
@@ -281,10 +282,12 @@ struct config {
 
         , test(-1)
         , mesh_size(2)
-        , tex_mode(3)
+        , tex_mode(2)
         , tex_freq(1)
         , use_vbo(false)
         , one_mesh(false)
+        , tex_size(64)
+        , dont_rnd_cubes(false)
 	{}
 
 	bool use_debug_context : 1;
@@ -294,12 +297,14 @@ struct config {
 	bool use_async_readback : 1;
     bool use_vbo : 1;
     bool one_mesh : 1;
+    bool dont_rnd_cubes : 1;
 
     // tests
     int test;
     int mesh_size;
     int tex_mode;
     int tex_freq;
+    int tex_size;
 };
 
 config& cfg();

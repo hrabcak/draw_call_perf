@@ -274,8 +274,12 @@ GLuint base::create_texture_storage(
         GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
         data);
 
+    base::stats()._texture_mem += width * height * pfd->_size;
+
     if (generate_mips) {
         glGenerateMipmap(GL_TEXTURE_2D);
+        for (int i = 1; i < nmips; ++i)
+            base::stats()._texture_mem += glm::max(width >> i, 1) * glm::max(height, 1) * pfd->_size;
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -289,10 +293,10 @@ GLuint base::create_texture_array(
     const int height,
     const int nslices,
     const base::pixelfmt pf,
-    const void *data,
     const unsigned buffer)
 {
     const base::pfd* pfd = base::get_pfd(pf);
+    const int nmips = 1 + int(glm::floor(glm::log2(glm::max(width, height))));
 
     GLuint handle;
     glGenTextures(1, &handle);
@@ -310,12 +314,18 @@ GLuint base::create_texture_array(
         glTextureStorage3DEXT(
             handle,
             GL_TEXTURE_2D_ARRAY,
-            7,
+            nmips,
             pfd->_internal,
             width,
             height,
             nslices);
     }
+
+    base::stats()._texture_mem += nslices * width * height * pfd->_size;
+
+    // always counting with mips!!!
+    for (int i = 1; i < nmips; ++i)
+        base::stats()._texture_mem += nslices * glm::max(width >> i, 1) * glm::max(height, 1) * pfd->_size;
 
     return handle;
 }

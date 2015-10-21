@@ -48,12 +48,24 @@ benchmark::~benchmark() {}
 
 void benchmark::start()
 {
+    char tmp[2048];
+
+    sprintf(
+        tmp,
+        "%s - Generating scene with %u unique meshes and textures",
+        get_wnd_name(),
+        scene::MAX_BLOCK_COUNT);
+
+    base::set_win_title(tmp);
+
     // start renderer thread
     _renderer.reset(new renderer(this, SRC_LOCATION));
    
     app::start();
 
     _scene->post_gpu_init();
+
+    base::set_win_title(get_wnd_name());
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -119,20 +131,21 @@ void benchmark::draw_frame()
 
             sprintf(
                 &_stats_str[0],
-                "tex:   %.0f MB\n"
-                "buf:   %.0f MB\n"
-                "vtx/s: %.0f M\n"
-                "vtx:   %.3f M\n"
-                "tri/s: %.0f M\n"
-                "tri:   %.3f M\n"
-                "dc/s:  %.0f k\n"
-                "dc:    %.3f k\n"
-                "gpu:   %.3f ms\n"
-                "cpu:   %.3f ms\n"
-                "fps:   %.0f\n\n"
+                "tex:      %.0f MB\n"
+                "buf:      %.0f MB\n"
+                "MVtx/s:   %.0f\n"
+                "MVtx:     %.3f\n"
+                "MTris/s:  %.0f\n"
+                "MTris:    %.3f\n"
+                "KDraw/s:  %.0f\n"
+                "KDraw:    %.3f\n"
+                "gpu:      %.3f ms\n"
+                "cpu:      %.3f ms\n"
+                "fps:      %.0f\n\n"
                 "one mesh: %s\n"
-                "use vbo: %s\n"
+                "vertex data: %s\n"
                 "mesh size: %u\n"
+                "tex size: %ux%u BGRA8\n"
                 "tex freq: %u\n\n"
                 "%s",
 
@@ -148,8 +161,9 @@ void benchmark::draw_frame()
                 stats._cpu_time * r_nframes,
                 fps,
                 base::cfg().one_mesh ? "true" : "false",
-                base::cfg().use_vbo ? "true" : "false",
+                base::cfg().use_vbo ? "VERTEX BUFFER" : "TEXTURE BUFFER",
                 base::cfg().mesh_size,
+                base::cfg().tex_size, base::cfg().tex_size,
                 base::cfg().tex_freq,
                 get_test_name());
 
@@ -162,7 +176,7 @@ void benchmark::draw_frame()
         _canvas->fill_rect(
             ctx,
             glm::vec2(0),
-            glm::vec2(140, 205),
+            glm::vec2(200, 216),
             glm::vec4(0.0, 0.0, 0.0, 0.6));
 
         _canvas->draw_text(
