@@ -44,22 +44,23 @@ public:
 	benchmark();
 	virtual ~benchmark();
 
-	virtual const char* get_app_name() const override { return "draw call benchmark"; }
-    virtual const char* get_wnd_name() const override { return get_app_name(); }
-    virtual const char* get_wnd_cls() const override { return "benchmark class"; }
+	const char* get_app_name() const override { return "draw call benchmark"; }
+    const char* get_wnd_name() const override { return get_app_name(); }
+    const char* get_wnd_cls() const override { return "benchmark class"; }
+    const char* get_test_name() const override;
 
-	virtual void set_benchmark_mode(bool mode) override { _benchmark_mode = mode; }
+	void set_benchmark_mode(bool mode) override { _benchmark_mode = mode; }
 
-	virtual void key(const int key, const bool down)override;
+	void key(const int key, const bool down)override;
 
-	virtual void start() override;
-    virtual void gpu_init() override;
+	void start() override;
+    void gpu_init() override;
 
-	virtual void stop() override;
+	void stop() override;
 
-	virtual void draw_frame() override;
+	void draw_frame() override;
 
-    virtual void gpu_draw_frame(base::frame_context * const ctx) override;
+    void gpu_draw_frame(base::frame_context * const ctx) override;
 
 private:
 	benchmark(const benchmark&);

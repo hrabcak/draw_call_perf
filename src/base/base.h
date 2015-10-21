@@ -43,11 +43,11 @@ class app;
 
 struct stats_data
 {
-    uint32 _buffer_mem;
-    uint32 _texture_mem;
-    uint32 _ntriangles;
-    uint32 _nvertices;
-    uint32 _ndrawcalls;
+    uint64 _buffer_mem;
+    uint64 _texture_mem;
+    uint64 _ntriangles;
+    uint64 _nvertices;
+    uint64 _ndrawcalls;
 
     stats_data()
         : _buffer_mem(0)
@@ -56,32 +56,46 @@ struct stats_data
         , _nvertices(0)
         , _ndrawcalls(0)
     {}
+
+    void operator += (const stats_data &s)
+    {
+        _buffer_mem = s._buffer_mem;
+        _texture_mem = s._texture_mem;
+        _ntriangles += s._ntriangles;
+        _nvertices += s._nvertices;
+        _ndrawcalls += s._ndrawcalls;
+    }
 };
 
-struct stats_data_buf{
-	float _fps;
+struct stats_data2{
+    int _nframes;
+    float _fps;
 	double _cpu_render_time;
 	double _gpu_render_time;
-	float _dc_per_sec;
-	float _tri_per_sec;
-	ushort _count;
+	//float _dc_per_sec;
+	//float _tri_per_sec;
+	//ushort _count;
 
-	stats_data_buf()
-		:_fps(0.0f),
-		_cpu_render_time(0.0f),
-		_gpu_render_time(0.0f),
-		_dc_per_sec(0.0f),
-		_tri_per_sec(0.0f),
-		_count(0)
+	stats_data2()
+        : _nframes(0)
+		, _fps(0.0f)
+		, _cpu_render_time(0.0f)
+		, _gpu_render_time(0.0f)
+		//_dc_per_sec(0.0f),
+		//_tri_per_sec(0.0f),
+		//_count(0)
 	{}
 
-	void mean(){
-		_fps /= _count;
-		_cpu_render_time /= _count;
-		_gpu_render_time /= _count;
-		_dc_per_sec /= _count;
-		_tri_per_sec /= _count;
-		_count = 1;
+    /// @time in seconds
+	void mean(const float time)
+    {
+        _fps = float(_nframes) / time;
+		//_fps /= _count;
+		_cpu_render_time /= time;
+		_gpu_render_time /= time;
+		//_dc_per_sec /= _count;
+		//_tri_per_sec /= _count;
+		//_count = 1;
 	}
 };
 
@@ -164,7 +178,7 @@ extern const pfd ___pfds[];
 inline const pfd* get_pfd(const pixelfmt pf) { assert(pf>PF_UNKNOWN && pf<PF_LAST); return ___pfds+pf; }
 
 /// run app and init OpenGL stuff
-void run_app_win(app *a, const bool initgl=true);
+void run_app_win(app * const a, const bool initgl = true);
 
 /// read whole file into given std::vector
 void read_file(

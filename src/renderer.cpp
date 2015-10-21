@@ -111,14 +111,14 @@ void renderer::run()
 	//TODO purge frame context pool
 
 	std::cout << "Renderer thread ended...\n";
+
+    _app->shutdown();
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 void renderer::stop(const base::source_location &loc)
 {
-	assert(_shutdown==false);
-
 	std::cout << "Renderer is going down...\n";
 	
 	_shutdown = true;
@@ -150,10 +150,18 @@ void renderer::draw_frame(base::frame_context * const ctx)
 
     static double start_time = timer.elapsed_time();
     static float frame = 0;
+    static int test_cycles = 0;
+    static float test_time = 0;
 
     double current_time = timer.elapsed_time();
     const float t = float(current_time - start_time);
-	if (t > 1000.f) {
+
+    static base::stats_data test_stats;
+
+    base::stats_data & stats = base::stats();
+    test_stats += stats;
+
+    if (t > 1000.f) {
 		__int64 result[3] = { 0, };
 		glGetQueryObjecti64v(ctx->_time_queries[0], GL_QUERY_RESULT, result);
 		glGetQueryObjecti64v(ctx->_time_queries[1], GL_QUERY_RESULT, result + 1);
@@ -161,12 +169,10 @@ void renderer::draw_frame(base::frame_context * const ctx)
 		const double time = double(result[1] - result[0]) * coef_n2m;
 		const float fps = frame / (t * 0.001f);
 		
-		base::stats_data & stats = base::stats();
-
 		float dc_per_sec = stats._ndrawcalls * fps * (1.f / (1024.f));
 		float tri_per_sec = float(stats._ntriangles) * fps * (1.f / (1024.f * 1024.f));
 
-		printf("fps: %.0f cpu: %.2f gpu: %.2f dc: %u dc/s: %.0fk tri/s: %.0fM tris: %uk vtx: %uk buf: %uM\n",
+		printf("fps: %.0f cpu: %.2f gpu: %.2f dc: %u dc/s: %.0fk t/s: %.0fM t: %uk vtx: %uk buf: %uM\n",
 			fps,
 			ctx->_cpu_render_time,
 			time,
@@ -177,20 +183,31 @@ void renderer::draw_frame(base::frame_context * const ctx)
 			stats._nvertices >> 10,
 			stats._buffer_mem >> 20);
 
-		_stat_data_buf._fps += fps;
+		//_stat_data_buf._fps += fps;
+        _stat_data_buf._nframes += int(frame);
 		_stat_data_buf._cpu_render_time += ctx->_cpu_render_time;
 		_stat_data_buf._gpu_render_time += time;
-		_stat_data_buf._dc_per_sec += dc_per_sec;
-		_stat_data_buf._tri_per_sec += tri_per_sec;
-		_stat_data_buf._count++;
+		//_stat_data_buf._dc_per_sec += dc_per_sec;
+		//_stat_data_buf._tri_per_sec += tri_per_sec;
+		//_stat_data_buf._count++;
 
-		if (t > 3.0){
-			_stat_data_buf.mean();
-			write_test_data_csv("test_data.csv", stats, _stat_data_buf);
-		}
-		
 		start_time = current_time;
         frame = 0;
+        test_cycles++;
+        test_time += t;
+
+        if (base::cfg().test != -1 &&  test_cycles == 4) {
+            _stat_data_buf.mean(test_time);
+
+            write_test_data_csv(
+                "result.csv",
+                test_stats,
+                _stat_data_buf,
+                test_time,
+                test_cycles - 1);
+
+            _shutdown = true;
+        }
     }
 
     frame += 1.f;
@@ -205,10 +222,15 @@ base::frame_context* renderer::pop_frame_context_from_pool() {
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-bool renderer::write_test_data_csv(const char * file_name, const base::stats_data & stats, const base::stats_data_buf & stats_buf){
+bool renderer::write_test_data_csv(
+    const char * file_name,
+    const base::stats_data & stats,
+    const base::stats_data2 & stats_buf,
+    const float time,
+    const int num_test_cycles)
+{
 	FILE * pFile;
 	pFile = fopen(file_name,"r+");
-	
 
 	if (pFile == NULL){
 		pFile = fopen(file_name,"w");
@@ -216,38 +238,48 @@ bool renderer::write_test_data_csv(const char * file_name, const base::stats_dat
 			return false;
 		}
 
-		fputs("test_name,"
-			"gpu_gl_name,"
-			 "texture_buffer_vbo,"
-			   "texture_binds,"
-			   "mesh_size,"
-			   "single_mesh_data,"
-			   "fps,"
-			   "cpu_render_time,"
-			   "gpu_render_time,"
-			   "dc,dc_per_sec,"
-			   "tri_per_sec,"
-			   "ntri,"
-			   "nvert,"
-			   "buf_mem",pFile);
+		fputs(
+            "test_name,"
+            "gpu_gl_name,"
+		    "use_vbo,"
+			"tex_freq,"
+			"mesh_size,"
+			"one_mesh,"
+			"fps,"
+            "cpu_render_time (ms),"
+            "gpu_render_time (ms),"
+			"dc,"
+            "dc_per_sec (Kc/s),"
+            "tri_per_sec (Mtri/s),"
+            "ntri (Mtri),"
+            "nvert (Mvtx),"
+            "buf_mem (MB),"
+            "tex_mem (MB)",
+            pFile);
 	}
 	else{
 		fseek(pFile, 0, SEEK_END);
 	}
 
-	fprintf(pFile, "\n%s,%s,%i,%i,%i,%i,%f,%f,%f,%u,%f,%f,%u,%u,%u",
-		"Some_TEST",
+	fprintf(
+        pFile,
+        "\n%s,%s,%s,%i,%i,%s,%u,%f,%f,%u,%u,%u,%u,%u,%u,%u",
+		_app->get_test_name(),
 		_graphic_card_name.c_str(),
-		0,0,0,0,
-		stats_buf._fps,
+		base::cfg().use_vbo ? "true" : "false",
+        base::cfg().tex_freq,
+        base::cfg().mesh_size,
+        base::cfg().one_mesh ? "true" : "false",
+        stats_buf._nframes,
 		stats_buf._cpu_render_time,
 		stats_buf._gpu_render_time,
-		stats._ndrawcalls,
-		stats_buf._dc_per_sec,
-		stats_buf._tri_per_sec,
-		stats._ntriangles >> 10,
-		stats._nvertices >> 10,
-		stats._buffer_mem >> 20);
+        stats._ndrawcalls / stats_buf._nframes,
+		stats._ndrawcalls / glm::uint64(time),//stats_buf._dc_per_sec,
+        stats._ntriangles / glm::uint64(time * 1000),//stats_buf._tri_per_sec,
+		(stats._ntriangles / stats_buf._nframes) / 1000,
+        (stats._nvertices / stats_buf._nframes) / 1000,
+		stats._buffer_mem >> 20,
+        stats._texture_mem >> 20);
 
 	fclose(pFile);
 

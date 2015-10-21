@@ -304,7 +304,7 @@ void base::init_opengl_dbg_win()
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void base::run_app_win(base::app *a, const bool initgl)
+void base::run_app_win(base::app * const a, const bool initgl)
 {
 	create_window_win(
 		a,
@@ -326,9 +326,6 @@ void base::run_app_win(base::app *a, const bool initgl)
 	hptimer timer;
 	timer.start();
 
-	double start_time = 0.0;
-	int nb_frames = 0;
-
 	for( ;; ) {
 		bool exit = false;
 		while(PeekMessage(&msg, 0, 0U, 0U, PM_REMOVE) != 0) {
@@ -343,20 +340,8 @@ void base::run_app_win(base::app *a, const bool initgl)
 		a->draw_frame();
 		a->inc_frame_number();
 
-		if(initgl)
-			swap_buffers();
-
-		nb_frames++;
-
-		double current_time = timer.elapsed_time();
-		if (current_time - start_time > 1000.0){
-			/*printf(
-				"%.3f ms/frame, %.1f FPS\n",
-				(current_time-start_time) / double(nb_frames),
-				double(nb_frames) * (current_time-start_time) * 0.001);*/
-			nb_frames = 0;
-			start_time = current_time;
-		}
+        if (a->is_shutdown())
+            break;
 	}
 
 	a->stop();

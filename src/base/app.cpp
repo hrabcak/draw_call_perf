@@ -42,6 +42,8 @@ base::app::app()
     , _fovy(45.f)
     , _aspect(float(get_wnd_width()) / float(get_wnd_height()))
 	, _benchmark_mode(false)
+
+    , _shutdown(false)
 { 
 	assert(_app == 0);
     _app = this; 
@@ -61,19 +63,18 @@ base::app::~app() {}
 void base::app::start()
 {
 	_canvas.reset(new base::canvas());
-	_canvas->set_pos(100, 100);
-	_canvas->set_size(220, 38);
+	_canvas->set_pos(10, 600);
+	_canvas->set_size(1280, 100);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 void base::app::gpu_init()
 {
-	//_fnt_mono.reset(new base::font());
-	//_fnt_mono->load(SRC_LOCATION,"fonts/lucida_console_13.fnt");
-    //
-	//_fnt_arial.reset(new base::font());
-	//_fnt_arial->load(SRC_LOCATION,"fonts/arial_14.fnt");
+    canvas::load_and_init_shaders(SRC_LOCATION);
+
+    _fnt_mono.reset(new base::font());
+	_fnt_mono->load(SRC_LOCATION,"fonts/lucida_console_13.fnt");
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -115,39 +116,6 @@ void base::app::update_camera(frame_context * const fc)
 
     fc->_fovy = _fovy;
     fc->_aspect = _aspect;
-}
-
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-void base::app::end_frame()
-{
-	/*_canvas->fill_rect(
-		ctx,
-		glm::vec2(0),
-		glm::vec2(220, 38),
-		glm::vec4(0.2f, 0.2f, 0.2f, 1));
-
-	char tmp[512];
-	sprintf(tmp, "vel(%.2f,%.2f) visible: %i", _velocity.x, _velocity.z, 0);
-
-	_canvas->draw_text(
-		ctx,
-		glm::vec2(0),
-		tmp,
-		glm::vec4(1, 1, 0, 1),
-		_fnt_mono.get());
-	
-	sprintf(tmp, "app::name: %s", get_app_name());
-	
-	_canvas->draw_text(
-		ctx,
-		glm::vec2(0, 22),
-		tmp,
-		glm::vec4(1, 0.3, 0.3, 1),
-		_fnt_arial.get());
-
-	if(!nogl)
-		canvas::render(ctx);*/
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
