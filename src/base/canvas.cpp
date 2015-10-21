@@ -165,12 +165,12 @@ void base::canvas::draw_text(
             base::batch(
             _pos,
             _size,
-            batch_elements - ctx->_elements_begin,	// start index
-            (ctx->_elements - batch_elements) / 3,	// number of elements in batch
+            int(batch_elements - ctx->_elements_begin),	// start index
+            int(ctx->_elements - batch_elements) / 3,	// number of elements in batch
             fnt->_tex));
     }
 	else {
-		last->count += (ctx->_elements - batch_elements) / 3;
+		last->count += int(ctx->_elements - batch_elements) / 3;
 		last->tex = fnt->_tex;
 	}
 }
@@ -194,7 +194,7 @@ void base::canvas::fill_rect(
 	// create or update batch
 	if(ctx->_batches.empty())
 		ctx->_batches.push_back(base::batch(
-			_pos, _size, ebegin - ctx->_elements_begin, 1, 0));
+			_pos, _size, int(ebegin - ctx->_elements_begin), 1, 0));
 	else
 		++(ctx->_batches.end() - 1)->count;
 }

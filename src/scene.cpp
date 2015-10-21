@@ -853,7 +853,7 @@ void scene::add_test_block(bool add_peaks)
 	height_map.resize(grid_size2, 0);
     
     const float grid_size_r = 1.f / float(grid_size);
-    base::stats_data & const stats = base::stats();
+    base::stats_data & stats = base::stats();
 
     // bottom layer
 	for (int y = 0; y < grid_size; y++) {

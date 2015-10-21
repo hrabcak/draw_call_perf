@@ -167,11 +167,11 @@ void renderer::draw_frame(base::frame_context * const ctx)
     glGetQueryObjecti64v(ctx->_time_queries[1], GL_QUERY_RESULT, result + 1);
     const double coef_n2m = 1.0 / 1000000.0;
     const double gpu_time = double(result[1] - result[0]) * coef_n2m;
-    test_stats._gpu_time += gpu_time;
+    test_stats._gpu_time += float(gpu_time);
 
     ctx->_stats = stats;
-    ctx->_stats._gpu_time = gpu_time;
-    ctx->_stats._cpu_time = ctx->_cpu_render_time;
+    ctx->_stats._gpu_time = float(gpu_time);
+    ctx->_stats._cpu_time = float(ctx->_cpu_render_time);
     ctx->_time = timer.time();
 
     if (t > 1000.f) {

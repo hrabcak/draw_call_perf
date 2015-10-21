@@ -60,12 +60,12 @@ LRESULT WINAPI MsgProc(HWND hwnd,UINT msg,WPARAM wParam,LPARAM lParam)
 		}
 		else {
 			if((lParam & (1<<30)) == 0)
-				myapp->key(wParam,true);
+				myapp->key(int(wParam), true);
 		}
 		break;
 
 	case WM_KEYUP:
-		myapp->key(wParam,false);
+		myapp->key(int(wParam), false);
 		break;
 
 	case WM_ACTIVATEAPP:
@@ -231,7 +231,7 @@ void base::set_main_rc()
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void WINAPI gl_debug_msg_proc_arb(
+static void WINAPI gl_debug_msg_proc_arb(
     GLenum source,
     GLenum type,
     GLuint id,
@@ -253,26 +253,6 @@ void WINAPI gl_debug_msg_proc_arb(
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void APIENTRY gl_debug_msg_proc_amd(
-	GLuint id,
-	GLenum category,
-	GLenum severity,
-	GLsizei length,
-	const GLchar* message,
-	GLvoid* userParam)
-{
-	userParam;
-	//message;
-	length;
-	severity;
-	category;
-	id;
-
-	printf("%s\n",message);
-}
-
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
 void base::init_opengl_dbg_win()
 {
 	if(cfg().use_debug_context) {
@@ -283,11 +263,7 @@ void base::init_opengl_dbg_win()
 		glDebugMessageInsertARB=
 			(PFNGLDEBUGMESSAGEINSERTARBPROC)wglGetProcAddress("glDebugMessageInsertARB");
 
-		if(GLEW_AMD_debug_output) {
-			glDebugMessageCallbackAMD(gl_debug_msg_proc_amd,0);
-			glDebugMessageEnableAMD(0,0,0,0,GL_TRUE);
-		}
-		else if(glDebugMessageControlARB 
+        if(glDebugMessageControlARB 
 			&& glDebugMessageCallbackARB 
 			&& glDebugMessageInsertARB) {
 			glDebugMessageCallbackARB(&gl_debug_msg_proc_arb,0);

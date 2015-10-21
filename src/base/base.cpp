@@ -43,7 +43,7 @@ void read_glsl_file(
 
     unsigned int size = (unsigned int)st.st_size;
 
-    const unsigned offset = str.size();
+    const size_t offset = str.size();
 
 	str.resize(str.size() + size + 1);
 
@@ -250,7 +250,7 @@ GLuint base::create_texture_storage(
     GLuint handle;
     glGenTextures(1, &handle);
 
-    const int nmips = 1 + glm::floor(glm::log2(glm::max(width, height)));
+    const int nmips = 1 + int(glm::floor(glm::log2(glm::max(width, height))));
 
     glBindTexture(GL_TEXTURE_2D, handle);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
