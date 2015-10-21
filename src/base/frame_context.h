@@ -24,6 +24,8 @@ THE SOFTWARE.
 #define __ASYNC_VBO_TRANSFERS_FRAME_CONTEXT_H__
 
 #include "types.h"
+#include "base.h"
+
 #include <glm/glm.hpp>
 #include <vector>
 #include <GL/glew.h>
@@ -162,6 +164,9 @@ struct frame_context
 
     float _fovy;
     float _aspect;
+
+    base::stats_data _stats;
+    __int64 _time;
 };
 
 } // end of namespace base

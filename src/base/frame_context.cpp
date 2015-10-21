@@ -57,6 +57,8 @@ base::frame_context::frame_context()
     , _elements(0)
     , _elements_begin(0)
     , _fence(0)
+
+    , _time(0)
 {}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

@@ -63,8 +63,8 @@ base::app::~app() {}
 void base::app::start()
 {
 	_canvas.reset(new base::canvas());
-	_canvas->set_pos(10, 600);
-	_canvas->set_size(1280, 100);
+	_canvas->set_pos(10, 568);
+	_canvas->set_size(1280, 132);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

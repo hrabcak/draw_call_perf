@@ -48,6 +48,8 @@ struct stats_data
     uint64 _ntriangles;
     uint64 _nvertices;
     uint64 _ndrawcalls;
+    float _cpu_time;
+    float _gpu_time;
 
     stats_data()
         : _buffer_mem(0)
@@ -55,6 +57,8 @@ struct stats_data
         , _ntriangles(0)
         , _nvertices(0)
         , _ndrawcalls(0)
+        , _cpu_time(0)
+        , _gpu_time(0)
     {}
 
     void operator += (const stats_data &s)

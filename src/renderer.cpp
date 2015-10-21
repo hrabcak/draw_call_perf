@@ -137,7 +137,7 @@ void renderer::stop(const base::source_location &loc)
 void renderer::draw_frame(base::frame_context * const ctx)
 {
     base::hptimer timer;
-    
+   
     glEnable(GL_FRAMEBUFFER_SRGB);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
@@ -160,36 +160,24 @@ void renderer::draw_frame(base::frame_context * const ctx)
 
     base::stats_data & stats = base::stats();
     test_stats += stats;
+    test_stats._cpu_time += float(ctx->_cpu_render_time);
+
+    __int64 result[2] = { 0, };
+    glGetQueryObjecti64v(ctx->_time_queries[0], GL_QUERY_RESULT, result);
+    glGetQueryObjecti64v(ctx->_time_queries[1], GL_QUERY_RESULT, result + 1);
+    const double coef_n2m = 1.0 / 1000000.0;
+    const double gpu_time = double(result[1] - result[0]) * coef_n2m;
+    test_stats._gpu_time += gpu_time;
+
+    ctx->_stats = stats;
+    ctx->_stats._gpu_time = gpu_time;
+    ctx->_stats._cpu_time = ctx->_cpu_render_time;
+    ctx->_time = timer.time();
 
     if (t > 1000.f) {
-		__int64 result[3] = { 0, };
-		glGetQueryObjecti64v(ctx->_time_queries[0], GL_QUERY_RESULT, result);
-		glGetQueryObjecti64v(ctx->_time_queries[1], GL_QUERY_RESULT, result + 1);
-		const double coef_n2m = 1.0 / 1000000.0;
-		const double time = double(result[1] - result[0]) * coef_n2m;
-		const float fps = frame / (t * 0.001f);
-		
-		float dc_per_sec = stats._ndrawcalls * fps * (1.f / (1024.f));
-		float tri_per_sec = float(stats._ntriangles) * fps * (1.f / (1024.f * 1024.f));
-
-		printf("fps: %.0f cpu: %.2f gpu: %.2f dc: %u dc/s: %.0fk t/s: %.0fM t: %uk vtx: %uk buf: %uM\n",
-			fps,
-			ctx->_cpu_render_time,
-			time,
-			stats._ndrawcalls,
-			dc_per_sec,
-			tri_per_sec,
-			stats._ntriangles >> 10,
-			stats._nvertices >> 10,
-			stats._buffer_mem >> 20);
-
-		//_stat_data_buf._fps += fps;
         _stat_data_buf._nframes += int(frame);
 		_stat_data_buf._cpu_render_time += ctx->_cpu_render_time;
-		_stat_data_buf._gpu_render_time += time;
-		//_stat_data_buf._dc_per_sec += dc_per_sec;
-		//_stat_data_buf._tri_per_sec += tri_per_sec;
-		//_stat_data_buf._count++;
+		_stat_data_buf._gpu_render_time += gpu_time;
 
 		start_time = current_time;
         frame = 0;

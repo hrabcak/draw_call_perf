@@ -35,7 +35,10 @@ THE SOFTWARE.
 benchmark::benchmark()
     : app()
     , _scene(new scene(this))
-{}
+{
+    _stats_str.resize(4096);
+    memset(&_stats_str[0], 0, _stats_str.size());
+}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -92,26 +95,72 @@ void benchmark::draw_frame()
 
     _scene->update(ctx);
 
-    //
-    _canvas->fill_rect(
-        ctx,
-        glm::vec2(0),
-        glm::vec2(500, 100),
-        glm::vec4(0.0, 0.0, 0.0, 0.6));
+    // prepare stats
+    static base::stats_data stats;
+    static int nframes = 0;
+    static __int64 start_time = 0;
 
-    char tmp[512];
-    sprintf(
-        tmp,
-        "vel(%.2f,%.2f)",
-        _velocity.x,
-        _velocity.z);
-    
-    _canvas->draw_text(
-        ctx,
-        glm::vec2(3),
-        tmp,
-        glm::vec4(1, 1, 1, 1),
-        _fnt_mono.get());
+    if (start_time == 0 && ctx->_time != 0)
+        start_time = ctx->_time;
+
+    if (start_time != 0) {
+        nframes++;
+        stats += ctx->_stats;
+        stats._cpu_time += ctx->_stats._cpu_time;
+        stats._gpu_time += ctx->_stats._gpu_time;
+
+        const __int64 freq = base::hptimer().freq();
+        const __int64 dt = ((ctx->_time - start_time) * 1000000) / freq;
+        
+        if (dt > 1000000) {
+            const float dtf = float(dt) * 0.000001f;
+            const float fps = float(nframes) / dtf;
+            const float r_nframes = 1.0f / float(nframes);
+
+            sprintf(
+                &_stats_str[0],
+                "tex:   %.0f MB\n"
+                "buf:   %.0f MB\n"
+                "vtx/s: %.0f M\n"
+                "vtx:   %.3f M\n"
+                "tri/s: %.0f M\n"
+                "tri:   %.3f M\n"
+                "dc/s:  %.0f k\n"
+                "dc:    %.3f k\n"
+                "gpu:   %.3f ms\n"
+                "cpu:   %.3f ms\n"
+                "fps:   %.0f\n",
+                float(stats._texture_mem) / float(1024 * 1024),
+                float(stats._buffer_mem) / float(1024 * 1024),
+                float(stats._nvertices) * 0.000001 / dtf,
+                float(stats._nvertices) * 0.000001 / float(nframes),
+                float(stats._ntriangles) * 0.000001 / dtf,
+                float(stats._ntriangles) * 0.000001 / float(nframes),
+                float(stats._ndrawcalls) * 0.001 / dtf,
+                float(stats._ndrawcalls) * 0.001 / nframes,
+                stats._gpu_time * r_nframes,
+                stats._cpu_time * r_nframes,
+                fps);
+
+            start_time = ctx->_time;
+            nframes = 0;
+            stats = base::stats_data();
+        }
+        
+        //
+        _canvas->fill_rect(
+            ctx,
+            glm::vec2(0),
+            glm::vec2(140, 132),
+            glm::vec4(0.0, 0.0, 0.0, 0.6));
+
+        _canvas->draw_text(
+            ctx,
+            glm::vec2(3),
+            &_stats_str[0],
+            glm::vec4(1, 1, 1, 1),
+            _fnt_mono.get());
+    }
 
 	_renderer->push_frame_context(ctx);
 }

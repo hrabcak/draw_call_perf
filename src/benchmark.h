@@ -39,6 +39,7 @@ class benchmark
 protected:
 	std::auto_ptr<scene> _scene;
 	std::auto_ptr<renderer> _renderer;
+    std::vector<char> _stats_str;
 
 public:
 	benchmark();

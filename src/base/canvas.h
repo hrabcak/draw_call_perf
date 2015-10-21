@@ -54,7 +54,7 @@ public:
 	void draw_text(
 		base::frame_context * const ctx,
 		const glm::vec2 &position,
-		const std::string &text,
+		const char * const text,
 		const glm::vec4 &color,
 		const font *fnt);
 

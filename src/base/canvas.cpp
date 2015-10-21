@@ -81,13 +81,13 @@ void base::canvas::load_and_init_shaders(const base::source_location &loc)
 void base::canvas::draw_text(
 	base::frame_context * const ctx,
 	const glm::vec2 &position,
-	const std::string &text,
+	const char * const text,
 	const glm::vec4 &color,
 	const font *fnt)
 {
 	assert(
 		fnt->_infoBlock != 0 
-		&& !text.empty()
+		&& text != nullptr
 		&& fnt!=0);
 	assert(ctx->_elements != 0 && ctx->_elements_begin != 0);
 
@@ -99,8 +99,8 @@ void base::canvas::draw_text(
 
 	const font::char_map_t &chars=fnt->_chars;
     
-	const char *e = text.c_str() + text.length();
-	for(const char *i = text.c_str(); i != e; ++i) {
+	const char *e = text + strlen(text);
+	for(const char *i = text; i != e; ++i) {
 		const unsigned int char_id = *i;
 
 		// new line
