@@ -826,11 +826,17 @@ void scene::gpu_draw(base::frame_context * const ctx)
 void scene::create_test_scene()
 {
 	_cur_block = get_perspective_block_bound(1,2.0f)*2;
-	for (int i = 0; i < 64; ++i)
+	for (int i = 0; i < 64; ++i){
 	    add_test_block();
+		if (_tms.size() >= 32687){
+			break;
+		}
+	 }
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+#define SIMPLEX_BIAS 75
 
 void scene::add_test_block()
 {
@@ -853,31 +859,82 @@ void scene::add_test_block()
 	for (int y = 0; y < grid_size; y++) {
 		for (int x = 0; x < grid_size; x++) {
             // create instances
-			const float s0 = glm::simplex(glm::vec2(x + cur_x*grid_size, y + cur_z*grid_size) * grid_size_r);
-			const float s1 = glm::simplex(glm::vec2(x + cur_x*grid_size, y + cur_z*grid_size) * 2.f * grid_size_r);
-			const int height = int(((((s0 + .5f * s1) + 1.5f) / 3.f) * max_height));
-			 
+			const float s0b = glm::simplex(glm::vec2(x + cur_x*grid_size + SIMPLEX_BIAS, y + cur_z*grid_size + SIMPLEX_BIAS) * grid_size_r);
+			const float s1b = glm::simplex(glm::vec2(x + cur_x*grid_size + SIMPLEX_BIAS, y + cur_z*grid_size + SIMPLEX_BIAS) * 2.f * grid_size_r);
+			float sb = (((((s0b + .5f * s1b) + 1.5f) / 3.f)));
+			
+			float peak_b = glm::clamp(glm::pow(s0b, 10.0f),0.1f,1.0f)*15.0f;
+
+			const int height_t = int(sb * max_height);
+
+			const float s0t = glm::simplex(glm::vec2(x + cur_x*grid_size + 64 + SIMPLEX_BIAS, y + cur_z*grid_size + 64 + SIMPLEX_BIAS) * grid_size_r);
+			const float s1t = glm::simplex(glm::vec2(x + cur_x*grid_size + 64 + SIMPLEX_BIAS, y + cur_z*grid_size + 64 + SIMPLEX_BIAS) * 2.f * grid_size_r);
+			float st = (((((s0t + .5f * s1t) + 1.5f) / 3.f)));
+
+			float peak_t = glm::clamp(glm::pow(s0t, 10.0f), 0.1f, 1.0f)*15.0f;
+
+			const int height_b = int(st * max_height);
+
+			
+
             const float xpos = ((cur_x * grid_size) + x) * 2.f;
-            const float zpos = ((cur_z * grid_size) + y) * 2.f;
+			const float ypos_b = height_b*1.3333333f;
+			const float ypos_t = height_t*1.3333333f;
+			const float zpos = ((cur_z * grid_size) + y) * 2.f;
+
 
             int idx = int(_tms.size());
+			int idx_e = idx;
 
-			add_block(
-				glm::vec3(xpos, height*1.3333333f, zpos),
-                box_size,
-                0);
-        
-            add_block(
-                glm::vec3(xpos, 32.f - height*1.33333f, zpos),
-                box_size,
-                0);
+			if (idx_e < 32767){
+				add_block(
+					glm::vec3(xpos, ypos_b, zpos),
+					box_size,
+					0);
 
-            const int idx_e = idx + 2;
+				idx_e++;
+			}
+
+			if (idx_e < 32767){
+				add_block(
+					glm::vec3(xpos, 32.f - ypos_t, zpos),
+					box_size,
+					0);
+				idx_e++;
+			}
+			
+			if (peak_b > 1.0f && idx_e < 32767){
+				for (float peak_ypos = ypos_b + 2.0f; peak_ypos < peak_t*2.0f; peak_ypos += box_size.y){
+					add_block(
+						glm::vec3(xpos, peak_ypos, zpos),
+						box_size,
+						0);
+					idx_e++;
+					if (idx_e >= 32767){
+						break;
+					}
+				}
+			}
+
+			if (peak_t > 1.0f && idx_e < 32767){
+				for (float peak_ypos = ypos_t + 2.0f; peak_ypos < peak_t*2.0f; peak_ypos += box_size.y){
+					add_block(
+						glm::vec3(xpos,32 - peak_ypos, zpos),
+						box_size,
+						0);
+					idx_e++;
+					if (idx_e >= 32767){
+						break;
+					}
+				}
+			}
+
+            
             do {
                 stats._ndrawcalls += 1;
                 stats._ntriangles += _dc_data[idx]._nelements / 3;
                 stats._nvertices += _dc_data[idx]._nvertices;
-            } while (++idx != idx_e);
+            } while (++idx != idx_e && idx < 32768);
         }
 	}
 
