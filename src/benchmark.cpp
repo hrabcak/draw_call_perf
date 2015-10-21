@@ -147,8 +147,8 @@ void benchmark::draw_frame()
                 stats._gpu_time * r_nframes,
                 stats._cpu_time * r_nframes,
                 fps,
-                base::cfg().one_mesh ? "false" : "true",
-                base::cfg().use_vbo ? "false" : "true",
+                base::cfg().one_mesh ? "true" : "false",
+                base::cfg().use_vbo ? "true" : "false",
                 base::cfg().mesh_size,
                 base::cfg().tex_freq,
                 get_test_name());
