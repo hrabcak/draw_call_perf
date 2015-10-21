@@ -54,7 +54,7 @@ public:
 
 public:
 
-    void add_test_block();
+	void add_test_block(bool add_peaks);
 
 protected:
 

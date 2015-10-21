@@ -183,9 +183,6 @@ void benchmark::key(const int key, const bool down)
 {
 	app::key(key, down);
 
-	if (key == 'N' && down){
-		_scene->add_test_block();
-	}
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

@@ -827,7 +827,7 @@ void scene::create_test_scene()
 {
 	_cur_block = get_perspective_block_bound(1,2.0f)*2;
 	for (int i = 0; i < 64; ++i){
-	    add_test_block();
+	    add_test_block(true);
 		if (_tms.size() >= 32687){
 			break;
 		}
@@ -838,7 +838,7 @@ void scene::create_test_scene()
 
 #define SIMPLEX_BIAS 75
 
-void scene::add_test_block()
+void scene::add_test_block(bool add_peaks)
 {
 	const int grid_size = 16;
 	const int grid_size2 = grid_size * grid_size;
@@ -903,7 +903,7 @@ void scene::add_test_block()
 				idx_e++;
 			}
 			
-			if (peak_b > 1.0f && idx_e < 32767){
+			if (add_peaks && peak_b > 1.0f && idx_e < 32767){
 				for (float peak_ypos = ypos_b + 2.0f; peak_ypos < peak_t*2.0f; peak_ypos += box_size.y){
 					add_block(
 						glm::vec3(xpos, peak_ypos, zpos),
@@ -916,7 +916,7 @@ void scene::add_test_block()
 				}
 			}
 
-			if (peak_t > 1.0f && idx_e < 32767){
+			if (add_peaks &&  peak_t > 1.0f && idx_e < 32767){
 				for (float peak_ypos = ypos_t + 2.0f; peak_ypos < peak_t*2.0f; peak_ypos += box_size.y){
 					add_block(
 						glm::vec3(xpos,32 - peak_ypos, zpos),
