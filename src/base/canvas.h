@@ -52,20 +52,20 @@ public:
 	~canvas();
 		
 	void draw_text(
-		base::frame_context *ctx,
+		base::frame_context * const ctx,
 		const glm::vec2 &position,
 		const std::string &text,
 		const glm::vec4 &color,
 		const font *fnt);
 
 	void fill_rect(
-		base::frame_context *ctx,
+		base::frame_context * const ctx,
 		const glm::vec2 &pos,
 		const glm::vec2 &size,
 		const glm::vec4 &color);
 
 
-	static void render(base::frame_context *ctx);
+	static void render(base::frame_context * const ctx);
 
 	void set_pos(const float x,const float y) { _pos=glm::vec2(x,y); }
 	void set_size(const float w,const float h) { _size=glm::vec2(w,h); }

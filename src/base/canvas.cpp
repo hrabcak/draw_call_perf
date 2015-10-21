@@ -79,7 +79,7 @@ void base::canvas::load_and_init_shaders(const base::source_location &loc)
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 void base::canvas::draw_text(
-	base::frame_context *ctx,
+	base::frame_context * const ctx,
 	const glm::vec2 &position,
 	const std::string &text,
 	const glm::vec4 &color,
@@ -157,15 +157,18 @@ void base::canvas::draw_text(
 	}
 
 	// create or update batch
-	base::batches_t::iterator last = ctx->_batches.end()-1;
-	if(ctx->_batches.empty() || (last->tex != fnt->_tex && last->tex != 0))
-		ctx->_batches.push_back(
-			base::batch(
-				_pos,
-				_size,
-				batch_elements - ctx->_elements_begin,	// start index
-				(ctx->_elements - batch_elements) / 3,	// number of elements in batch
-				fnt->_tex));
+    base::batches_t::iterator last = ctx->_batches.empty()
+        ? ctx->_batches.end() 
+        : ctx->_batches.end() - 1;
+    if (ctx->_batches.empty() || (last->tex != fnt->_tex && last->tex != 0)) {
+        ctx->_batches.push_back(
+            base::batch(
+            _pos,
+            _size,
+            batch_elements - ctx->_elements_begin,	// start index
+            (ctx->_elements - batch_elements) / 3,	// number of elements in batch
+            fnt->_tex));
+    }
 	else {
 		last->count += (ctx->_elements - batch_elements) / 3;
 		last->tex = fnt->_tex;
@@ -198,13 +201,9 @@ void base::canvas::fill_rect(
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void base::canvas::render(base::frame_context *ctx)
+void base::canvas::render(base::frame_context * const ctx)
 {
 	if(!ctx->_batches.empty()) {
-		// this is only needed on AMD cards due to driver bug wich needs
-		// to have attr0 array anabled
-		base::set_attr0_vbo_amd_wa();
-
 		glUseProgram(_prg);
 
 		// bind canvas elements texture buffer
@@ -236,8 +235,7 @@ void base::canvas::render(base::frame_context *ctx)
 		}
 
 		ctx->_batches.clear();
-
-		base::clear_attr0_vbo_amd_wa();
+        ctx->_elements = ctx->_elements_begin;
 	}
 }
 

@@ -119,8 +119,6 @@ void base::frame_context::create_buffers()
         __buffers_created = true;
 	}
 	else {
-        //glGenBuffers(1, tmp);
-		//_canvas_vbo = __canvas_buffer;
 		_scene_vbo = __scene_buffer;
         _scene_tb = __scene_tb;
         _drawid_vbo = __drawid_buffer;
@@ -137,24 +135,23 @@ void base::frame_context::create_buffers()
         _drawid_data_ptr = __drawid_data_ptr;
         _drawid_data_offset = scene::MAX_BLOCK_COUNT * _ctx_id;
     }
-    
-    // canvas buffer
-    //glGenBuffers(1, &_canvas_vbo);
-    //glGenTextures(1, &_canvas_tb);
-    //glBindTexture(GL_TEXTURE_BUFFER, _canvas_tb);
-    //glTexBuffer(
-    //    GL_TEXTURE_BUFFER,
-    //    base::get_pfd(base::PF_RGBA32F)->_internal,
-    //    _canvas_vbo);
-    //glBindTexture(GL_TEXTURE_BUFFER, 0);
 
-    //// canvas
-    //glBindBuffer(GL_TEXTURE_BUFFER, _canvas_vbo);
-    //glBufferData(
-    //    GL_TEXTURE_BUFFER,
-    //    base::canvas::ELEMENTS_VBO_SIZE,
-    //    0,
-    //    GL_STREAM_DRAW);
+    // create canvas buffer
+    glGenBuffers(1, &_canvas_vbo);
+    _canvas_vbo = base::create_buffer<glm::float4>(
+        base::canvas::ELEMENTS_VBO_SIZE,
+        &_elements,
+        0);
+    _elements_begin = _elements;
+
+    // canvas buffer TB
+    glGenTextures(1, &_canvas_tb);
+    glBindTexture(GL_TEXTURE_BUFFER, _canvas_tb);
+    glTexBuffer(
+        GL_TEXTURE_BUFFER,
+        base::get_pfd(base::PF_RGBA32F)->_internal,
+        _canvas_vbo);
+    glBindTexture(GL_TEXTURE_BUFFER, 0);
 
     glGenQueries(sizeof(_time_queries) / sizeof(*_time_queries), _time_queries);
 }

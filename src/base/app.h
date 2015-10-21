@@ -54,7 +54,6 @@ public:
     void begin_frame();
     virtual void draw_frame() = 0;
     virtual void gpu_draw_frame(base::frame_context * const ctx) = 0;
-    void end_frame();
 	virtual void stop();
 
 	virtual void set_benchmark_mode(bool mode) = 0;
@@ -66,6 +65,8 @@ public:
     virtual const char* get_app_name() const = 0;
     virtual const char* get_wnd_name() const = 0;
     virtual const char* get_wnd_cls() const = 0;
+
+    virtual const char * get_test_name() const = 0;
 
 	static app* get() { assert(_app); return _app; }
 
@@ -100,13 +101,15 @@ public:
     float get_fovy() const { return _fovy; }
     float get_aspect() const { return _aspect; }
 
+    void shutdown() { _shutdown = true; }
+    bool is_shutdown() const { return _shutdown; }
+
 protected:
 	static app *_app;
 
 	bool _benchmark_mode;
 
 	std::auto_ptr<base::font> _fnt_mono;
-	std::auto_ptr<base::font> _fnt_arial;
 	std::auto_ptr<base::canvas> _canvas;
 
 	glm::ivec2 _last_mouse_pos;
@@ -119,6 +122,8 @@ protected:
 
 	bool _velocity_boost : 1;
 	bool _active : 1;
+    
+    bool _shutdown;
 
 	/// frame context pool
 	std::list<base::frame_context*> _pool;

@@ -77,8 +77,11 @@ void benchmark::draw_frame()
 	base::frame_context *ctx = 0;
 	
 	// wait for renderer
-	while((ctx = _renderer->pop_frame_context_from_pool()) == 0)
+	while((ctx = _renderer->pop_frame_context_from_pool()) == 0 && !_shutdown)
         base::sleep_ms(0);
+
+    if (_shutdown)
+        return;
 	
 	assert(ctx != 0);
 
@@ -89,8 +92,27 @@ void benchmark::draw_frame()
 
     _scene->update(ctx);
 
-	app::end_frame();
+    //
+    _canvas->fill_rect(
+        ctx,
+        glm::vec2(0),
+        glm::vec2(500, 100),
+        glm::vec4(0.0, 0.0, 0.0, 0.6));
+
+    char tmp[512];
+    sprintf(
+        tmp,
+        "vel(%.2f,%.2f)",
+        _velocity.x,
+        _velocity.z);
     
+    _canvas->draw_text(
+        ctx,
+        glm::vec2(3),
+        tmp,
+        glm::vec4(1, 1, 1, 1),
+        _fnt_mono.get());
+
 	_renderer->push_frame_context(ctx);
 }
 
@@ -98,8 +120,12 @@ void benchmark::draw_frame()
 
 void benchmark::gpu_draw_frame(base::frame_context * const ctx)
 {
+    glDisable(GL_BLEND);
     _scene->gpu_draw(ctx);
-    //base::canvas::render(ctx);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    base::canvas::render(ctx);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -111,6 +137,15 @@ void benchmark::key(const int key, const bool down)
 	if (key == 'N' && down){
 		_scene->add_test_block();
 	}
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+const char* benchmark::get_test_name() const
+{
+    return base::cfg().test != -1
+        ? _scene->get_test_name(base::cfg().test)
+        : "Interactive";
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

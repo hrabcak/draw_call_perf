@@ -23,9 +23,18 @@ THE SOFTWARE.
 #include "base/base.h"
 #include "base/app.h"
 #include "benchmark.h"
+#include "Windows.h"
 
+//int WINAPI WinMain(
+//    HINSTANCE /*hInstance*/,
+//    HINSTANCE /*hPrevInstance*/,
+//    LPSTR lpCmdLine,
+//    int /*nCmdShow*/)
 int main(int argc, char* argv[])
 {
+    //int argc = 0;
+    //char ** argv;
+
 	try {
 		for(int i = 1; i < argc; ++i) {
 			if(stricmp(argv[i], "--debug-ctx") == 0) {

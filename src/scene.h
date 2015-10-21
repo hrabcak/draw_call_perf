@@ -50,6 +50,8 @@ public:
     void update(base::frame_context * const ctx);
     void gpu_draw(base::frame_context * const ctx);
 
+    const char* get_test_name(const int i) const { return _test_names[i].c_str(); }
+
 public:
 
     void add_test_block();
