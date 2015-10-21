@@ -129,7 +129,13 @@ void benchmark::draw_frame()
                 "dc:    %.3f k\n"
                 "gpu:   %.3f ms\n"
                 "cpu:   %.3f ms\n"
-                "fps:   %.0f\n",
+                "fps:   %.0f\n\n"
+                "one mesh: %s\n"
+                "use vbo: %s\n"
+                "mesh size: %u\n"
+                "tex freq: %u\n\n"
+                "%s",
+
                 float(stats._texture_mem) / float(1024 * 1024),
                 float(stats._buffer_mem) / float(1024 * 1024),
                 float(stats._nvertices) * 0.000001 / dtf,
@@ -140,7 +146,12 @@ void benchmark::draw_frame()
                 float(stats._ndrawcalls) * 0.001 / nframes,
                 stats._gpu_time * r_nframes,
                 stats._cpu_time * r_nframes,
-                fps);
+                fps,
+                base::cfg().one_mesh ? "false" : "true",
+                base::cfg().use_vbo ? "false" : "true",
+                base::cfg().mesh_size,
+                base::cfg().tex_freq,
+                get_test_name());
 
             start_time = ctx->_time;
             nframes = 0;
@@ -151,7 +162,7 @@ void benchmark::draw_frame()
         _canvas->fill_rect(
             ctx,
             glm::vec2(0),
-            glm::vec2(140, 132),
+            glm::vec2(140, 205),
             glm::vec4(0.0, 0.0, 0.0, 0.6));
 
         _canvas->draw_text(
