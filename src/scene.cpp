@@ -863,16 +863,13 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
 void scene::create_test_scene()
 {
-	_cur_block = get_perspective_block_bound(1,2.0f);
+	_cur_block = get_perspective_block_bound(1,32.0f);
 	for (int i = 0; i < 116; ++i){
 	    add_test_block(true);
 	 }
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// 66
-//558
-
 
 void scene::add_test_block(bool add_peaks)
 {
@@ -880,16 +877,18 @@ void scene::add_test_block(bool add_peaks)
 	const int grid_size2 = grid_size * grid_size;
 	int max_height = 5;
 
-	ushort cur_z = (_cur_block & 0xffff0000) >> 16;
-	ushort cur_bound = get_perspective_block_bound(cur_z + 1,2.0f);
-	short cur_x = (_cur_block & 0xffff);
-
 	const glm::vec3 box_size(2.0f, 2.0f, 2.0f);
 	std::vector<int> height_map;
 	height_map.resize(grid_size2, 0);
+
+	const float world_row_len = box_size.z * grid_size;
     
     const float grid_size_r = 1.f / float(grid_size);
     base::stats_data & stats = base::stats();
+
+	ushort cur_z = (_cur_block & 0xffff0000) >> 16;
+	ushort cur_bound = get_perspective_block_bound(cur_z + 1, world_row_len);
+	short cur_x = (_cur_block & 0xffff);
 
     // bottom layer
 	for (int y = 0; y < grid_size; y++) {
@@ -967,7 +966,7 @@ void scene::add_test_block(bool add_peaks)
 	// set next block coords
 	if (cur_x - 1 <= -cur_bound){
 		cur_z += 1;
-		cur_x = get_perspective_block_bound(cur_z + 1,2.0f);
+		cur_x = get_perspective_block_bound(cur_z + 1,world_row_len);
 		_cur_block = (cur_z << 16) | ushort(cur_x);
 	}
 	else{
@@ -978,9 +977,9 @@ void scene::add_test_block(bool add_peaks)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-int scene::get_perspective_block_bound(int row, float scale){
+int scene::get_perspective_block_bound(int row, float world_row_len){
 	float fovx = glm::atan(glm::tan(_app->get_fovy()/2.0f)*(_app->get_aspect()));
-	return int(glm::ceil((glm::tan(fovx)*row*16*scale) / (16*scale)));
+	return int(glm::ceil((glm::tan(fovx)*row*world_row_len) / int(world_row_len)));
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
