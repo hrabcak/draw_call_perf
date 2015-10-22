@@ -313,6 +313,10 @@ void scene::init_gpu_stuff(const base::source_location &loc)
     if (_use_vbo) {
         glBindBuffer(GL_ARRAY_BUFFER, _buffer_pos);
         glVertexAttribIPointer(0, 2, GL_INT, 0, (GLvoid*)0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, _buffer_nor_uv);
+        glVertexAttribIPointer(1, 2, GL_INT, 0, (GLvoid*)0);
+
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     
@@ -729,8 +733,10 @@ void scene::gpu_draw(base::frame_context * const ctx)
         break;
     }
 
-    if (_use_vbo)
+    if (_use_vbo) {
         glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+    }
 
 
     glQueryCounter(ctx->_time_queries[0], GL_TIMESTAMP);
