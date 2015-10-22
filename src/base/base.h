@@ -279,6 +279,7 @@ struct config {
 		, use_pinned_memory(false)
 		, use_nvidia_fast_download(false)
 		, use_async_readback(false)
+        , use_nor_uv(false)
 
         , test(-1)
         , mesh_size(2)
@@ -298,6 +299,7 @@ struct config {
     bool use_vbo : 1;
     bool one_mesh : 1;
     bool dont_rnd_cubes : 1;
+    bool use_nor_uv : 1;
 
     // tests
     int test;

@@ -169,6 +169,9 @@ int WINAPI WinMain(
             else if (stricmp(argv[i], "--dont-rnd-cubes") == 0) {
                 base::cfg().dont_rnd_cubes = true;
             }
+            else if (stricmp(argv[i], "--use_nor_uv") == 0) {
+                base::cfg().dont_rnd_cubes = true;
+            }
             else {
 				MessageBoxA(
                     NULL,
@@ -197,7 +200,8 @@ int WINAPI WinMain(
                     "--tex-freq3 - One unique texture for four meshes\n\n"
                     "--one-mesh - Use one geometry for all meshes\n"
                     "--use-vbo - Use classic buffer for vertex data instead of texture buffer\n"
-                    "--dont-rnd-cubes - Turn off cube randomization (better utilization of post-transform cache)\n\n",
+                    "--dont-rnd-cubes - Turn off cube randomization (better utilization of post-transform cache)\n\n"
+                    "--use_nor_uv - Will use additional vertex data normal and uv compressed to 8 bytes (16bytes vertex data)",
                     "Command line options",
                     MB_APPLMODAL);
 				return -1;
