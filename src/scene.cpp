@@ -107,7 +107,7 @@ scene::scene(benchmark * const app)
     _use_vbo = base::cfg().use_vbo;
     _one_mesh = base::cfg().one_mesh;
 
-	srand(time(NULL));
+	srand(uint(time(NULL)));
 	SIMPLEX_BIAS_X = rand();
 	SIMPLEX_BIAS_Y = rand();
 }
@@ -338,7 +338,7 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 		_buffer_nor_uv);
 	glBindTexture(GL_TEXTURE_BUFFER, 0);
 
-    if (_tex_mode != BenchTexNone)
+    if (_tex_mode != BenchTexNone) {
         create_textures(loc);
     }
 }

@@ -18,7 +18,7 @@ Test 0: Draw naive
 Call pair of glVertexAttribI4i and glDrawElements per draw call. glVertexAttrib is there to provide drawcall data. (instance_id, material_id, vertex offset etc.)
 
 [code]
-	for(int i = 0; i < 32768; ++i, ++dc) {
+	for(int i = 0; i < nmeshes; ++i, ++dc) {
 		glVertexAttribI3i(
 			13,
 			ctx->_scene_data_offset + offset,	// instance id
@@ -46,7 +46,7 @@ depends on the mode. Mesh data are provides from buffer as int4
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	//
-	for(int i = 0; i < 32768; ++i, ++dc) {
+	for(int i = 0; i < nmeshes; ++i, ++dc) {
 		glDrawElementsInstancedBaseInstance(
 			GL_TRIANGLES,
 			dc->_nelements,
