@@ -1,10 +1,13 @@
 #include "gen_tex.h"
 
-#include "base/utils.h"
+#include "base/base.h"
 
 #include <vector>
 
 #define COMP_LATTICE_PROBABILITY		0.1f
+
+
+base::rnd_int _get_text_generator(9894);
 
 uint32 u8vec4_to_uint32(const glm::u8vec4 & color){
 	return uint32(color.x) | uint32(color.y << 8) | uint32(color.z << 16) | uint32(color.w << 24);
@@ -20,8 +23,6 @@ void gen_texture(
 	if (grid_dim <= 0){
 		return;
 	}
-
-	srand(seed);
 
 	int max = (int)(1 / COMP_LATTICE_PROBABILITY);
 
@@ -42,7 +43,7 @@ void gen_texture(
     }
 
 	for (int i = 0; i < grid_dim*grid_dim; i++){
-		int rnd = util::rndFromInterval(1, max);
+		int rnd = base::rndFromInterval(_get_text_generator, 1, max);
 		if (rnd == 1){
 			grid[i] = cc1;
 		}
