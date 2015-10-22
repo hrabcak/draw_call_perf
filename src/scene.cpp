@@ -866,16 +866,13 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
 void scene::create_test_scene()
 {
-	_cur_block = get_perspective_block_bound(1,2.0f)*2;
+	_cur_block = get_perspective_block_bound(1,32.0f);
 	for (int i = 0; i < 116; ++i){
 	    add_test_block(true);
 	 }
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// 66
-//558
-
 
 void scene::add_test_block(bool add_peaks)
 {
@@ -883,16 +880,18 @@ void scene::add_test_block(bool add_peaks)
 	const int grid_size2 = grid_size * grid_size;
 	int max_height = 5;
 
-	ushort cur_z = (_cur_block & 0xffff0000) >> 16;
-	ushort cur_bound = get_perspective_block_bound(cur_z + 1,2.0f);
-	short cur_x = (_cur_block & 0xffff) - cur_bound;
-
 	const glm::vec3 box_size(2.0f, 2.0f, 2.0f);
 	std::vector<int> height_map;
 	height_map.resize(grid_size2, 0);
+
+	const float world_row_len = box_size.z * grid_size;
     
     const float grid_size_r = 1.f / float(grid_size);
     base::stats_data & stats = base::stats();
+
+	ushort cur_z = (_cur_block & 0xffff0000) >> 16;
+	ushort cur_bound = get_perspective_block_bound(cur_z + 1, world_row_len);
+	short cur_x = (_cur_block & 0xffff);
 
     // bottom layer
 	for (int y = 0; y < grid_size; y++) {
@@ -904,7 +903,7 @@ void scene::add_test_block(bool add_peaks)
 			
 			float peak_b = glm::clamp(glm::pow(s0b, 10.0f),0.1f,1.0f)*15.0f;
 
-			const int height_t = int(sb * max_height);
+			const int height_t =  int(sb * max_height);
 
 			const float s0t = glm::simplex(glm::vec2(x + cur_x*grid_size + 64 + SIMPLEX_BIAS_X, y + cur_z*grid_size + 64 + SIMPLEX_BIAS_Y) * grid_size_r);
 			const float s1t = glm::simplex(glm::vec2(x + cur_x*grid_size + 64 + SIMPLEX_BIAS_X, y + cur_z*grid_size + 64 + SIMPLEX_BIAS_Y) * 2.f * grid_size_r);
@@ -912,11 +911,11 @@ void scene::add_test_block(bool add_peaks)
 
 			float peak_t = glm::clamp(glm::pow(s0t, 10.0f), 0.1f, 1.0f)*15.0f;
 
-			const int height_b = int(st * max_height);
+			const int height_b =  int(st * max_height);
 
 			
 
-            const float xpos = ((cur_x * grid_size) + x) * 2.f;
+            const float xpos = (((cur_x - 1) * grid_size) + x) * 2.f;
 			const float ypos_b = height_b * 2.0f;
 			const float ypos_t = height_t * 2.0f;
 			const float zpos = ((cur_z * grid_size) + y) * 2.f;
@@ -968,22 +967,22 @@ void scene::add_test_block(bool add_peaks)
 	}
 
 	// set next block coords
-	if (cur_x - 1 < -cur_bound){
+	if (cur_x - 1 <= -cur_bound){
 		cur_z += 1;
-		cur_x = get_perspective_block_bound(cur_z + 1,2.0f) * 2 - 1;
+		cur_x = get_perspective_block_bound(cur_z + 1,world_row_len);
 		_cur_block = (cur_z << 16) | ushort(cur_x);
 	}
 	else{
-		_cur_block--;
+		_cur_block = (cur_z << 16) | ushort(cur_x - 1);
 	}
 
 };
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-int scene::get_perspective_block_bound(int row, float scale){
-	float fovx = glm::atan(glm::tan(_app->get_fovy())*(_app->get_aspect()));
-	return int(glm::ceil((glm::tan(fovx)*row) / scale));
+int scene::get_perspective_block_bound(int row, float world_row_len){
+	float fovx = glm::atan(glm::tan(_app->get_fovy()/2.0f)*(_app->get_aspect()));
+	return int(glm::ceil((glm::tan(fovx)*row*world_row_len) / int(world_row_len)));
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
