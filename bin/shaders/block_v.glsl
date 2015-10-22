@@ -62,6 +62,15 @@ ivec2 get_vertex_pos_data(int vertex_id)
 #endif
 }
 
+ivec2 get_norm_uv_data(int vertex_id)
+{
+#ifdef USE_TB_FOR_VERTEX_DATA
+    return texelFetch(tb_nor_uv, vertex_id).xy;
+#else
+    return in_nor_uv;
+#endif
+}
+
 #if defined(USE_BINDLESS_TEX)
     uniform usamplerBuffer tb_tex_handles;
     out flat uvec2 tex_handle;
@@ -81,6 +90,17 @@ vec3 unpack_position(ivec2 pack_pos, float coef)
         ((pack_pos.x << 21) >> 11) | (pack_pos.y >> 21),
         (pack_pos.y << 11) >> 11)
         * coef;
+}
+
+vec3 unpack_norm(ivec2 pack_norm, float coef){
+  vec3 result = vec3(pack_norm.x >> 16, (pack_norm.x << 16) >> 16, 0.0);
+  float lenght2 = dot(result.xy,result.xy);
+  result.z = (pack_norm.y & 0x1)!=0?-1.0:1.0; 
+  return vec3(0.0,0.0,0.0);//result * coef;
+}
+
+vec2 unpack_uv(ivec2 pack_uv,float coef){
+  return vec2(pack_uv.y >> 17, (pack_uv.y << 15) >> 17) * coef;
 }
 
 void main()
@@ -103,8 +123,9 @@ void main()
 
     ivec2 tmp0 = get_vertex_pos_data(gl_InstanceID * _ctx._mesh_size + index_start.y + vertex_id);
     vec3 pos = unpack_position(tmp0.xy, 1.0 / 1048575.0);
-    uv = pos.xy;
-    uv = uv * 0.5 + 0.5;
+    tmp0 = get_norm_uv_data(gl_InstanceID * _ctx._mesh_size + index_start.y + vertex_id);
+    uv = clamp(unpack_uv(tmp0.xy,1.0 / 16383.0),0.0,1.0);
+    //uv = uv * 0.5 + 0.5;
 
     inst_id = _ctx._tex_freq == -1 ? 0 : inst_id >> _ctx._tex_freq;
 

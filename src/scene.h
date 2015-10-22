@@ -97,6 +97,7 @@ protected:
     GLint _prg_tb_blocks;
     GLint _prg_ctx;
     GLint _prg_tb_pos;
+	GLint _prg_tb_nor_uv;
     GLint _prg_tex;
 
     GLuint _tb_pos;

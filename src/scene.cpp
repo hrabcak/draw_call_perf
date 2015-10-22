@@ -35,7 +35,13 @@ THE SOFTWARE.
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include <random>
+#include <time.h>
+
 using namespace glm;
+
+int SIMPLEX_BIAS_X;
+int SIMPLEX_BIAS_Y;
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -50,6 +56,7 @@ scene::scene(benchmark * const app)
     , _prg_tb_blocks(-1)
     , _prg_ctx(-1)
     , _prg_tb_pos(-1)
+	, _prg_tb_nor_uv(-1)
     , _prg_tex(-1)
 
     , _buffer_elem(0)
@@ -99,8 +106,26 @@ scene::scene(benchmark * const app)
     _tex_freq = base::cfg().tex_freq;
     _use_vbo = base::cfg().use_vbo;
     _one_mesh = base::cfg().one_mesh;
+
+	srand(time(NULL));
+	SIMPLEX_BIAS_X = rand();
+	SIMPLEX_BIAS_Y = rand();
 }
 
+//X 3056
+//Y 9134
+
+//X 4382
+//Y 14837
+
+//X 7800
+//Y 17720
+
+//X 9310
+//Y 14031
+
+//X 12951
+//Y 5408
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 scene::~scene() {}
@@ -192,6 +217,7 @@ void scene::load_and_init_shaders(const base::source_location &loc)
     _prg_tb_blocks = get_uniform_location(loc, _prg, "tb_blocks");
     if (!_use_vbo)
         _prg_tb_pos = get_uniform_location(loc, _prg, "tb_pos");
+		_prg_tb_nor_uv = get_uniform_location(loc, _prg, "tb_nor_uv");
     _prg_ctx = glGetUniformBlockIndex(_prg, "context");
 
     switch (_bench_mode) {
@@ -305,7 +331,14 @@ void scene::init_gpu_stuff(const base::source_location &loc)
         _buffer_pos);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
 
-    if (_tex_mode != BenchTexNone) {
+	glGenTextures(1, &_tb_nor_uv);
+	glBindTexture(GL_TEXTURE_BUFFER, _tb_nor_uv);
+	glTexBuffer(GL_TEXTURE_BUFFER,
+		base::get_pfd(base::PF_RG32I)->_internal,
+		_buffer_nor_uv);
+	glBindTexture(GL_TEXTURE_BUFFER, 0);
+
+    if (_tex_mode != BenchTexNone)
         create_textures(loc);
     }
 }
@@ -655,6 +688,9 @@ void scene::gpu_draw(base::frame_context * const ctx)
     glUniform1i(_prg_tb_pos, 1);
     glBindMultiTextureEXT(GL_TEXTURE1, GL_TEXTURE_BUFFER, _tb_pos);
 
+	glUniform1i(_prg_tb_nor_uv, 2);
+	glBindMultiTextureEXT(GL_TEXTURE2, GL_TEXTURE_BUFFER, _tb_nor_uv);
+
     switch (_bench_mode) {
     case BenchNaive:
         fast_drawcall = true;
@@ -834,8 +870,9 @@ void scene::create_test_scene()
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// 66
+//558
 
-#define SIMPLEX_BIAS 75
 
 void scene::add_test_block(bool add_peaks)
 {
@@ -858,17 +895,17 @@ void scene::add_test_block(bool add_peaks)
 	for (int y = 0; y < grid_size; y++) {
 		for (int x = 0; x < grid_size; x++) {
             // create instances
-			const float s0b = glm::simplex(glm::vec2(x + cur_x*grid_size + SIMPLEX_BIAS, y + cur_z*grid_size + SIMPLEX_BIAS) * grid_size_r);
-			const float s1b = glm::simplex(glm::vec2(x + cur_x*grid_size + SIMPLEX_BIAS, y + cur_z*grid_size + SIMPLEX_BIAS) * 2.f * grid_size_r);
-			float sb = (((((s0b + .5f * s1b) + 1.5f) / 3.f)));
+			const float s0b = glm::simplex(glm::vec2(x + cur_x*grid_size + SIMPLEX_BIAS_X, y + cur_z*grid_size + SIMPLEX_BIAS_Y) * grid_size_r);
+			const float s1b = glm::simplex(glm::vec2(x + cur_x*grid_size + SIMPLEX_BIAS_X, y + cur_z*grid_size + SIMPLEX_BIAS_Y) * 2.f * grid_size_r);
+			float sb = (((((s0b + s1b) + 2.f) / 4.f)));
 			
 			float peak_b = glm::clamp(glm::pow(s0b, 10.0f),0.1f,1.0f)*15.0f;
 
 			const int height_t = int(sb * max_height);
 
-			const float s0t = glm::simplex(glm::vec2(x + cur_x*grid_size + 64 + SIMPLEX_BIAS, y + cur_z*grid_size + 64 + SIMPLEX_BIAS) * grid_size_r);
-			const float s1t = glm::simplex(glm::vec2(x + cur_x*grid_size + 64 + SIMPLEX_BIAS, y + cur_z*grid_size + 64 + SIMPLEX_BIAS) * 2.f * grid_size_r);
-			float st = (((((s0t + .5f * s1t) + 1.5f) / 3.f)));
+			const float s0t = glm::simplex(glm::vec2(x + cur_x*grid_size + 64 + SIMPLEX_BIAS_X, y + cur_z*grid_size + 64 + SIMPLEX_BIAS_Y) * grid_size_r);
+			const float s1t = glm::simplex(glm::vec2(x + cur_x*grid_size + 64 + SIMPLEX_BIAS_X, y + cur_z*grid_size + 64 + SIMPLEX_BIAS_Y) * 2.f * grid_size_r);
+			float st = (((((s0t + s1t) + 2.f) / 4.f)));
 
 			float peak_t = glm::clamp(glm::pow(s0t, 10.0f), 0.1f, 1.0f)*15.0f;
 
@@ -877,8 +914,8 @@ void scene::add_test_block(bool add_peaks)
 			
 
             const float xpos = ((cur_x * grid_size) + x) * 2.f;
-			const float ypos_b = height_b*1.3333333f;
-			const float ypos_t = height_t*1.3333333f;
+			const float ypos_b = height_b * 2.0f;
+			const float ypos_t = height_t * 2.0f;
 			const float zpos = ((cur_z * grid_size) + y) * 2.f;
 
 
