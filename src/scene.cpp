@@ -857,7 +857,7 @@ void scene::gpu_draw(base::frame_context * const ctx)
 void scene::create_test_scene()
 {
 	_cur_block = get_perspective_block_bound(1,2.0f)*2;
-	for (int i = 0; i < 112; ++i){
+	for (int i = 0; i < 116; ++i){
 	    add_test_block(true);
 	 }
 }
