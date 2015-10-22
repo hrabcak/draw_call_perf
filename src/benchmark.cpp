@@ -30,6 +30,8 @@ THE SOFTWARE.
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <sstream>
+
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 benchmark::benchmark()
@@ -120,6 +122,7 @@ void benchmark::draw_frame()
 	static float dtime_total = 0.0f;
 	static int test_cycles = 0;
 
+	char mesh_size_str[32];
 
     if (start_time == 0 && ctx->_time != 0)
         start_time = ctx->_time;
@@ -138,6 +141,10 @@ void benchmark::draw_frame()
             const float fps = float(nframes) / dtf;
             const float r_nframes = 1.0f / float(nframes);
 
+			get_mesh_size_str(mesh_size_str,
+				scene::get_vtx_tbl()[base::cfg().mesh_size],
+				scene::get_ele_tbl()[base::cfg().mesh_size]);
+
             sprintf(
                 &_stats_str[0],
                 "tex:      %.0f MB\n"
@@ -153,10 +160,11 @@ void benchmark::draw_frame()
                 "fps:      %.0f\n\n"
                 "one mesh: %s\n"
                 "vertex data: %s\n"
-                "mesh size: %u\n"
+                "mesh size: %s\n"
                 "textures: %ux%u BGRA8\n"
                 "tex freq: %u\n"
-                "GPU: %s\n\n"
+				"tex mode: %s\n"
+				"GPU: %s\n\n"
                 "%s",
 
                 float(stats._texture_mem) / float(1024 * 1024),
@@ -172,9 +180,10 @@ void benchmark::draw_frame()
                 fps,
                 base::cfg().one_mesh ? "true" : "false",
                 base::cfg().use_vbo ? "VERTEX BUFFER" : "TEXTURE BUFFER",
-                base::cfg().mesh_size,
+				mesh_size_str,
                 base::cfg().tex_size, base::cfg().tex_size,
                 base::cfg().tex_freq,
+				get_texturing_mode_str(base::cfg().tex_mode),
                 _renderer->get_gpu_str(),
                 get_test_name());
 
@@ -310,5 +319,28 @@ bool benchmark::write_test_data_csv(
 
 	return true;
 }
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+const char * benchmark::get_texturing_mode_str(int mode){
+	switch (mode){
+	case 0: return "No texture";
+		break;
+	case 1:	return "Naive";
+		break;
+	case 2: return "Array";
+		break;
+	case 3: return "Bindless";
+		break;
+	default: return "Not valid!";
+		break;
+	}
+};
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void benchmark::get_mesh_size_str(char * out_str,ushort nvert, ushort nelem){
+	sprintf(out_str, "%uV/%uE", nvert, nelem);
+};
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

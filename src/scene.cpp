@@ -247,8 +247,8 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 
     load_and_init_shaders(loc);
 
-    const int vtx_tbl[] = { 24, 54, 96, 150, 216, 294 };
-    const int ele_tbl[] = { 26, 144, 324, 576, 900, 1296 };
+    const int * vtx_tbl = scene::get_vtx_tbl();
+	const int * ele_tbl = scene::get_ele_tbl();
 
     uint nvertices = vtx_tbl[_mesh_size] * 2;
     uint nelements = ele_tbl[_mesh_size] * 2;

@@ -39,6 +39,14 @@ class benchmark;
 class scene
 {
 public:
+	static const int * get_vtx_tbl() { 
+		static const int vtx_tbl[] = { 24, 54, 96, 150, 216, 294 }; 
+		return &vtx_tbl[0]; 
+	}
+	static const int * get_ele_tbl() { 
+		static const int ele_tbl[] = { 26, 144, 324, 576, 900, 1296 }; 
+		return &ele_tbl[0]; 
+	}
 	static const int MAX_BLOCK_COUNT = 0x10000;
 	std::vector<std::string> _test_names;
 

@@ -73,6 +73,9 @@ private:
 		const base::stats_data & stats,
 		const float time,
 		const int nframes);
+
+	const char * get_texturing_mode_str(int mode);
+	void get_mesh_size_str(char * out_str, ushort nvert, ushort nelem);
 };
 
 #endif // __ASYNC_VBO_TRANSFERS_APP_SCENARIO2_H__
