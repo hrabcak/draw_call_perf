@@ -111,6 +111,10 @@ void benchmark::draw_frame()
     static base::stats_data stats;
     static int nframes = 0;
     static __int64 start_time = 0;
+	static int nframes_total = 0;
+	static float dtime_total = 0.0f;
+	static int test_cycles = 0;
+
 
     if (start_time == 0 && ctx->_time != 0)
         start_time = ctx->_time;
@@ -143,7 +147,7 @@ void benchmark::draw_frame()
                 "cpu:      %.3f ms\n"
                 "fps:      %.0f\n\n"
                 "one mesh: %s\n"
-                "vertex data 16B: %s\n"
+                "vertex data: %s\n"
                 "mesh size: %u\n"
                 "textures: %ux%u BGRA8\n"
                 "tex freq: %u\n"
@@ -169,9 +173,23 @@ void benchmark::draw_frame()
                 _renderer->get_gpu_str(),
                 get_test_name());
 
-            start_time = ctx->_time;
-            nframes = 0;
+			if (test_cycles >= 1){
+				_test_stats += stats;
+				_test_stats._cpu_time += stats._cpu_time;
+				_test_stats._gpu_time += stats._gpu_time;
+				nframes_total += nframes;
+				dtime_total += dtf;
+			}
+
+			if (base::cfg().test != -1 &&  test_cycles == 3){
+				write_test_data_csv("test.csv", _test_stats, dtime_total, nframes_total);
+				_shutdown = true;
+			}
+
+			start_time = ctx->_time;
+			nframes = 0;
             stats = base::stats_data();
+			test_cycles++;
         }
         
         //
@@ -221,6 +239,69 @@ const char* benchmark::get_test_name() const
     return base::cfg().test != -1
         ? _scene->get_test_name(base::cfg().test)
         : "Interactive";
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+bool benchmark::write_test_data_csv(
+	const char * file_name,
+	const base::stats_data & stats,
+	const float time,
+	const int nframes)
+{
+	FILE * pFile;
+	pFile = fopen(file_name, "r+");
+
+	if (pFile == NULL){
+		pFile = fopen(file_name, "w");
+		if (pFile == NULL){
+			return false;
+		}
+
+		fputs(
+			"test_name,"
+			"gpu_gl_name,"
+			"use_vbo,"
+			"tex_freq,"
+			"mesh_size,"
+			"one_mesh,"
+			"frames,"
+			"render_time,"
+			"cpu_render_time (ms),"
+			"gpu_render_time (ms),"
+			"dc,"
+			"ntri (Mtri),"
+			"nverts (Mvtx),"
+			"buf_mem (MB),"
+			"tex_mem (MB)",
+			pFile);
+	}
+	else{
+		fseek(pFile, 0, SEEK_END);
+	}
+
+	fprintf(
+		pFile,
+		"\n%s,%s,%s,%i,%i,%s,%u,%f,%f,%f,%u,%u,%u,%u,%u",
+		this->get_test_name(),
+		_renderer->get_gpu_str(),
+		base::cfg().use_vbo ? "true" : "false",
+		base::cfg().tex_freq,
+		base::cfg().mesh_size,
+		base::cfg().one_mesh ? "true" : "false",
+		nframes,
+		time,
+		stats._cpu_time,
+		stats._gpu_time,
+		stats._ndrawcalls,
+		stats._ntriangles,
+		stats._nvertices,
+		stats._buffer_mem >> 20,
+		stats._texture_mem >> 20);
+
+	fclose(pFile);
+
+	return true;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

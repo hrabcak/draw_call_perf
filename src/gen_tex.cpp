@@ -7,7 +7,7 @@
 #define COMP_LATTICE_PROBABILITY		0.1f
 
 
-base::rnd_int _get_text_generator(9894);
+base::rnd_int _gen_text_rnd_generator(9894);
 
 uint32 u8vec4_to_uint32(const glm::u8vec4 & color){
 	return uint32(color.x) | uint32(color.y << 8) | uint32(color.z << 16) | uint32(color.w << 24);
@@ -27,8 +27,10 @@ void gen_texture(
 	int max = (int)(1 / COMP_LATTICE_PROBABILITY);
 
 	int lattice_dim = dim / grid_dim;
-
-    glm::u8vec4 base_color(86, 116, 142, 0);
+	
+	int base_col_rand = base::rndFromInterval(_gen_text_rnd_generator, -50, 50);
+	
+	glm::u8vec4 base_color(86 + base_col_rand, 116 + base_col_rand, 142 + base_col_rand, 0);
 	glm::u8vec4 complement_color1(100, 100, 100, 0);
 	glm::u8vec4 complement_color2(234, 223, 205, 255);
 
@@ -43,7 +45,7 @@ void gen_texture(
     }
 
 	for (int i = 0; i < grid_dim*grid_dim; i++){
-		int rnd = base::rndFromInterval(_get_text_generator, 1, max);
+		int rnd = base::rndFromInterval(_gen_text_rnd_generator, 1, max);
 		if (rnd == 1){
 			grid[i] = cc1;
 		}

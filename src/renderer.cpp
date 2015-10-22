@@ -148,57 +148,18 @@ void renderer::draw_frame(base::frame_context * const ctx)
 
 	base::swap_buffers();
 
-    static double start_time = timer.elapsed_time();
-    static float frame = 0;
-    static int test_cycles = 0;
-    static float test_time = 0;
-
-    double current_time = timer.elapsed_time();
-    const float t = float(current_time - start_time);
-
-    static base::stats_data test_stats;
-
     base::stats_data & stats = base::stats();
-    test_stats += stats;
-    test_stats._cpu_time += float(ctx->_cpu_render_time);
 
     __int64 result[2] = { 0, };
     glGetQueryObjecti64v(ctx->_time_queries[0], GL_QUERY_RESULT, result);
     glGetQueryObjecti64v(ctx->_time_queries[1], GL_QUERY_RESULT, result + 1);
     const double coef_n2m = 1.0 / 1000000.0;
     const double gpu_time = double(result[1] - result[0]) * coef_n2m;
-    test_stats._gpu_time += float(gpu_time);
 
     ctx->_stats = stats;
     ctx->_stats._gpu_time = float(gpu_time);
     ctx->_stats._cpu_time = float(ctx->_cpu_render_time);
     ctx->_time = timer.time();
-
-    if (t > 1000.f) {
-        _stat_data_buf._nframes += int(frame);
-		_stat_data_buf._cpu_render_time += ctx->_cpu_render_time;
-		_stat_data_buf._gpu_render_time += gpu_time;
-
-		start_time = current_time;
-        frame = 0;
-        test_cycles++;
-        test_time += t;
-
-        if (base::cfg().test != -1 &&  test_cycles == 4) {
-            _stat_data_buf.mean(test_time);
-
-            write_test_data_csv(
-                "result.csv",
-                test_stats,
-                _stat_data_buf,
-                test_time,
-                test_cycles - 1);
-
-            _shutdown = true;
-        }
-    }
-
-    frame += 1.f;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -206,72 +167,6 @@ void renderer::draw_frame(base::frame_context * const ctx)
 base::frame_context* renderer::pop_frame_context_from_pool() {
 	base::mutex_guard g(_mx_queue);
 	return base::app::get()->pop_frame_context_from_pool();
-}
-
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-bool renderer::write_test_data_csv(
-    const char * file_name,
-    const base::stats_data & stats,
-    const base::stats_data2 & stats_buf,
-    const float time,
-    const int num_test_cycles)
-{
-	FILE * pFile;
-	pFile = fopen(file_name,"r+");
-
-	if (pFile == NULL){
-		pFile = fopen(file_name,"w");
-		if (pFile == NULL){
-			return false;
-		}
-
-		fputs(
-            "test_name,"
-            "gpu_gl_name,"
-		    "use_vbo,"
-			"tex_freq,"
-			"mesh_size,"
-			"one_mesh,"
-			"fps,"
-            "cpu_render_time (ms),"
-            "gpu_render_time (ms),"
-			"dc,"
-            "dc_per_sec (Kc/s),"
-            "tri_per_sec (Mtri/s),"
-            "ntri (Mtri),"
-            "nvert (Mvtx),"
-            "buf_mem (MB),"
-            "tex_mem (MB)",
-            pFile);
-	}
-	else{
-		fseek(pFile, 0, SEEK_END);
-	}
-
-	fprintf(
-        pFile,
-        "\n%s,%s,%s,%i,%i,%s,%u,%f,%f,%u,%u,%u,%u,%u,%u,%u",
-		_app->get_test_name(),
-		_graphic_card_name.c_str(),
-		base::cfg().use_vbo ? "true" : "false",
-        base::cfg().tex_freq,
-        base::cfg().mesh_size,
-        base::cfg().one_mesh ? "true" : "false",
-        stats_buf._nframes,
-		stats_buf._cpu_render_time,
-		stats_buf._gpu_render_time,
-        stats._ndrawcalls / stats_buf._nframes,
-		stats._ndrawcalls / glm::uint64(time),//stats_buf._dc_per_sec,
-        stats._ntriangles / glm::uint64(time * 1000),//stats_buf._tri_per_sec,
-		(stats._ntriangles / stats_buf._nframes) / 1000,
-        (stats._nvertices / stats_buf._nframes) / 1000,
-		stats._buffer_mem >> 20,
-        stats._texture_mem >> 20);
-
-	fclose(pFile);
-
-	return true;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

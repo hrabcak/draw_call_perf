@@ -40,6 +40,7 @@ protected:
 	std::auto_ptr<scene> _scene;
 	std::auto_ptr<renderer> _renderer;
     std::vector<char> _stats_str;
+	base::stats_data _test_stats;
 
 public:
 	benchmark();
@@ -51,7 +52,7 @@ public:
     const char* get_test_name() const override;
 
 	void set_benchmark_mode(bool mode) override { _benchmark_mode = mode; }
-
+	
 	void key(const int key, const bool down)override;
 
 	void start() override;
@@ -66,6 +67,12 @@ public:
 private:
 	benchmark(const benchmark&);
 	void operator =(const benchmark&);
+
+	bool write_test_data_csv(
+		const char * file_name,
+		const base::stats_data & stats,
+		const float time,
+		const int nframes);
 };
 
 #endif // __ASYNC_VBO_TRANSFERS_APP_SCENARIO2_H__
