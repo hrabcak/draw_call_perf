@@ -183,6 +183,8 @@ void benchmark::gpu_draw_frame(base::frame_context * const ctx)
     glDisable(GL_BLEND);
     _scene->gpu_draw(ctx);
 
+
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     base::canvas::render(ctx);

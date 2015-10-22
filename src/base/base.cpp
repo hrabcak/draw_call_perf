@@ -297,11 +297,7 @@ GLuint base::create_texture_array(
     GLuint handle;
     glGenTextures(1, &handle);
 
-    glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
-    glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    
 
     if (pfd->_compressed) {
         
@@ -316,6 +312,12 @@ GLuint base::create_texture_array(
             height,
             nslices);
     }
+
+	glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
+	glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTextureParameterfEXT(handle, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     return handle;
 }

@@ -349,7 +349,7 @@ inline glm::ivec2 pack_to_norm2x16b_uv2x15b(const glm::dvec3 &norm, const glm::d
 	const glm::ivec3 norm16(norm*scale_norm);
 	const glm::ivec2 uv15(uv*scale_uv);
 
-	return glm::ivec2(norm16.x << 16 | (norm16.y & 0xffff), (uv15.x << 17) | ((uv15.y << 2) & 0x3fffc) | ((unsigned int)(norm16.z & 0x80000000) >> 31));
+	return glm::ivec2(norm16.x << 16 | (norm16.y & 0xffff), (uv15.x << 17) | ((uv15.y << 2) & 0x1fffc) | ((unsigned int)(norm16.z & 0x80000000) >> 31));
 }
 
 inline void unpack_from_norm2x16b_uv2x15b(const glm::ivec2 &norm_uv, const float scale_norm, const float scale_uv, glm::vec3 &norm_out, glm::vec2 &uv_out) {
