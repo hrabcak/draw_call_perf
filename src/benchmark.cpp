@@ -143,7 +143,7 @@ void benchmark::draw_frame()
                 "cpu:      %.3f ms\n"
                 "fps:      %.0f\n\n"
                 "one mesh: %s\n"
-                "vertex data: %s\n"
+                "vertex data 16B: %s\n"
                 "mesh size: %u\n"
                 "textures: %ux%u BGRA8\n"
                 "tex freq: %u\n"

@@ -121,11 +121,12 @@ void main()
     int inst_id = index_start.z + gl_InstanceID;
 #endif
 
-    ivec2 tmp0 = get_vertex_pos_data(gl_InstanceID * _ctx._mesh_size + index_start.y + vertex_id);
+    int vtx_index = gl_InstanceID * _ctx._mesh_size + index_start.y + vertex_id;
+    ivec2 tmp0 = get_vertex_pos_data(vtx_index);
     vec3 pos = unpack_position(tmp0.xy, 1.0 / 1048575.0);
-    tmp0 = get_norm_uv_data(gl_InstanceID * _ctx._mesh_size + index_start.y + vertex_id);
+    
+    tmp0 = get_norm_uv_data(vtx_index);
     uv = clamp(unpack_uv(tmp0.xy,1.0 / 16383.0),0.0,1.0);
-    //uv = uv * 0.5 + 0.5;
 
     inst_id = _ctx._tex_freq == -1 ? 0 : inst_id >> _ctx._tex_freq;
 

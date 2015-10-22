@@ -182,22 +182,27 @@ int WINAPI WinMain(
                     "--test1 - glDrawElementsBaseInstance\n"
                     "--test2 - glMultiDrawIndirect (default)\n"
                     "--test3 - glMultiDrawElementsIndirect\n\n"
+                    
                     "--tex-mode0 - No textures\n"
                     "--tex-mode1 - Classis texture binding with glBindMultiTextureEXT\n"
                     "--tex-mode2 - Texture arrays with max possible slices (default)\n"
                     "--tex-mode3 - Bindless texturing handles are stored in texture buffer\n\n"
+                    
                     "--tex-size32 - Texture 32x32 BGRA8\n"
                     "--tex-size64 - Texture 64x64 BGRA8 (default)\n"
                     "--tex-size128 - Texture 128x128 BGRA8\n\n"
+
                     "--mesh-size0 - Meshes with 12 faces\n"
                     "--mesh-size1 - Meshes with ~48 faces\n"
                     "--mesh-size2 - Meshes with ~108 faces (default)\n"
                     "--mesh-size3 - Meshes with ~192 faces\n"
                     "--mesh-size4 - Meshes with ~300 faces\n\n"
+                    
                     "--tex-freq0 - One texture for all meshes\n"
                     "--tex-freq1 - One unique texture for each mesh (default)\n"
                     "--tex-freq2 - One unique texture for two meshes\n"
                     "--tex-freq3 - One unique texture for four meshes\n\n"
+                    
                     "--one-mesh - Use one geometry for all meshes\n"
                     "--use-vbo - Use classic buffer for vertex data instead of texture buffer\n"
                     "--dont-rnd-cubes - Turn off cube randomization (better utilization of post-transform cache)\n\n"
