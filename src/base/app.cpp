@@ -41,7 +41,7 @@ base::app::app()
 	, _frame_number(0)
     , _fovy(45.f)
     , _aspect(float(get_wnd_width()) / float(get_wnd_height()))
-	, _benchmark_mode(false)
+	, _benchmark_mode(cfg().test != -1)
 
     , _shutdown(false)
 { 

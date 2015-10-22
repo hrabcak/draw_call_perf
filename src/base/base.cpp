@@ -325,7 +325,7 @@ GLuint base::create_texture_array(
 
     // always counting with mips!!!
     for (int i = 1; i < nmips; ++i)
-        base::stats()._texture_mem += nslices * glm::max(width >> i, 1) * glm::max(height, 1) * pfd->_size;
+        base::stats()._texture_mem += nslices * glm::max(width >> i, 1) * glm::max(height >> i, 1) * pfd->_size;
 
     return handle;
 }
