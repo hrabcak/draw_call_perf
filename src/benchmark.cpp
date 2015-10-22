@@ -145,8 +145,9 @@ void benchmark::draw_frame()
                 "one mesh: %s\n"
                 "vertex data: %s\n"
                 "mesh size: %u\n"
-                "tex size: %ux%u BGRA8\n"
-                "tex freq: %u\n\n"
+                "textures: %ux%u BGRA8\n"
+                "tex freq: %u\n"
+                "GPU: %s\n\n"
                 "%s",
 
                 float(stats._texture_mem) / float(1024 * 1024),
@@ -165,6 +166,7 @@ void benchmark::draw_frame()
                 base::cfg().mesh_size,
                 base::cfg().tex_size, base::cfg().tex_size,
                 base::cfg().tex_freq,
+                _renderer->get_gpu_str(),
                 get_test_name());
 
             start_time = ctx->_time;
@@ -176,7 +178,7 @@ void benchmark::draw_frame()
         _canvas->fill_rect(
             ctx,
             glm::vec2(0),
-            glm::vec2(200, 216),
+            glm::vec2(256, 260),
             glm::vec4(0.0, 0.0, 0.0, 0.6));
 
         _canvas->draw_text(

@@ -72,6 +72,8 @@ public:
 	}
 
 	base::frame_context* pop_frame_context_from_pool();
+
+    const char* get_gpu_str() const { return _graphic_card_name.c_str(); }
 };
 
 #endif // __ASYNC_VBO_TRANSFERS_RENDERER_H__
