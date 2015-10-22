@@ -210,7 +210,8 @@ void scene::load_and_init_shaders(const base::source_location &loc)
     _prg_tb_blocks = get_uniform_location(loc, _prg, "tb_blocks");
     if (!_use_vbo) {
         _prg_tb_pos = get_uniform_location(loc, _prg, "tb_pos");
-        _prg_tb_nor_uv = get_uniform_location(loc, _prg, "tb_nor_uv");
+        if (_tex_mode != BenchTexNone)
+            _prg_tb_nor_uv = get_uniform_location(loc, _prg, "tb_nor_uv");
     }
     _prg_ctx = glGetUniformBlockIndex(_prg, "context");
 
@@ -686,8 +687,10 @@ void scene::gpu_draw(base::frame_context * const ctx)
     glUniform1i(_prg_tb_pos, 1);
     glBindMultiTextureEXT(GL_TEXTURE1, GL_TEXTURE_BUFFER, _tb_pos);
 
-	glUniform1i(_prg_tb_nor_uv, 2);
-	glBindMultiTextureEXT(GL_TEXTURE2, GL_TEXTURE_BUFFER, _tb_nor_uv);
+    if (_tex_mode != BenchTexNone) {
+        glUniform1i(_prg_tb_nor_uv, 2);
+        glBindMultiTextureEXT(GL_TEXTURE2, GL_TEXTURE_BUFFER, _tb_nor_uv);
+    }
 
     switch (_bench_mode) {
     case BenchNaive:

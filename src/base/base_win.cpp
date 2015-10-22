@@ -311,13 +311,11 @@ void base::run_app_win(base::app * const a, const bool initgl)
 			DispatchMessage(&msg);
 		}
 		
-		if(exit) break;
+		if(exit || a->is_shutdown())
+            break;
 
 		a->draw_frame();
 		a->inc_frame_number();
-
-        if (a->is_shutdown())
-            break;
 	}
 
 	a->stop();
