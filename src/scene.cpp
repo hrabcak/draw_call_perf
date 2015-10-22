@@ -35,13 +35,10 @@ THE SOFTWARE.
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include <random>
-#include <time.h>
-
 using namespace glm;
 
-int SIMPLEX_BIAS_X;
-int SIMPLEX_BIAS_Y;
+#define SIMPLEX_BIAS_X		4382
+#define SIMPLEX_BIAS_Y		14837
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -106,10 +103,6 @@ scene::scene(benchmark * const app)
     _tex_freq = base::cfg().tex_freq;
     _use_vbo = base::cfg().use_vbo;
     _one_mesh = base::cfg().one_mesh;
-
-	srand(time(NULL));
-	SIMPLEX_BIAS_X = rand();
-	SIMPLEX_BIAS_Y = rand();
 }
 
 //X 3056
@@ -338,7 +331,7 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 		_buffer_nor_uv);
 	glBindTexture(GL_TEXTURE_BUFFER, 0);
 
-    if (_tex_mode != BenchTexNone)
+    if (_tex_mode != BenchTexNone) {
         create_textures(loc);
     }
 }
