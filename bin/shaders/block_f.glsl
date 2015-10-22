@@ -41,14 +41,14 @@ out vec3 _retval;
 
 void main()
 {
-    vec3 tex_color;
+    vec4 tex_color;
 
 #if defined(USE_NAIVE_TEX)
-    tex_color = texture(mat_tex, uv, 0).rgb;
+    tex_color = texture(mat_tex, uv, 0);
 #elif defined(USE_ARRAY_TEX)
-    tex_color = texture(mat_tex, vec3(uv, tex_slice), 0).rgb;
+    tex_color = texture(mat_tex, vec3(uv, tex_slice), 0);
 #elif defined(USE_BINDLESS_TEX)
-    tex_color = texture(sampler2D(tex_handle), uv, 0).rgb;
+    tex_color = texture(sampler2D(tex_handle), uv, 0);
 #else
     tex_color = vec3(0.5);
 #endif
@@ -58,7 +58,10 @@ void main()
     vec3 nor = normalize(cross(dFdx(wpos), dFdy(wpos)));
     float fog = clamp(exp2(-0.01 * (1.0 / gl_FragCoord.w)), 0.0, 1.0);
     float LdN = clamp(dot(nor, normalize(vec3(-1, 1, -0.5))), 0, 1);
-    tex_color = tex_color * LdN * sun_color + tex_color * 0.15;
+    //tex_color.rgb = tex_color.rgb * LdN * sun_color + tex_color.rgb * 0.15;
+    tex_color.rgb =
+        (tex_color.rgb * LdN * sun_color + tex_color.rgb * 0.15)  * (1.0 - tex_color.a)
+        + tex_color.rgb * tex_color.a * 1.5;
 
-    _retval = tex_color + vec3(1.0f * (1.0 - fog));
+    _retval = tex_color.rgb * fog + vec3(1.0f * (1-fog));
 }

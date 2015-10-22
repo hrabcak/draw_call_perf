@@ -30,7 +30,10 @@ void gen_texture(
 	
 	int base_col_rand = base::rndFromInterval(_gen_text_rnd_generator, -50, 50);
 	
-	glm::u8vec4 base_color(86 + base_col_rand, 116 + base_col_rand, 142 + base_col_rand, 0);
+    glm::u8vec4 base_color(
+        86 + base_col_rand,
+        116 + base_col_rand,
+        142 + base_col_rand + (base_col_rand & 0xf), 0);
 	glm::u8vec4 complement_color1(100, 100, 100, 0);
 	glm::u8vec4 complement_color2(234, 223, 205, 255);
 
@@ -49,7 +52,7 @@ void gen_texture(
 		if (rnd == 1){
 			grid[i] = cc1;
 		}
-		else if (rnd == 2){
+		else if (rnd == 3){
 			grid[i] = cc2;
 		}
 	}

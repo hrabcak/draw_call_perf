@@ -387,10 +387,10 @@ void base::clear_attr0_vbo_amd_wa()
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-int base::rndFromInterval(rnd_int & rnd,int min, int max){
-	int result = rnd.rand()&0x0000ffff;
+int base::rndFromInterval(rnd_int & rnd, int min, int max){
+    glm::uint result = rnd.rand();// &0x0000ffff;
 	result %= (max - min + 1);
-	return result + min;
+	return int(result) + min;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
