@@ -263,6 +263,7 @@ bool benchmark::write_test_data_csv(
 			"gpu_gl_name,"
 			"use_vbo,"
 			"tex_freq,"
+			"tex_mode,"
 			"mesh_size,"
 			"one_mesh,"
 			"frames,"
@@ -282,11 +283,12 @@ bool benchmark::write_test_data_csv(
 
 	fprintf(
 		pFile,
-		"\n%s,%s,%s,%i,%i,%s,%u,%f,%f,%f,%u,%u,%u,%u,%u",
+		"\n%s,%s,%s,%i,%u,%i,%s,%u,%f,%f,%f,%u,%u,%u,%u,%u",
 		this->get_test_name(),
 		_renderer->get_gpu_str(),
 		base::cfg().use_vbo ? "true" : "false",
 		base::cfg().tex_freq,
+		base::cfg().tex_mode,
 		base::cfg().mesh_size,
 		base::cfg().one_mesh ? "true" : "false",
 		nframes,
