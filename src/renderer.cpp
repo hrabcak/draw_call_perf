@@ -31,6 +31,7 @@ THE SOFTWARE.
 
 #include <iostream>
 #include <fstream>
+#include <Windows.h>
 
 #include <glm/glm.hpp>
 
@@ -50,7 +51,7 @@ renderer::renderer(base::app * const a, const base::source_location &loc)
 
     if (!_event.wait(1000000))
         throw base::exception(loc.to_str())
-        << "Renderer initialization failed!";
+            << "Renderer initialization failed!";
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -61,56 +62,61 @@ renderer::~renderer() {}
 
 void renderer::run()
 {
-	base::init_opengl_win();
-	base::init_opengl_dbg_win();
+    try {
+        base::init_opengl_win();
+        base::init_opengl_dbg_win();
 
-	_graphic_card_name = (char*)glGetString(GL_RENDERER);
+        _graphic_card_name = (char*)glGetString(GL_RENDERER);
 
-	// create frame_context pool
-	{
-		base::mutex_guard g(_mx_queue);
-		base::app::get()->create_frame_context_pool();
-	}
+        // create frame_context pool
+        {
+            base::mutex_guard g(_mx_queue);
+            base::app::get()->create_frame_context_pool();
+        }
 
-    _app->gpu_init();
+        _app->gpu_init();
 
-	_event.signal();
+        _event.signal();
 
-	for(;;) {
-		base::frame_context *ctx = 0;
+        for (;;) {
+            base::frame_context *ctx = 0;
 
-		if(!_waiting.empty() && _waiting.front()->check_fence()) {
-			base::mutex_guard g(_mx_queue);
-			base::app::get()->push_frame_context_to_pool(_waiting.front());
-			
-			_waiting.pop_front();
-		}		
+            if (!_waiting.empty() && _waiting.front()->check_fence()) {
+                base::mutex_guard g(_mx_queue);
+                base::app::get()->push_frame_context_to_pool(_waiting.front());
 
-		{
-			base::mutex_guard g(_mx_queue);
-			if(!_queue.empty()) {
-				ctx = _queue.back();
-				_queue.pop_back();
-			}
-		}
+                _waiting.pop_front();
+            }
 
-		if(ctx==0) {
-			if(_shutdown) break;
-			continue;
-		}
+        {
+            base::mutex_guard g(_mx_queue);
+            if (!_queue.empty()) {
+                ctx = _queue.back();
+                _queue.pop_back();
+            }
+        }
 
-		draw_frame(ctx);
+        if (ctx == 0) {
+            if (_shutdown) break;
+            continue;
+        }
 
-		ctx->put_fence();
-		_waiting.push_back(ctx);
+        draw_frame(ctx);
 
-		if(_shutdown)
-			break;
-	}
+        ctx->put_fence();
+        _waiting.push_back(ctx);
 
-	//TODO purge frame context pool
+        if (_shutdown)
+            break;
+        }
 
-	std::cout << "Renderer thread ended...\n";
+        printf("Renderer thread ended...\n");
+    }
+    catch (const base::exception &e) {
+        MessageBoxA(0, e.text().c_str(), "Error...", MB_APPLMODAL);
+        _shutdown = true;
+        _event.signal();
+    }
 
     _app->shutdown();
 }
@@ -119,13 +125,13 @@ void renderer::run()
 
 void renderer::stop(const base::source_location &loc)
 {
-	std::cout << "Renderer is going down...\n";
+	printf("Renderer is going down...\n");
 	
 	_shutdown = true;
 	_event.signal();
 
 	if(!wait_for_end(2000)) {
-		std::cout << "Terminating renderer thread!\n";
+		printf("Terminating renderer thread!\n");
 		terminate();
 	}
 

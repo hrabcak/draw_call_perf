@@ -60,6 +60,11 @@ void benchmark::start()
 
     // start renderer thread
     _renderer.reset(new renderer(this, SRC_LOCATION));
+    
+    if (!_renderer->is_alive()) {
+        shutdown();
+        return;
+    }
    
     app::start();
 

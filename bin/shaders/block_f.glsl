@@ -50,7 +50,7 @@ void main()
 #elif defined(USE_BINDLESS_TEX)
     tex_color = texture(sampler2D(tex_handle), uv, 0);
 #else
-    tex_color = vec3(0.5);
+    tex_color = vec4(vec3(0.5), 0);
 #endif
 
     const vec3 sun_color = vec3(1.0f, 0.9725f, 0.9490f);
@@ -60,8 +60,10 @@ void main()
     float LdN = clamp(dot(nor, normalize(vec3(-1, 1, -0.5))), 0, 1);
     //tex_color.rgb = tex_color.rgb * LdN * sun_color + tex_color.rgb * 0.15;
     tex_color.rgb =
-        (tex_color.rgb * LdN * sun_color + tex_color.rgb * 0.15)  * (1.0 - tex_color.a)
-        + tex_color.rgb * tex_color.a * 1.5;
+        tex_color.rgb * LdN * sun_color + tex_color.rgb * 0.15
+        + tex_color.a * vec3(254, 239,100) * (1.0 / 255.0);
+
+    //if (tex_color.a == 0.0) discard;
 
     _retval = tex_color.rgb * fog + vec3(1.0f * (1-fog));
 }

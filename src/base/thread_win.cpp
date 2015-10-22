@@ -51,7 +51,9 @@ void* base::thread::thread_fnc(void* data)
 	}
 	catch(const base::exception &e) {
 		std::cout << e.text();
-		return (void*)-1;
+        MessageBoxA(0, e.text().c_str(), "Error...", MB_APPLMODAL);
+        PostQuitMessage(-1);
+        return (void*)-1;
 	}
 	PostQuitMessage(-1);
 
