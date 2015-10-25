@@ -108,6 +108,12 @@ protected:
 	GLint _prg_tb_nor_uv;
     GLint _prg_tex;
 
+    GLuint _prg_tg;
+    GLint _prg_tg_tex;
+
+    GLuint _prg_mip;
+    GLint _prg_mip_tex;
+
     GLuint _tb_pos;
     GLuint _tb_nor_uv;
     GLuint _tb_tex_handles;

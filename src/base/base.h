@@ -201,7 +201,8 @@ GLuint create_and_compile_shader(
 GLuint create_program(
 	const GLuint vs,
 	const GLuint gs,
-	const GLuint fs);
+	const GLuint fs,
+    const GLuint cs = 0);
 
 ///
 void link_program(

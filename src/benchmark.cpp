@@ -160,7 +160,7 @@ void benchmark::draw_frame()
                 "fps:      %.0f\n\n"
                 "one mesh: %s\n"
                 "vertex data: %s\n"
-                "mesh size: %s\n"
+                "average mesh size: %s\n"
                 "textures: %ux%u BGRA8\n"
                 "tex freq: %u\n"
 				"tex mode: %s\n"
@@ -211,7 +211,7 @@ void benchmark::draw_frame()
             ctx,
             glm::vec2(0),
             glm::vec2(256, 260),
-            glm::vec4(0.0, 0.0, 0.0, 0.6));
+            glm::vec4(0.0, 0.0, 0.0, 0.8));
 
         _canvas->draw_text(
             ctx,
@@ -297,7 +297,7 @@ bool benchmark::write_test_data_csv(
 
 	fprintf(
 		pFile,
-		"\n%s,%s,%s,%i,%u,%i,%s,%u,%f,%f,%f,%u,%u,%u,%u,%u",
+		"\n%s,%s,%s,%i,%u,%i,%s,%u,%f,%f,%f,%u,%llu,%llu,%u,%u",
 		this->get_test_name(),
 		_renderer->get_gpu_str(),
 		base::cfg().use_vbo ? "true" : "false",
@@ -340,7 +340,7 @@ const char * benchmark::get_texturing_mode_str(int mode){
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 void benchmark::get_mesh_size_str(char * out_str,ushort nvert, ushort nelem){
-	sprintf(out_str, "%uV/%uE", nvert, nelem);
+    sprintf(out_str, "%uF/%uV", nelem / 3, nvert);
 };
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
