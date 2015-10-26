@@ -222,12 +222,19 @@ void scene::load_and_init_shaders(const base::source_location &loc)
         0, 0, 0,
         base::create_and_compile_shader(
         SRC_LOCATION,
-        cfg,
+        cfg + "#define GROUP_SIZE 16\n#define GROUP_DEPTH 1\n",
         "shaders/mipgen_c.glsl",
         GL_COMPUTE_SHADER));
     base::link_program(loc, _prg_mip);
 
-    _prg_mip_tex = get_uniform_location(loc, _prg_mip, "tex");
+    _prg_mip2 = base::create_program(
+        0, 0, 0,
+        base::create_and_compile_shader(
+        SRC_LOCATION,
+        cfg + "#define GROUP_SIZE 1\n#define GROUP_DEPTH 1\n",
+        "shaders/mipgen_c.glsl",
+        GL_COMPUTE_SHADER));
+    base::link_program(loc, _prg_mip);
 
     // GET UNIFORM STUFF
 
@@ -447,24 +454,25 @@ void scene::create_textures(const base::source_location &)
         glUseProgram(0);
 
         glUseProgram(_prg_mip);
-        glUniform1i(_prg_mip_tex, 0);
-        auto i = &_texs[0];
-        auto e = i + _texs.size();
+        i = &_texs[0];
         do {
-            glBindImageTexture(0, *i, 1, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
-            glDispatchCompute(width >> 1, width >> 1, _max_array_layers);
-            
-            glBindImageTexture(0, *i, 2, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
-            glDispatchCompute(width >> 2, width >> 2, _max_array_layers);
-            
-            glBindImageTexture(0, *i, 3, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
-            glDispatchCompute(width >> 3, width >> 3, _max_array_layers);
-            
-            glBindImageTexture(0, *i, 4, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
-            glDispatchCompute(width >> 4, width >> 4, _max_array_layers);
-            
-            glBindImageTexture(0, *i, 5, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
-            glDispatchCompute(width >> 5, width >> 5, _max_array_layers);
+            int mip = 1;
+            do {
+                glBindImageTexture(0, *i, mip - 1, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+                glBindImageTexture(1, *i, mip, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
+                glDispatchCompute(width >> mip, width >> mip, _max_array_layers);
+            } while ((width >> ++mip) >= 16);
+        } while (++i != e);
+
+        glUseProgram(_prg_mip2);
+        i = &_texs[0];
+        do {
+            int mip = base::cfg().tex_size / 16;
+            do {
+                glBindImageTexture(0, *i, mip - 1, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+                glBindImageTexture(1, *i, mip, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
+                glDispatchCompute(width >> mip, width >> mip, _max_array_layers);
+            } while ((width >> ++mip) >= 1);
         } while (++i != e);
         glUseProgram(0);
     }
