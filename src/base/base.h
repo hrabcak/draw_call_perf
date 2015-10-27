@@ -288,6 +288,7 @@ struct config {
         , one_mesh(false)
         , tex_size(64)
         , dont_rnd_cubes(false)
+		, procedural_scene(false)
         //, use_nor_uv(false)
     {}
 
@@ -299,6 +300,7 @@ struct config {
     bool use_vbo : 1;
     bool one_mesh : 1;
     bool dont_rnd_cubes : 1;
+	bool procedural_scene : 1;
     //bool use_nor_uv : 1;
 
     // tests

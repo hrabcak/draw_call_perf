@@ -30,8 +30,6 @@ THE SOFTWARE.
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <sstream>
-
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 benchmark::benchmark()

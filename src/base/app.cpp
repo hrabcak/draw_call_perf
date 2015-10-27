@@ -64,7 +64,7 @@ void base::app::start()
 {
 	_canvas.reset(new base::canvas());
 	_canvas->set_pos(10, 400);
-	_canvas->set_size(1280, 230);
+	_canvas->set_size(1280, 260);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

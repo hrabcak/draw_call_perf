@@ -158,7 +158,7 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 
     cfg += "#version 430\n";
 
-    if (!_use_vbo)
+   /* if (!_use_vbo)
            cfg += "#define USE_TB_FOR_VERTEX_DATA 1\n";
 
     switch (_bench_mode) {
@@ -189,26 +189,48 @@ void scene::load_and_init_shaders(const base::source_location &loc)
     case BenchTexBindless:
         cfg += "#define USE_BINDLESS_TEX 1\n";
         break;
-    }
+    }*/
 
 	_prg = base::create_program(
 		base::create_and_compile_shader(
 			SRC_LOCATION,
             cfg,
-            "shaders/block_v.glsl",
+            "shaders/proc_v.glsl",
             GL_VERTEX_SHADER),
-		0,
+		base::create_and_compile_shader(
+			SRC_LOCATION,
+			cfg,
+			"shaders/proc_g.glsl",
+			GL_GEOMETRY_SHADER),
 		base::create_and_compile_shader(
 			SRC_LOCATION,
             cfg,
-            "shaders/block_f.glsl",
+            "shaders/proc_f.glsl",
             GL_FRAGMENT_SHADER));
 	base::link_program(loc, _prg);
 
     // GET UNIFORM STUFF
 
-    _prg_tb_blocks = get_uniform_location(loc, _prg, "tb_blocks");
-    if (!_use_vbo) {
+	_prg_ctx = glGetUniformBlockIndex(_prg, "context");
+
+	_prg2 = base::create_program(
+		base::create_and_compile_shader(
+		SRC_LOCATION,
+		cfg,
+		"shaders/tile_v.glsl",
+		GL_VERTEX_SHADER),
+		0,
+		base::create_and_compile_shader(
+		SRC_LOCATION,
+		cfg,
+		"shaders/tile_f.glsl",
+		GL_FRAGMENT_SHADER));
+
+	base::link_program(loc,_prg2);
+
+	_prg2_ctx = glGetUniformBlockIndex(_prg2, "context");
+
+    /*if (!_use_vbo) {
         _prg_tb_pos = get_uniform_location(loc, _prg, "tb_pos");
         if (_tex_mode != BenchTexNone)
             _prg_tb_nor_uv = get_uniform_location(loc, _prg, "tb_nor_uv");
@@ -236,7 +258,7 @@ void scene::load_and_init_shaders(const base::source_location &loc)
     case BenchTexBindless:
         _prg_tex = get_uniform_location(loc, _prg, "tb_tex_handles");
         break;
-    }
+    }*/
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -652,7 +674,7 @@ void scene::bind_texture(int counter)
 
 void scene::gpu_draw(base::frame_context * const ctx)
 {
-	glUseProgram(_prg);
+	/*glUseProgram(_prg);
 
     //glColorMask(false, false, false, false);
     //glPolygonMode(GL_FRONT, GL_LINE);
@@ -859,7 +881,29 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
     glQueryCounter(ctx->_time_queries[1], GL_TIMESTAMP);
 
-    ctx->_cpu_render_time = timer.elapsed_time();
+    ctx->_cpu_render_time = timer.elapsed_time();*/
+
+	glUseProgram(_prg2);
+
+	glBindBufferRange(
+		GL_UNIFORM_BUFFER,
+		_prg2_ctx,
+		ctx->_ctx_vbo,
+		ctx->_ctx_id * sizeof(base::ctx_data),
+		sizeof(base::ctx_data));
+
+	glDrawArrays(GL_TRIANGLES, 0, 6 * 4 * 4);
+
+	glUseProgram(_prg);
+	glBindBufferRange(
+	GL_UNIFORM_BUFFER,
+	_prg_ctx,
+	ctx->_ctx_vbo,
+	ctx->_ctx_id * sizeof(base::ctx_data),
+	sizeof(base::ctx_data));
+	glDrawArraysInstanced(GL_POINTS, 0, 16,16);
+
+
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
