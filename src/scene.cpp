@@ -562,6 +562,20 @@ int scene::frustum_check(base::frame_context * const ctx)
 		}
 	}
 
+	glm::mat4 inv_mpv = glm::inverse(ctx->_mvp);
+
+	_lt_ray = vec3(inv_mpv * vec4(-1,1,0,0));
+	_rt_ray = vec3(inv_mpv * vec4(-1, -1, 0, 0));
+
+	_lt_ray = glm::normalize(_lt_ray);
+	_rt_ray = glm::normalize(_rt_ray);
+	float d = glm::dot(_lt_ray, _rt_ray);
+
+
+	_cam_pos = vec3(ctx->_view[3]);
+
+	
+
 	return ctx->_num_visible_blocks[0];
 }
 
@@ -883,6 +897,14 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
     ctx->_cpu_render_time = timer.elapsed_time();*/
 
+	calculate_visible_tiles(256,1.0);
+
+	base::hptimer timer;
+
+	timer.start();
+
+	glDisable(GL_CULL_FACE);
+
 	glUseProgram(_prg2);
 
 	GLint pos_uloc = get_uniform_location(SRC_LOCATION, _prg2, "tile_pos");
@@ -894,19 +916,18 @@ void scene::gpu_draw(base::frame_context * const ctx)
 		ctx->_ctx_id * sizeof(base::ctx_data),
 		sizeof(base::ctx_data));
 
-	for (int i = 0; i < 10; i++){
-		for (int j = 0; j < 10; j++){
-			glUniform2f(pos_uloc, j, i);
+	for (int i = 0; i < 256; i++){
+		glUniform2f(pos_uloc, _grass_tiles[i].x, _grass_tiles[i].y);
 
-			glDrawArrays(GL_TRIANGLES, 0, 6 * 4 * 4);
-
-		}
+		glDrawArrays(GL_TRIANGLES, 0, 6 * 4 * 4);
 	}
 
 	glUseProgram(_prg);
 	
 	pos_uloc = get_uniform_location(SRC_LOCATION, _prg2, "tile_pos");
 	
+	
+
 	glBindBufferRange(
 	GL_UNIFORM_BUFFER,
 	_prg_ctx,
@@ -914,14 +935,20 @@ void scene::gpu_draw(base::frame_context * const ctx)
 	ctx->_ctx_id * sizeof(base::ctx_data),
 	sizeof(base::ctx_data));
 
-	for (int i = 0; i < 10; i++){
-		for (int j = 0; j < 10; j++){
-			glUniform2f(pos_uloc, j, i);
+	glQueryCounter(ctx->_time_queries[0], GL_TIMESTAMP);
+
+	for (int i = -5; i < 6; i++){
+		for (int j = -5; j < 6; j++){
+			glUniform2f(pos_uloc, float(j), float(i));
 
 			glDrawArraysInstanced(GL_POINTS, 0, 16, 16);
 
 		}
 	}
+
+	glQueryCounter(ctx->_time_queries[1], GL_TIMESTAMP);
+
+	ctx->_cpu_render_time = timer.elapsed_time();
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1045,6 +1072,12 @@ void scene::add_test_block(bool add_peaks)
 int scene::get_perspective_block_bound(int row, float world_row_len){
 	float fovx = glm::atan(glm::tan(_app->get_fovy()/2.0f)*(_app->get_aspect()));
 	return int(glm::ceil((glm::tan(fovx)*row*world_row_len) / int(world_row_len)));
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void scene::calculate_visible_tiles(int ntiles, float tile_size) {
+	
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

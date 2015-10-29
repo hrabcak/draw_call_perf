@@ -52,7 +52,7 @@ void main(){
 
 	if (row % 2 == 0){
 		if (col % 2 != 0){
-			color = vec3(0.0, 0.5, 0.3);
+			color = vec3(0.0, 0.0, 0.0);
 		}
 		else{
 			color = vec3(0.1, 0.1, 0.1);
@@ -60,7 +60,7 @@ void main(){
 	}
 	else{
 		if (col % 2 == 0){
-			color = vec3(0.0, 0.5, 0.3);
+			color = vec3(0.0, 0.0, 0.0);
 		}
 		else{
 			color = vec3(0.1, 0.1, 0.1);

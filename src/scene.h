@@ -23,6 +23,8 @@ THE SOFTWARE.
 #ifndef __ASYNC_VBO_TRANSFERS_SCENE_H__
 #define __ASYNC_VBO_TRANSFERS_SCENE_H__
 
+#define MAX_GRASS_TILES			1024
+
 #include <vector>
 
 #include <gl/glew.h>
@@ -85,6 +87,8 @@ protected:
         base::frame_context *ctx);
     void bind_texture(int counter);
 
+	void calculate_visible_tiles(int ntiles, float tile_size);
+
 protected:
 	glm::ivec2 _cur_next_block;
 	uint32 _cur_block;
@@ -128,6 +132,13 @@ protected:
     glm::int2 * _vertices_base_ptr;
     glm::int2 * _norm_uv_base_ptr;
     ushort * _elements_base_ptr;
+
+	glm::vec3 _lt_ray;
+	glm::vec3 _rt_ray;
+	glm::vec3 _lb_ray;
+	glm::vec3 _rb_ray;
+	glm::vec3 _cam_pos;
+	glm::vec2 _grass_tiles[MAX_GRASS_TILES];
 
     struct dc_data
     {
