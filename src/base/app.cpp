@@ -94,7 +94,7 @@ void base::app::create_perspective_matrix(frame_context * const fc)
 	fc->_mprj = glm::perspective(
 		_fovy,
 		_aspect,
-		0.1f,
+		0.01f,
 		500.0f);
 }
 
@@ -113,6 +113,7 @@ void base::app::update_camera(frame_context * const fc)
 
 	fc->_view[3] = glm::vec4(_position, 1);
 	fc->_mvp = fc->_mprj * glm::inverse(fc->_view);
+	fc->_imvp = glm::inverse(fc->_mvp);
 
     fc->_fovy = _fovy;
     fc->_aspect = _aspect;

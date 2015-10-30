@@ -190,8 +190,10 @@ void scene::load_and_init_shaders(const base::source_location &loc)
         cfg += "#define USE_BINDLESS_TEX 1\n";
         break;
     }*/
-
-	_prg = base::create_program(
+	
+	// with GS
+	
+	/*_prg = base::create_program(
 		base::create_and_compile_shader(
 			SRC_LOCATION,
             cfg,
@@ -207,6 +209,26 @@ void scene::load_and_init_shaders(const base::source_location &loc)
             cfg,
             "shaders/proc_f.glsl",
             GL_FRAGMENT_SHADER));
+	base::link_program(loc, _prg);*/
+
+	// without GS
+
+	_prg = base::create_program(
+		base::create_and_compile_shader(
+		SRC_LOCATION,
+		cfg,
+		"shaders/proc_inst_v.glsl",
+		GL_VERTEX_SHADER),
+		/*base::create_and_compile_shader(
+		SRC_LOCATION,
+		cfg,
+		"shaders/proc_g.glsl",
+		GL_GEOMETRY_SHADER)*/ 0,
+		base::create_and_compile_shader(
+		SRC_LOCATION,
+		cfg,
+		"shaders/proc_f.glsl",
+		GL_FRAGMENT_SHADER));
 	base::link_program(loc, _prg);
 
     // GET UNIFORM STUFF
@@ -562,17 +584,36 @@ int scene::frustum_check(base::frame_context * const ctx)
 		}
 	}
 
-	glm::mat4 inv_mpv = glm::inverse(ctx->_mvp);
+	vec4 a = ctx->_imvp * vec4(-1.0f, 1.0f, -1.0f, 1.0f);
+	vec4 b = ctx->_imvp * vec4(-1.0f, 1.0f, 1.0f, 1.0f);
+	a = vec4(a.x / a.w, a.y / a.w, a.z / a.w, 1.0);
+	b = vec4(b.x / b.w, b.y / b.w, b.z / b.w, 1.0);
 
-	_lt_ray = vec3(inv_mpv * vec4(-1,1,0,0));
-	_rt_ray = vec3(inv_mpv * vec4(-1, -1, 0, 0));
+	_lt_ray = glm::normalize(vec3(b - a));
 
-	_lt_ray = glm::normalize(_lt_ray);
-	_rt_ray = glm::normalize(_rt_ray);
-	float d = glm::dot(_lt_ray, _rt_ray);
+	a = ctx->_imvp * vec4(1.0f, 1.0f, -1.0f, 1.0f);
+	b = ctx->_imvp * vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	a = vec4(a.x / a.w, a.y / a.w, a.z / a.w, 1.0);
+	b = vec4(b.x / b.w, b.y / b.w, b.z / b.w, 1.0);
 
+	_rt_ray = glm::normalize(vec3(b - a));
 
+	a = ctx->_imvp * vec4(-1.0f, -1.0f, -1.0f, 1.0f);
+	b = ctx->_imvp * vec4(-1.0f, -1.0f, 1.0f, 1.0f);
+	a = vec4(a.x / a.w, a.y / a.w, a.z / a.w, 1.0);
+	b = vec4(b.x / b.w, b.y / b.w, b.z / b.w, 1.0);
+
+	_lb_ray = glm::normalize(vec3(b - a));
+	
+	a = ctx->_imvp * vec4(1.0f, -1.0f, -1.0f, 1.0f);
+	b = ctx->_imvp * vec4(1.0f, -1.0f, 1.0f, 1.0f);
+	a = vec4(a.x / a.w, a.y / a.w, a.z / a.w, 1.0);
+	b = vec4(b.x / b.w, b.y / b.w, b.z / b.w, 1.0);
+
+	_rb_ray = glm::normalize(vec3(b - a));
+	
 	_cam_pos = vec3(ctx->_view[3]);
+	_cam_view = vec3(ctx->_view[2]);
 
 	
 
@@ -897,7 +938,8 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
     ctx->_cpu_render_time = timer.elapsed_time();*/
 
-	calculate_visible_tiles(256,1.0);
+	memset(_grass_tiles, 0, MAX_GRASS_TILES*sizeof(vec2));
+	calculate_visible_tiles(100,4.0);
 
 	base::hptimer timer;
 
@@ -916,7 +958,7 @@ void scene::gpu_draw(base::frame_context * const ctx)
 		ctx->_ctx_id * sizeof(base::ctx_data),
 		sizeof(base::ctx_data));
 
-	for (int i = 0; i < 256; i++){
+	for (int i = 0; i < 100; i++){
 		glUniform2f(pos_uloc, _grass_tiles[i].x, _grass_tiles[i].y);
 
 		glDrawArrays(GL_TRIANGLES, 0, 6 * 4 * 4);
@@ -937,13 +979,12 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
 	glQueryCounter(ctx->_time_queries[0], GL_TIMESTAMP);
 
-	for (int i = -5; i < 6; i++){
-		for (int j = -5; j < 6; j++){
-			glUniform2f(pos_uloc, float(j), float(i));
+	for (int i = 0; i < 100; i++){
+		glUniform2f(pos_uloc, _grass_tiles[i].x, _grass_tiles[i].y);
 
-			glDrawArraysInstanced(GL_POINTS, 0, 16, 16);
+		glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 7, 256); // without GS
+		//glDrawArraysInstanced(GL_POINTS, 0, 16, 16); // with GS
 
-		}
 	}
 
 	glQueryCounter(ctx->_time_queries[1], GL_TIMESTAMP);
@@ -1077,7 +1118,93 @@ int scene::get_perspective_block_bound(int row, float world_row_len){
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 void scene::calculate_visible_tiles(int ntiles, float tile_size) {
+	/*float fovx = atan(tan(glm::radians(_app->get_fovy()) * 0.5f) * _app->get_aspect());
+	vec3 view_proj = -vec3(_cam_view.x,0.0f,_cam_view.z);
+	vec3 cam_proj = vec3(_cam_pos.x,0.0f,_cam_pos.z);
+
+	view_proj = glm::normalize(view_proj);
+
+	vec3 left = glm::rotateY(view_proj, fovx);
 	
+	vec3 right = glm::rotateY(view_proj, -fovx);
+
+	vec3 far_l = cam_proj + 20 * left;
+	vec3 far_r = cam_proj + 20 * right;
+
+	//left = vec3(-left.z, 0.0f, left.x);
+	//right = vec3(-right.z, 0.0f, right.x);
+
+	
+
+	vec2 min = vec2(glm::min(far_r.x, glm::min(cam_proj.x, far_l.x)), glm::min(far_r.z, glm::min(cam_proj.z, far_l.z)));
+	vec2 max = vec2(glm::max(far_r.x, glm::max(cam_proj.x, far_l.x)), glm::max(far_r.z, glm::max(cam_proj.z, far_l.z)));
+
+	int t_count = 0;
+
+	vec3 res = cam_proj;
+
+	for (int z = 0; z  < 256; z += 1){
+		res += left;
+		_grass_tiles[z] = vec2(glm::floor(res.x), glm::floor(res.z));
+	}*/
+	/*
+	float d = -_cam_pos.y / _lb_ray.y;
+
+	vec3 lb = _cam_pos + d*_lb_ray;
+
+	d = -_cam_pos.y / _rb_ray.y;
+
+	vec3 rb = _cam_pos + d*_rb_ray;
+
+	vec3 rb_ray_p(_rb_ray.x, 0.0f, _rb_ray.z);
+	vec3 lb_ray_p(_lb_ray.x, 0.0f, _lb_ray.z);
+
+	rb_ray_p = glm::normalize(rb_ray_p);
+	lb_ray_p = glm::normalize(lb_ray_p);
+	
+	vec3 lt = lb + lb_ray_p * 15;
+	vec3 rt = rb + rb_ray_p * 15;
+
+	vec3 min = glm::min(rb,glm::min(rt, glm::min(lt, lb)));
+	vec3 max = glm::max(rb, glm::max(rt, glm::max(lt, lb)));
+
+	int ntil = 0;
+
+	
+	
+	for (int z = glm::floor(min.z / tile_size); z < glm::ceil(max.z / tile_size); z++){
+		for (int x = glm::floor(min.x / tile_size); x < glm::ceil(max.x / tile_size); x++){
+			_grass_tiles[ntil] = vec2(float(x),float(z));
+			ntil++;
+			if (ntil >= ntiles){
+				break;
+			}
+		}
+
+		if (ntil >= ntiles){
+			break;
+		}
+	}*/
+
+	int ntil = 0;
+
+	int side = int(glm::sqrt(ntiles)) >> 1;
+
+	vec2 mid_pos = vec2(glm::floor(_cam_pos.x / tile_size), glm::floor(_cam_pos.z / tile_size));
+
+	for (int z = mid_pos.y - side; z < mid_pos.y + side; z++){
+		for (int x = mid_pos.x - side; x < mid_pos.x + side; x++){
+			_grass_tiles[ntil] = vec2(float(x), float(z));
+			ntil++;
+			if (ntil >= ntiles){
+				break;
+			}
+		}
+
+		if (ntil >= ntiles){
+			break;
+		}
+	}
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

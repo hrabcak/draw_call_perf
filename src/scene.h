@@ -133,11 +133,14 @@ protected:
     glm::int2 * _norm_uv_base_ptr;
     ushort * _elements_base_ptr;
 
+	glm::vec3 _cam_view;
+	glm::vec3 _cam_pos;
+
 	glm::vec3 _lt_ray;
 	glm::vec3 _rt_ray;
 	glm::vec3 _lb_ray;
 	glm::vec3 _rb_ray;
-	glm::vec3 _cam_pos;
+
 	glm::vec2 _grass_tiles[MAX_GRASS_TILES];
 
     struct dc_data

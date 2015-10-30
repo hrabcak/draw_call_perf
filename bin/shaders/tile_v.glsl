@@ -1,4 +1,4 @@
-#define TILEWIDTH		1.0
+#define TILEWIDTH		4.0
 #define BLOCKSPERROW	4
 
 // IN
@@ -52,18 +52,18 @@ void main(){
 
 	if (row % 2 == 0){
 		if (col % 2 != 0){
-			color = vec3(0.0, 0.0, 0.0);
+			color = vec3(0.5, 0.25, 0.0);
 		}
 		else{
-			color = vec3(0.1, 0.1, 0.1);
+			color = vec3(0.317647, 0.156862, 0.0);
 		}
 	}
 	else{
 		if (col % 2 == 0){
-			color = vec3(0.0, 0.0, 0.0);
+			color = vec3(0.5, 0.25, 0.0);
 		}
 		else{
-			color = vec3(0.1, 0.1, 0.1);
+			color = vec3(0.317647, 0.156862, 0.0);
 		}
 	}
 }

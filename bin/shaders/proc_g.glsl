@@ -1,4 +1,4 @@
-﻿layout(points) in;
+layout(points) in;
 layout(triangle_strip, max_vertices = 7) out;
 
 #define TRICOUNT 20
