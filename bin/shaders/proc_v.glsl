@@ -49,7 +49,7 @@ void main()
 	const float block_width = TILEWIDTH / float(BLOCKSPERROW);
 	const float half_block_width = 0.5*block_width;
 	int vertex_id = gl_VertexID;
-	vec2 block_pos = tile_pos*TILEWIDTH + vec2((vertex_id%BLOCKSPERROW) * block_width, (vertex_id / BLOCKSPERROW) * block_width);
+	vec2 block_pos = tile_pos*TILEWIDTH + vec2((vertex_id%BLOCKSPERROW) * block_width, (vertex_id / BLOCKSPERROW) * block_width) + half_block_width;
 	vec4 rnd = random_2d_perm(ivec2(block_pos*BLOCKSPERROW));
 	/*int vertex_id = gl_VertexID;
 	int x = gl_InstanceID % 16;

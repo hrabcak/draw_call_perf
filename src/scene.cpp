@@ -885,6 +885,8 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
 	glUseProgram(_prg2);
 
+	GLint pos_uloc = get_uniform_location(SRC_LOCATION, _prg2, "tile_pos");
+
 	glBindBufferRange(
 		GL_UNIFORM_BUFFER,
 		_prg2_ctx,
@@ -892,18 +894,34 @@ void scene::gpu_draw(base::frame_context * const ctx)
 		ctx->_ctx_id * sizeof(base::ctx_data),
 		sizeof(base::ctx_data));
 
-	glDrawArrays(GL_TRIANGLES, 0, 6 * 4 * 4);
+	for (int i = 0; i < 10; i++){
+		for (int j = 0; j < 10; j++){
+			glUniform2f(pos_uloc, j, i);
+
+			glDrawArrays(GL_TRIANGLES, 0, 6 * 4 * 4);
+
+		}
+	}
 
 	glUseProgram(_prg);
+	
+	pos_uloc = get_uniform_location(SRC_LOCATION, _prg2, "tile_pos");
+	
 	glBindBufferRange(
 	GL_UNIFORM_BUFFER,
 	_prg_ctx,
 	ctx->_ctx_vbo,
 	ctx->_ctx_id * sizeof(base::ctx_data),
 	sizeof(base::ctx_data));
-	glDrawArraysInstanced(GL_POINTS, 0, 16,16);
 
+	for (int i = 0; i < 10; i++){
+		for (int j = 0; j < 10; j++){
+			glUniform2f(pos_uloc, j, i);
 
+			glDrawArraysInstanced(GL_POINTS, 0, 16, 16);
+
+		}
+	}
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

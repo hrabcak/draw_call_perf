@@ -14,6 +14,8 @@ layout(std140) uniform context
 	context_data _ctx;
 };
 
+uniform vec2 tile_pos;
+
 out vec3 color;
 
 void main(){
@@ -33,7 +35,7 @@ void main(){
 		vert_ord = 0;
 	}
 
-	vec4 base_vert = vec4(col*block_w,-0.00001 ,row*block_w,1.0);
+	vec4 base_vert = vec4(tile_pos.x * TILEWIDTH + col*block_w, -0.001, tile_pos.y * TILEWIDTH + row*block_w, 1.0);
 
 	if (vert_ord == 0){
 		gl_Position = _ctx._mvp * base_vert;
