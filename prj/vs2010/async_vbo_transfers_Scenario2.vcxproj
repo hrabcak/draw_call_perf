@@ -184,7 +184,6 @@
     <ClInclude Include="..\..\src\base\tga_utils.h" />
     <ClInclude Include="..\..\src\base\thread.h" />
     <ClInclude Include="..\..\src\base\types.h" />
-    <ClInclude Include="..\..\src\base\utils.h" />
     <ClInclude Include="..\..\src\cube_gen.h" />
     <ClInclude Include="..\..\src\gen_tex.h" />
     <ClInclude Include="..\..\src\renderer.h" />
