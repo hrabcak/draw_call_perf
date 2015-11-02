@@ -449,7 +449,7 @@ void scene::create_textures(const base::source_location &)
         auto e = i + _texs.size();
         do {
             glBindImageTexture(0, *i, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
-            glDispatchCompute(width, width, _max_array_layers);
+            glDispatchCompute(width >> 4, width >> 4, _max_array_layers);
         } while (++i != e);
         glUseProgram(0);
 
@@ -460,7 +460,7 @@ void scene::create_textures(const base::source_location &)
             do {
                 glBindImageTexture(0, *i, mip - 1, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
                 glBindImageTexture(1, *i, mip, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
-                glDispatchCompute(width >> mip, width >> mip, _max_array_layers);
+                glDispatchCompute(width >> 4 >> mip, width >> 4 >> mip, _max_array_layers);
             } while ((width >> ++mip) >= 16);
         } while (++i != e);
 

@@ -30,6 +30,7 @@ float random_1d_perm1(int coord)
 
     return float(p) * float(1.0 / 0x8000);
 }
+
 void main()
 {
     const vec4 c0[] = {

@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#version 140
-//#version 330
+#version 430
+
 precision highp float;
 precision highp int;
 
-uniform sampler2D tex_font;
+layout(binding = 5) uniform sampler2D tex_font;
 uniform vec4 clip;
 
 in vec2 uv;
@@ -38,16 +38,16 @@ void main()
 {
 	vec4 col;
 
-	if(color_only!=1)
-		col=textureLod(tex_font,uv/vec2(textureSize(tex_font,0)),0);
+	if(color_only != 1)
+		col = textureLod(tex_font, uv / vec2(textureSize(tex_font, 0)), 0);
 	else
-		col=vec4(1);
+		col = vec4(1);
 
-	if(col.a==0.0f 
-		|| gl_FragCoord.x<clip.x
-		|| gl_FragCoord.x>clip.z
-		|| gl_FragCoord.y<clip.y
-		|| gl_FragCoord.y>clip.w)
+	if(col.a == 0.0f 
+		|| gl_FragCoord.x < clip.x
+		|| gl_FragCoord.x > clip.z
+		|| gl_FragCoord.y < clip.y
+		|| gl_FragCoord.y > clip.w)
 		discard;
 
 	_retval = col * color;
