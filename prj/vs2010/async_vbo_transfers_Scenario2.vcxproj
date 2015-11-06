@@ -22,6 +22,7 @@
     <ProjectGuid>{04EE60D8-DC4E-4EBB-A257-4562123AE516}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>async_vbo_transfers</RootNamespace>
+    <ProjectName>draw_call_perf</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
