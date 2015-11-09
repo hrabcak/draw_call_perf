@@ -137,5 +137,11 @@
     <None Include="..\..\bin\shaders\block_v.glsl">
       <Filter>src\shaders</Filter>
     </None>
+    <None Include="..\..\bin\shaders\texgen_c.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\mipgen_c.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
