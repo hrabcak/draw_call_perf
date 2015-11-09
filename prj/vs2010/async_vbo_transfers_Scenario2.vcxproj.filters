@@ -58,6 +58,9 @@
     <ClInclude Include="..\..\src\scene_i.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\scene_grass.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\base\base.cpp">
@@ -111,6 +114,9 @@
     <ClCompile Include="..\..\src\gen_tex.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\scene_grass.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -141,6 +147,24 @@
       <Filter>src\shaders</Filter>
     </None>
     <None Include="..\..\bin\shaders\mipgen_c.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\proc_f.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\proc_g.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\proc_inst_v.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\proc_v.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\tile_f.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\tile_v.glsl">
       <Filter>src\shaders</Filter>
     </None>
   </ItemGroup>

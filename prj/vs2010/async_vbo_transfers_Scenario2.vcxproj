@@ -189,6 +189,7 @@
     <ClInclude Include="..\..\src\gen_tex.h" />
     <ClInclude Include="..\..\src\renderer.h" />
     <ClInclude Include="..\..\src\scene.h" />
+    <ClInclude Include="..\..\src\scene_grass.h" />
     <ClInclude Include="..\..\src\scene_i.h" />
   </ItemGroup>
   <ItemGroup>
@@ -234,6 +235,7 @@
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\renderer.cpp" />
     <ClCompile Include="..\..\src\scene.cpp" />
+    <ClCompile Include="..\..\src\scene_grass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\bin\shaders\block_f.glsl" />
@@ -241,7 +243,13 @@
     <None Include="..\..\bin\shaders\canvas_f.glsl" />
     <None Include="..\..\bin\shaders\canvas_v.glsl" />
     <None Include="..\..\bin\shaders\mipgen_c.glsl" />
+    <None Include="..\..\bin\shaders\proc_f.glsl" />
+    <None Include="..\..\bin\shaders\proc_g.glsl" />
+    <None Include="..\..\bin\shaders\proc_inst_v.glsl" />
+    <None Include="..\..\bin\shaders\proc_v.glsl" />
     <None Include="..\..\bin\shaders\texgen_c.glsl" />
+    <None Include="..\..\bin\shaders\tile_f.glsl" />
+    <None Include="..\..\bin\shaders\tile_v.glsl" />
     <None Include="..\..\readme.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
