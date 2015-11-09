@@ -124,8 +124,12 @@ inline void uvw_by_mask(const glm::vec3 & uvw, glm::vec2 & uv, unsigned char mas
 		uv.y = uvw.y;
 	}
 	else if (mask == MASK_BIT_4 || mask == MASK_BIT_5){
-		uv.x = uvw.x;
-		uv.y = uvw.z;
+		/*uv.x = uvw.x;
+		uv.y = uvw.z;*/
+		// top bottom zero UVs workaround
+		
+		uv.x = 0;
+		uv.y = 0;
 	}
 }
 
