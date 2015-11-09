@@ -7,8 +7,8 @@ precision highp int;
 #define SQRT_2 1.414213562
 
 #define BLADESPERTUFT			16
-#define BLOCKSPERROW			4
-#define TILEWIDTH				4.0
+#define BLOCKSPERROW			64
+#define TILEWIDTH				10.0
 
 // IN
 struct context_data

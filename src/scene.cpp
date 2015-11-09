@@ -40,6 +40,10 @@ using namespace glm;
 #define SIMPLEX_BIAS_X		4382
 #define SIMPLEX_BIAS_Y		14837
 
+#define GRASS_TILE_W			10.0
+#define GRASS_TUFTS_PER_TILE	4096
+#define GRASS_BLADES_PER_TUFT	16
+
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 scene::scene(benchmark * const app)
@@ -943,7 +947,7 @@ void scene::gpu_draw(base::frame_context * const ctx)
     ctx->_cpu_render_time = timer.elapsed_time();*/
 
 	memset(_grass_tiles, 0, MAX_GRASS_TILES*sizeof(vec2));
-	calculate_visible_tiles(100,4.0);
+	calculate_visible_tiles(16, GRASS_TILE_W);
 
 	base::hptimer timer;
 
@@ -962,10 +966,10 @@ void scene::gpu_draw(base::frame_context * const ctx)
 		ctx->_ctx_id * sizeof(base::ctx_data),
 		sizeof(base::ctx_data));
 
-	for (int i = 0; i < 100; i++){
+	for (int i = 0; i < 16; i++){
 		glUniform2f(pos_uloc, _grass_tiles[i].x, _grass_tiles[i].y);
 
-		glDrawArrays(GL_TRIANGLES, 0, 6 * 4 * 4);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 
 	glUseProgram(_prg);
@@ -983,13 +987,13 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
 	glQueryCounter(ctx->_time_queries[0], GL_TIMESTAMP);
 
-	for (int i = 0; i < 100; i++){
+	for (int i = 0; i < 16; i++){
 		glUniform2f(pos_uloc, _grass_tiles[i].x, _grass_tiles[i].y);
 		if (base::cfg().use_instancing){
-			glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 7, 256); // without GS
+			glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 9 * GRASS_BLADES_PER_TUFT, GRASS_TUFTS_PER_TILE); // without GS
 		}
 		else{
-			glDrawArraysInstanced(GL_POINTS, 0, 16, 16); // with GS
+			glDrawArraysInstanced(GL_POINTS, 0, GRASS_TUFTS_PER_TILE, GRASS_BLADES_PER_TUFT); // with GS
 		}
 	
 

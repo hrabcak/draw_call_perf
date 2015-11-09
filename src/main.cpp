@@ -175,6 +175,9 @@ int WINAPI WinMain(
 			else if (stricmp(argv[i], "--procedural-scene") == 0) {
 				base::cfg().procedural_scene = true;
 			}
+			else if (stricmp(argv[i], "--proc_use_inst") == 0){
+				base::cfg().use_instancing = true;
+			}
             else {
 				MessageBoxA(
                     NULL,

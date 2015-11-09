@@ -7,8 +7,8 @@ precision highp int;
 #define SQRT_2 1.414213562
 
 #define BLADESPERTUFT			16
-#define BLOCKSPERROW			4
-#define TILEWIDTH				4.0
+#define BLOCKSPERROW			64
+#define TILEWIDTH				10.0
 
 #define BLADE_WIDTH			0.02
 #define BLADE_HEIGHT		0.1
@@ -55,10 +55,12 @@ void main(){
 	const vec3 up = vec3(0.0, 1.0, 0.0);
 	const float block_width = TILEWIDTH / float(BLOCKSPERROW);
 	const float half_block_width = 0.5*block_width;
-	int vertex_id = gl_InstanceID / BLADESPERTUFT;
-	int instance_id = gl_InstanceID % BLADESPERTUFT;
+	int vertex_id = gl_VertexID % 9;
+	vertex_id = (vertex_id == 0) ? 0 : vertex_id - 1;
+	vertex_id = (vertex_id == 7) ? 6 : vertex_id;
+	int instance_id = gl_VertexID / 9 ;
 
-	vec2 block_pos = tile_pos*TILEWIDTH + vec2((vertex_id % BLOCKSPERROW) * block_width, (vertex_id / BLOCKSPERROW) * block_width) + half_block_width;
+	vec2 block_pos = tile_pos*TILEWIDTH + vec2((gl_InstanceID % BLOCKSPERROW) * block_width, (gl_InstanceID / BLOCKSPERROW) * block_width) + half_block_width;
 	vec4 rnd = random_2d_perm(ivec2(block_pos * instance_id * BLOCKSPERROW));
 
 	vec4 turf_pos = vec4(block_pos.x + rnd.x*half_block_width, 0.0, block_pos.y + rnd.y*half_block_width, 1.0);
@@ -74,15 +76,11 @@ void main(){
 	vec3 bx_dis = blade_tangent * BLADE_WIDTH;
 	vec4 blade_up_displace = vec4(up * BLADE_HEIGHT, 0.0);
 
-	float k = (gl_VertexID >> 1) * hcf;
+	float k = (vertex_id >> 1) * hcf;
 
 	vec3 bend_displace = bend*(1 - exp2(-1))*k*k*BLADE_HEIGHT;
 
 	norm = normalize(cross(blade_up_displace.xyz + bend_displace, bx_dis));
 
-	//gl_Position = _ctx._mvp * (turf_pos + vec4(bx_dis * (1.0 - k*k) * ((gl_VertexID & 1) - 0.5) + bend_displace, 0.0));
-	
-	//(blade_up_displace*float(gl_VertexID >> 1));
-	//gl_Position = _ctx._mvp * (turf_pos + vec4(bx_dis * ((gl_VertexID & 1) - 0.5), 0.0) + (blade_up_displace*float(gl_VertexID >> 1)));
-	gl_Position = _ctx._mvp * (turf_pos + vec4(bx_dis * (1.0 - k*k) * ((gl_VertexID & 1) - 0.5) + bend_displace, 0.0) + (blade_up_displace*float(gl_VertexID >> 1)));
+	gl_Position = _ctx._mvp * (turf_pos + vec4(bx_dis * (1.0 - k*k) * ((vertex_id & 1) - 0.5) + bend_displace, 0.0) + (blade_up_displace*float(vertex_id >> 1)));
 }

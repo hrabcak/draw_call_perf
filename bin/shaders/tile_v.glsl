@@ -1,5 +1,4 @@
-#define TILEWIDTH		4.0
-#define BLOCKSPERROW	4
+#define TILEWIDTH		10.0
 
 // IN
 struct context_data
@@ -19,11 +18,7 @@ uniform vec2 tile_pos;
 out vec3 color;
 
 void main(){
-	const float block_w = TILEWIDTH / BLOCKSPERROW;
-	const int vert_per_row = BLOCKSPERROW * 6;
-	int row = gl_VertexID / vert_per_row;
-	int col = (gl_VertexID % vert_per_row) / 6;
-	int vert_ord = (gl_VertexID % vert_per_row) % 6;
+	int vert_ord = gl_VertexID;
 
 	if (vert_ord == 5){
 		vert_ord = 1;
@@ -35,35 +30,25 @@ void main(){
 		vert_ord = 0;
 	}
 
-	vec4 base_vert = vec4(tile_pos.x * TILEWIDTH + col*block_w, -0.001, tile_pos.y * TILEWIDTH + row*block_w, 1.0);
+	vec4 base_vert = vec4(tile_pos.x * TILEWIDTH, -0.001, tile_pos.y * TILEWIDTH, 1.0);
 
 	if (vert_ord == 0){
 		gl_Position = _ctx._mvp * base_vert;
 	}
 	else if (vert_ord == 1){
-		gl_Position = _ctx._mvp * (base_vert + vec4(block_w, 0.0, block_w, 0.0));
+		gl_Position = _ctx._mvp * (base_vert + vec4(TILEWIDTH, 0.0, TILEWIDTH, 0.0));
 	}
 	else if (vert_ord == 2){
-		gl_Position = _ctx._mvp * (base_vert + vec4(block_w, 0.0, 0.0, 0.0));
+		gl_Position = _ctx._mvp * (base_vert + vec4(TILEWIDTH, 0.0, 0.0, 0.0));
 	}
 	else if (vert_ord == 3){
-		gl_Position = _ctx._mvp * (base_vert + vec4(0.0, 0.0, block_w, 0.0));
+		gl_Position = _ctx._mvp * (base_vert + vec4(0.0, 0.0, TILEWIDTH, 0.0));
 	}
 
-	if (row % 2 == 0){
-		if (col % 2 != 0){
-			color = vec3(0.5, 0.25, 0.0);
-		}
-		else{
-			color = vec3(0.317647, 0.156862, 0.0);
-		}
+	if (int(tile_pos.x + tile_pos.y) % 2 == 0){
+		color = vec3(0.5, 0.25, 0.0);
 	}
 	else{
-		if (col % 2 == 0){
-			color = vec3(0.5, 0.25, 0.0);
-		}
-		else{
-			color = vec3(0.317647, 0.156862, 0.0);
-		}
+		color = vec3(0.317647, 0.156862, 0.0);
 	}
 }
