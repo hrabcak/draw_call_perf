@@ -20,12 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-//#version 330
-#version 140
+#version 430
 precision highp float;
 precision highp int;
 
-uniform samplerBuffer tb_elements;
+layout(binding = 4) uniform samplerBuffer tb_elements;
 uniform vec2 screen_size;	//< 1.0 / screen_size
 uniform int start_index;
 

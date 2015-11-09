@@ -20,35 +20,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#version 430
+#pragma once
+#ifndef __DRAW_CALL_PERF_SCENE_I_H__
+#define __DRAW_CALL_PERF_SCENE_I_H__
 
-precision highp float;
-precision highp int;
-
-layout(binding = 5) uniform sampler2D tex_font;
-uniform vec4 clip;
-
-in vec2 uv;
-in vec4 color;
-flat in int color_only;
-
-out vec4 _retval;
-
-void main()
-{
-	vec4 col;
-
-	if(color_only != 1)
-		col = textureLod(tex_font, uv / vec2(textureSize(tex_font, 0)), 0);
-	else
-		col = vec4(1);
-
-	if(col.a == 0.0f 
-		|| gl_FragCoord.x < clip.x
-		|| gl_FragCoord.x > clip.z
-		|| gl_FragCoord.y < clip.y
-		|| gl_FragCoord.y > clip.w)
-		discard;
-
-	_retval = col * color;
+namespace base {
+    class source_location;
+    struct frame_context;
 }
+
+class scene_i
+{
+public:
+    virtual void init_gpu_stuff(const base::source_location &loc) = 0;
+    virtual void post_gpu_init() = 0;
+    virtual void update(base::frame_context * const ctx) = 0;
+    virtual void gpu_draw(base::frame_context * const ctx) = 0;
+    virtual const char* get_test_name(const int i) const = 0;
+};
+
+#endif // __DRAW_CALL_PERF_SCENE_I_H__

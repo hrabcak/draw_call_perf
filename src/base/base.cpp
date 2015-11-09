@@ -125,19 +125,19 @@ GLuint base::create_and_compile_shader(
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 GLuint base::create_program(
-	const GLuint vs,
-	const GLuint gs,
-	const GLuint fs)
+    const GLuint vs,
+    const GLuint gs,
+    const GLuint fs,
+    const GLuint cs)
 {
-	assert(vs != 0 && fs != 0);
+    GLuint prg = glCreateProgram();
 
-	GLuint prg = glCreateProgram();
-   
-	glAttachShader(prg, vs); 
-	if(gs) glAttachShader(prg, gs); 
-	glAttachShader(prg, fs);
+    if (vs) glAttachShader(prg, vs);
+    if (gs) glAttachShader(prg, gs);
+    if (fs) glAttachShader(prg, fs);
+    if (cs) glAttachShader(prg, cs);
 
-	return prg;
+    return prg;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -266,13 +266,15 @@ GLuint base::create_texture_storage(
         width,
         height);
 
-    glTextureSubImage2D(
-        handle,
-        0,
-        0, 0,
-        width, height,
-        GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-        data);
+    if (data != 0) {
+        glTextureSubImage2D(
+            handle,
+            0,
+            0, 0,
+            width, height,
+            GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+            data);
+    }
 
     base::stats()._texture_mem += width * height * pfd->_size;
 

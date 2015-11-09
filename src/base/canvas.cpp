@@ -207,9 +207,8 @@ void base::canvas::render(base::frame_context * const ctx)
 		glUseProgram(_prg);
 
 		// bind canvas elements texture buffer
-        glUniform1i(_prg_tb_elements, 0);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_BUFFER, ctx->_canvas_tb);
+        glUniform1i(_prg_tb_elements, 4);
+        glBindMultiTextureEXT(GL_TEXTURE4, GL_TEXTURE_BUFFER, ctx->_canvas_tb);
 
 		const glm::vec2 screen_size(
 			app::get()->get_wnd_width(),
@@ -217,11 +216,9 @@ void base::canvas::render(base::frame_context * const ctx)
 
 		// set screen size
 		glUniform2fv(_prg_screen_size, 1, glm::value_ptr(1.0f / screen_size));
-		// set texture channel for batch
-		glUniform1i(_prg_tex_fnt, 1);
-		glActiveTexture(GL_TEXTURE1);
+		glUniform1i(_prg_tex_fnt, 5);
 
-		glDisable(GL_DEPTH_TEST);
+        glDisable(GL_DEPTH_TEST);
 
 		// draw canvas batches
 		base::batches_t::const_iterator e = ctx->_batches.end();
@@ -230,8 +227,8 @@ void base::canvas::render(base::frame_context * const ctx)
 			glUniform4fv(_prg_clip, 1, glm::value_ptr(glm::vec4(i->pos, i->pos + i->size)));
 			glUniform1i(_prg_start_index, i->index);
 
-			glBindTexture(GL_TEXTURE_2D, i->tex);
-			glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, i->count);
+            glBindMultiTextureEXT(GL_TEXTURE5, GL_TEXTURE_2D, i->tex);
+            glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, i->count);
 		}
 
 		ctx->_batches.clear();

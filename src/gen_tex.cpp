@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#define COMP_LATTICE_PROBABILITY		0.1f
+#define COMP_LATTICE_PROBABILITY		0.05f
 
 
 base::rnd_int _gen_text_rnd_generator(9894);
@@ -24,9 +24,9 @@ void gen_texture(
 		return;
 	}
 
-	int max = (int)(1 / COMP_LATTICE_PROBABILITY);
+	const int max = int(1 / COMP_LATTICE_PROBABILITY);
 
-	int lattice_dim = dim / grid_dim;
+	const int lattice_dim = dim / grid_dim;
 	
 	int base_col_rand = base::rndFromInterval(_gen_text_rnd_generator, -50, 50);
 	
@@ -58,16 +58,17 @@ void gen_texture(
 	}
 
 	uint32 * row = grid + grid_dim * grid_dim;
+    const int dim4 = dim * 4;
 
 	for (ushort y = 0; y < dim; y += 4){
 		for (ushort x = 0; x < dim; x++){
-			row[x] = grid[(y / lattice_dim)*grid_dim + (x / lattice_dim)];
+			row[x] = grid[(y / lattice_dim) * grid_dim + (x / lattice_dim)];
 		}
 
-		memcpy(tex_data + y*dim, row, dim * 4);
-        memcpy(tex_data + (y+1)*dim, row, dim * 4);
-        memcpy(tex_data + (y+2)*dim, row, dim * 4);
-        memcpy(tex_data + (y+3)*dim, row, dim * 4);
+		memcpy(tex_data + y*dim, row, dim4);
+        memcpy(tex_data + (y+1)*dim, row, dim4);
+        memcpy(tex_data + (y+2)*dim, row, dim4);
+        memcpy(tex_data + (y+3)*dim, row, dim4);
     }
 }
 

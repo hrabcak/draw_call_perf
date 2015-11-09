@@ -23,13 +23,13 @@ THE SOFTWARE.
 #ifndef __ASYNC_VBO_TRANSFERS_SCENE_H__
 #define __ASYNC_VBO_TRANSFERS_SCENE_H__
 
-#define MAX_GRASS_TILES			1024
-
 #include <vector>
 
 #include <gl/glew.h>
 
 #include "base/types.h"
+
+#include "scene_i.h"
 
 namespace base {
 	struct frame_context;
@@ -39,6 +39,7 @@ namespace base {
 class benchmark;
 
 class scene
+    : public scene_i
 {
 public:
 	static const int * get_vtx_tbl() { 
@@ -55,12 +56,12 @@ public:
 	scene(benchmark * const app);
 	~scene();
 
-    void init_gpu_stuff(const base::source_location &loc);
-    void post_gpu_init();
-    void update(base::frame_context * const ctx);
-    void gpu_draw(base::frame_context * const ctx);
+    void init_gpu_stuff(const base::source_location &loc) override;
+    void post_gpu_init() override;
+    void update(base::frame_context * const ctx) override;
+    void gpu_draw(base::frame_context * const ctx) override;
 
-    const char* get_test_name(const int i) const { return _test_names[i].c_str(); }
+    const char* get_test_name(const int i) const override { return _test_names[i].c_str(); }
 
 public:
 
@@ -87,8 +88,6 @@ protected:
         base::frame_context *ctx);
     void bind_texture(int counter);
 
-	void calculate_visible_tiles(int ntiles, float tile_size);
-
 protected:
 	glm::ivec2 _cur_next_block;
 	uint32 _cur_block;
@@ -112,8 +111,11 @@ protected:
 	GLint _prg_tb_nor_uv;
     GLint _prg_tex;
 
-	GLint _prg2;
-	GLint _prg2_ctx;
+    GLuint _prg_tg;
+    GLint _prg_tg_tex;
+
+    GLuint _prg_mip;
+    GLuint _prg_mip2;
 
     GLuint _tb_pos;
     GLuint _tb_nor_uv;
@@ -132,16 +134,6 @@ protected:
     glm::int2 * _vertices_base_ptr;
     glm::int2 * _norm_uv_base_ptr;
     ushort * _elements_base_ptr;
-
-	glm::vec3 _cam_view;
-	glm::vec3 _cam_pos;
-
-	glm::vec3 _lt_ray;
-	glm::vec3 _rt_ray;
-	glm::vec3 _lb_ray;
-	glm::vec3 _rb_ray;
-
-	glm::vec2 _grass_tiles[MAX_GRASS_TILES];
 
     struct dc_data
     {

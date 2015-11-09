@@ -55,6 +55,9 @@
     <ClInclude Include="..\..\src\gen_tex.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\scene_i.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\base\base.cpp">
@@ -132,6 +135,12 @@
       <Filter>src\shaders</Filter>
     </None>
     <None Include="..\..\bin\shaders\block_v.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\texgen_c.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\mipgen_c.glsl">
       <Filter>src\shaders</Filter>
     </None>
   </ItemGroup>

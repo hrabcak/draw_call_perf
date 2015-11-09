@@ -22,6 +22,7 @@
     <ProjectGuid>{04EE60D8-DC4E-4EBB-A257-4562123AE516}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>async_vbo_transfers</RootNamespace>
+    <ProjectName>draw_call_perf</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -103,7 +104,7 @@
       <DisableSpecificWarnings>4201;4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>opengl32.lib;glew32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\lib\debug</AdditionalLibraryDirectories>
@@ -140,7 +141,7 @@
       <DisableSpecificWarnings>4201;4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
@@ -188,6 +189,7 @@
     <ClInclude Include="..\..\src\gen_tex.h" />
     <ClInclude Include="..\..\src\renderer.h" />
     <ClInclude Include="..\..\src\scene.h" />
+    <ClInclude Include="..\..\src\scene_i.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\benchmark.cpp" />
@@ -238,6 +240,8 @@
     <None Include="..\..\bin\shaders\block_v.glsl" />
     <None Include="..\..\bin\shaders\canvas_f.glsl" />
     <None Include="..\..\bin\shaders\canvas_v.glsl" />
+    <None Include="..\..\bin\shaders\mipgen_c.glsl" />
+    <None Include="..\..\bin\shaders\texgen_c.glsl" />
     <None Include="..\..\readme.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
