@@ -47,7 +47,12 @@ void main()
 
     float rnd2 = random_1d_perm1(int(gl_GlobalInvocationID.z));
 
+    if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.x == 0)
+        irnd = 2;
+
     vec4 color = c0[irnd];
+
+
     color.rgb += vec3(rnd2 * 0.1);
     color.r += abs(rnd2 * 0.05);
 
