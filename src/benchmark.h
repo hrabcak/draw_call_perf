@@ -32,12 +32,13 @@ THE SOFTWARE.
 #include <glm/glm.hpp>
 
 class renderer;
+class scene_i;
 
 class benchmark
 	: public base::app
 {
 protected:
-	std::auto_ptr<scene> _scene;
+	std::auto_ptr<scene_i> _scene;
 	std::auto_ptr<renderer> _renderer;
     std::vector<char> _stats_str;
 	base::stats_data _test_stats;

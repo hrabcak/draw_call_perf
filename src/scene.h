@@ -29,6 +29,8 @@ THE SOFTWARE.
 
 #include "base/types.h"
 
+#include "scene_i.h"
+
 namespace base {
 	struct frame_context;
 	class source_location;
@@ -37,6 +39,7 @@ namespace base {
 class benchmark;
 
 class scene
+    : public scene_i
 {
 public:
 	static const int * get_vtx_tbl() { 
@@ -53,12 +56,12 @@ public:
 	scene(benchmark * const app);
 	~scene();
 
-    void init_gpu_stuff(const base::source_location &loc);
-    void post_gpu_init();
-    void update(base::frame_context * const ctx);
-    void gpu_draw(base::frame_context * const ctx);
+    void init_gpu_stuff(const base::source_location &loc) override;
+    void post_gpu_init() override;
+    void update(base::frame_context * const ctx) override;
+    void gpu_draw(base::frame_context * const ctx) override;
 
-    const char* get_test_name(const int i) const { return _test_names[i].c_str(); }
+    const char* get_test_name(const int i) const override { return _test_names[i].c_str(); }
 
 public:
 

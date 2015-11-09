@@ -190,6 +190,7 @@
     <ClInclude Include="..\..\src\gen_tex.h" />
     <ClInclude Include="..\..\src\renderer.h" />
     <ClInclude Include="..\..\src\scene.h" />
+    <ClInclude Include="..\..\src\scene_i.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\benchmark.cpp" />
