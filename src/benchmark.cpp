@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include "base/frame_context.h"
 #include "base/canvas.h"
 #include "scene.h"
+#include "scene_grass.h"
 #include "renderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -34,10 +35,17 @@ THE SOFTWARE.
 
 benchmark::benchmark()
     : app()
-    , _scene(new scene(this))
 {
     _stats_str.resize(4096);
     memset(&_stats_str[0], 0, _stats_str.size());
+
+	if (base::cfg().procedural_scene){
+		_scene = std::auto_ptr<scene_i>(new scene_grass(this));
+	}
+	else{
+		_scene = std::auto_ptr<scene_i>(new scene(this));
+	}
+	
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -143,47 +151,94 @@ void benchmark::draw_frame()
 				scene::get_vtx_tbl()[base::cfg().mesh_size],
 				scene::get_ele_tbl()[base::cfg().mesh_size]);
 
-            sprintf(
-                &_stats_str[0],
-                "tex:      %.0f MB\n"
-                "buf:      %.0f MB\n"
-                "MVtx/s:   %.0f\n"
-                "MVtx:     %.3f\n"
-                "MTris/s:  %.0f\n"
-                "MTris:    %.3f\n"
-                "KDraw/s:  %.0f\n"
-                "KDraw:    %.3f\n"
-                "gpu:      %.3f ms\n"
-                "cpu:      %.3f ms\n"
-                "fps:      %.0f\n\n"
-                "one mesh: %s\n"
-                "vertex data: %s\n"
-                "average mesh size: %s\n"
-                "textures: %ux%u BGRA8\n"
-                "tex freq: %u\n"
-				"tex mode: %s\n"
-				"GPU: %s\n\n"
-                "%s",
+			if (base::cfg().procedural_scene)
+			{
+				sprintf(
+					&_stats_str[0],
+					"tex:      %.0f MB\n"
+					"buf:      %.0f MB\n"
+					"MVtx/s:   %.0f\n"
+					"MVtx:     %.3f\n"
+					"MTris/s:  %.0f\n"
+					"MTris:    %.3f\n"
+					"KDraw/s:  %.0f\n"
+					"KDraw:    %.3f\n"
+					"gpu:      %.3f ms\n"
+					"cpu:      %.3f ms\n"
+					"fps:      %.0f\n\n"
+					"one mesh: %s\n"
+					"vertex data: %s\n"
+					"average mesh size: %s\n"
+					"textures: %ux%u BGRA8\n"
+					"tex freq: %u\n"
+					"tex mode: %s\n"
+					"GPU: %s\n\n"
+					"%s",
 
-                float(stats._texture_mem) / float(1024 * 1024),
-                float(stats._buffer_mem) / float(1024 * 1024),
-                float(stats._nvertices) * 0.000001 / dtf,
-                float(stats._nvertices) * 0.000001 / float(nframes),
-                float(stats._ntriangles) * 0.000001 / dtf,
-                float(stats._ntriangles) * 0.000001 / float(nframes),
-                float(stats._ndrawcalls) * 0.001 / dtf,
-                float(stats._ndrawcalls) * 0.001 / nframes,
-                stats._gpu_time * r_nframes,
-                stats._cpu_time * r_nframes,
-                fps,
-                base::cfg().one_mesh ? "true" : "false",
-                base::cfg().use_vbo ? "VERTEX BUFFER" : "TEXTURE BUFFER",
-				mesh_size_str,
-                base::cfg().tex_size, base::cfg().tex_size,
-                base::cfg().tex_freq,
-				get_texturing_mode_str(base::cfg().tex_mode),
-                _renderer->get_gpu_str(),
-                get_test_name());
+					float(stats._texture_mem) / float(1024 * 1024),
+					float(stats._buffer_mem) / float(1024 * 1024),
+					float(stats._nvertices) * 0.000001 / dtf,
+					float(stats._nvertices) * 0.000001 / float(nframes),
+					float(stats._ntriangles) * 0.000001 / dtf,
+					float(stats._ntriangles) * 0.000001 / float(nframes),
+					float(stats._ndrawcalls) * 0.001 / dtf,
+					float(stats._ndrawcalls) * 0.001 / nframes,
+					stats._gpu_time * r_nframes,
+					stats._cpu_time * r_nframes,
+					fps,
+					base::cfg().one_mesh ? "true" : "false",
+					base::cfg().use_vbo ? "VERTEX BUFFER" : "TEXTURE BUFFER",
+					mesh_size_str,
+					base::cfg().tex_size, base::cfg().tex_size,
+					base::cfg().tex_freq,
+					get_texturing_mode_str(base::cfg().tex_mode),
+					_renderer->get_gpu_str(),
+					get_test_name());
+			}
+			else
+			{
+				sprintf(
+					&_stats_str[0],
+					"tex:      %.0f MB\n"
+					"buf:      %.0f MB\n"
+					"MVtx/s:   %.0f\n"
+					"MVtx:     %.3f\n"
+					"MTris/s:  %.0f\n"
+					"MTris:    %.3f\n"
+					"KDraw/s:  %.0f\n"
+					"KDraw:    %.3f\n"
+					"gpu:      %.3f ms\n"
+					"cpu:      %.3f ms\n"
+					"fps:      %.0f\n\n"
+					"one mesh: %s\n"
+					"vertex data: %s\n"
+					"average mesh size: %s\n"
+					"textures: %ux%u BGRA8\n"
+					"tex freq: %u\n"
+					"tex mode: %s\n"
+					"GPU: %s\n\n"
+					"%s",
+
+					float(stats._texture_mem) / float(1024 * 1024),
+					float(stats._buffer_mem) / float(1024 * 1024),
+					float(stats._nvertices) * 0.000001 / dtf,
+					float(stats._nvertices) * 0.000001 / float(nframes),
+					float(stats._ntriangles) * 0.000001 / dtf,
+					float(stats._ntriangles) * 0.000001 / float(nframes),
+					float(stats._ndrawcalls) * 0.001 / dtf,
+					float(stats._ndrawcalls) * 0.001 / nframes,
+					stats._gpu_time * r_nframes,
+					stats._cpu_time * r_nframes,
+					fps,
+					base::cfg().one_mesh ? "true" : "false",
+					base::cfg().use_vbo ? "VERTEX BUFFER" : "TEXTURE BUFFER",
+					mesh_size_str,
+					base::cfg().tex_size, base::cfg().tex_size,
+					base::cfg().tex_freq,
+					get_texturing_mode_str(base::cfg().tex_mode),
+					_renderer->get_gpu_str(),
+					get_test_name());
+			}
 
 			if (test_cycles >= 1){
 				_test_stats += stats;

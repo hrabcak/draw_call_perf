@@ -37,7 +37,8 @@ base::app* base::app::_app = 0;
 
 base::app::app()
 	: _velocity_boost(false)
-    , _position(0.0, 10.3, 0.0)
+    //, _position(0.0, 10.3, 0.0)
+	, _position(0.0, 1.8, 0.0)
 	, _frame_number(0)
     , _fovy(45.f)
     , _aspect(float(get_wnd_width()) / float(get_wnd_height()))

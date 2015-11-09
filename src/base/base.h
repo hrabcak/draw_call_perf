@@ -291,7 +291,7 @@ struct config {
         , dont_rnd_cubes(false)
 		, procedural_scene(false)
 		, blades_per_tuft(16)
-		, use_instancing(true)
+		, use_instancing(false)
         //, use_nor_uv(false)
     {}
 
