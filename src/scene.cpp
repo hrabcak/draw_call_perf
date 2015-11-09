@@ -397,14 +397,13 @@ void scene::create_textures(const base::source_location &)
 
     if (_tex_mode != BenchTexArray) {
         for (int i = 0; i < ntex; ++i) {
-            gen_texture(data.begin()._Ptr, width, width >> 2, i, &tmp[0]);
             const GLint tex = create_texture_storage(
                 width,
                 width,
                 pf,
-                data.begin()._Ptr,
                 0,
-                true);
+                0,
+                false);
 
             _texs.push_back(tex);
         }
@@ -418,64 +417,48 @@ void scene::create_textures(const base::source_location &)
                 _max_array_layers,
                 pf,
                 0);
-            
-            /*for (int j = 0; j < _max_array_layers; ++j) {
-                gen_texture(&data[0], width, width >> 2, i+j, &tmp[0]);
-                glTextureSubImage3DEXT(
-                    tex,
-                    GL_TEXTURE_2D_ARRAY,
-                    0,
-                    0,
-                    0,
-                    j,
-                    width,
-                    width,
-                    1,
-                    pfd->_format,
-                    pfd->_type,
-                    &data[0]);
-            }*/
-
             _texs.push_back(tex);
-
-            //glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
-            //glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
         }
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-
-        glUseProgram(_prg_tg);
-        glUniform1i(_prg_tg_tex, 0);
-        auto i = &_texs[0];
-        auto e = i + _texs.size();
-        do {
-            glBindImageTexture(0, *i, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
-            glDispatchCompute(width >> 4, width >> 4, _max_array_layers);
-        } while (++i != e);
-        glUseProgram(0);
-
-        glUseProgram(_prg_mip);
-        i = &_texs[0];
-        do {
-            int mip = 1;
-            do {
-                glBindImageTexture(0, *i, mip - 1, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
-                glBindImageTexture(1, *i, mip, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
-                glDispatchCompute(width >> 4 >> mip, width >> 4 >> mip, _max_array_layers);
-            } while ((width >> ++mip) >= 16);
-        } while (++i != e);
-
-        glUseProgram(_prg_mip2);
-        i = &_texs[0];
-        do {
-            int mip = base::cfg().tex_size / 16;
-            do {
-                glBindImageTexture(0, *i, mip - 1, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
-                glBindImageTexture(1, *i, mip, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
-                glDispatchCompute(width >> mip, width >> mip, _max_array_layers);
-            } while ((width >> ++mip) >= 1);
-        } while (++i != e);
-        glUseProgram(0);
     }
+
+    // GENERATE TEXTURES
+    const uint nslices = _tex_mode != BenchTexArray
+        ? 1
+        : _max_array_layers;
+
+    glUseProgram(_prg_tg);
+    glUniform1i(_prg_tg_tex, 0);
+    auto i = &_texs[0];
+    auto e = i + _texs.size();
+    do {
+        glBindImageTexture(0, *i, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
+        glDispatchCompute(width >> 4, width >> 4, nslices);
+    } while (++i != e);
+    glUseProgram(0);
+
+    glUseProgram(_prg_mip);
+    i = &_texs[0];
+    do {
+        int mip = 1;
+        do {
+            glBindImageTexture(0, *i, mip - 1, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+            glBindImageTexture(1, *i, mip, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
+            glDispatchCompute(width >> 4 >> mip, width >> 4 >> mip, nslices);
+        } while ((width >> ++mip) >= 16);
+    } while (++i != e);
+
+    glUseProgram(_prg_mip2);
+    i = &_texs[0];
+    do {
+        int mip = base::cfg().tex_size / 16;
+        do {
+            glBindImageTexture(0, *i, mip - 1, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+            glBindImageTexture(1, *i, mip, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
+            glDispatchCompute(width >> mip, width >> mip, nslices);
+        } while ((width >> ++mip) >= 1);
+    } while (++i != e);
+    glUseProgram(0);
     
     if (_tex_mode == BenchTexBindless) {
         for (int i = 0; i < ntex; ++i) {

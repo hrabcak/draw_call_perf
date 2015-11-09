@@ -266,13 +266,15 @@ GLuint base::create_texture_storage(
         width,
         height);
 
-    glTextureSubImage2D(
-        handle,
-        0,
-        0, 0,
-        width, height,
-        GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-        data);
+    if (data != 0) {
+        glTextureSubImage2D(
+            handle,
+            0,
+            0, 0,
+            width, height,
+            GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+            data);
+    }
 
     base::stats()._texture_mem += width * height * pfd->_size;
 
