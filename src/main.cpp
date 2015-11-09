@@ -210,7 +210,8 @@ int WINAPI WinMain(
                     "--use-vbo - Use classic buffer for vertex data instead of texture buffer\n"
                     "--dont-rnd-cubes - Turn off cube randomization (better utilization of post-transform cache)\n"
 					"--procedural-scene - Use procedural scene instead of the meshes\n\n"
-                    "--use_nor_uv - Will use additional vertex data normal and uv compressed to 8 bytes (16bytes vertex data)",
+					"--proc_use_inst - Use instancing instead of geometry shader"
+					"--use_nor_uv - Will use additional vertex data normal and uv compressed to 8 bytes (16bytes vertex data)",
                     "Command line options",
                     MB_APPLMODAL);
 				return -1;

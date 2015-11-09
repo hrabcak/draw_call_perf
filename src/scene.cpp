@@ -191,46 +191,50 @@ void scene::load_and_init_shaders(const base::source_location &loc)
         break;
     }*/
 	
-	// with GS
-	
-	/*_prg = base::create_program(
-		base::create_and_compile_shader(
+	if (base::cfg().use_instancing){
+		// without GS
+
+		_prg = base::create_program(
+			base::create_and_compile_shader(
 			SRC_LOCATION,
-            cfg,
-            "shaders/proc_v.glsl",
-            GL_VERTEX_SHADER),
-		base::create_and_compile_shader(
+			cfg,
+			"shaders/proc_inst_v.glsl",
+			GL_VERTEX_SHADER),
+			/*base::create_and_compile_shader(
 			SRC_LOCATION,
 			cfg,
 			"shaders/proc_g.glsl",
-			GL_GEOMETRY_SHADER),
-		base::create_and_compile_shader(
+			GL_GEOMETRY_SHADER)*/ 0,
+			base::create_and_compile_shader(
 			SRC_LOCATION,
-            cfg,
-            "shaders/proc_f.glsl",
-            GL_FRAGMENT_SHADER));
-	base::link_program(loc, _prg);*/
+			cfg,
+			"shaders/proc_f.glsl",
+			GL_FRAGMENT_SHADER));
+		base::link_program(loc, _prg);
 
-	// without GS
+	}
+	else{
+		// with GS
 
-	_prg = base::create_program(
+		_prg = base::create_program(
 		base::create_and_compile_shader(
 		SRC_LOCATION,
 		cfg,
-		"shaders/proc_inst_v.glsl",
+		"shaders/proc_v.glsl",
 		GL_VERTEX_SHADER),
-		/*base::create_and_compile_shader(
+		base::create_and_compile_shader(
 		SRC_LOCATION,
 		cfg,
 		"shaders/proc_g.glsl",
-		GL_GEOMETRY_SHADER)*/ 0,
+		GL_GEOMETRY_SHADER),
 		base::create_and_compile_shader(
 		SRC_LOCATION,
 		cfg,
 		"shaders/proc_f.glsl",
 		GL_FRAGMENT_SHADER));
-	base::link_program(loc, _prg);
-
+		base::link_program(loc, _prg);
+	}
+	
     // GET UNIFORM STUFF
 
 	_prg_ctx = glGetUniformBlockIndex(_prg, "context");
@@ -981,9 +985,13 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
 	for (int i = 0; i < 100; i++){
 		glUniform2f(pos_uloc, _grass_tiles[i].x, _grass_tiles[i].y);
-
-		glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 7, 256); // without GS
-		//glDrawArraysInstanced(GL_POINTS, 0, 16, 16); // with GS
+		if (base::cfg().use_instancing){
+			glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 7, 256); // without GS
+		}
+		else{
+			glDrawArraysInstanced(GL_POINTS, 0, 16, 16); // with GS
+		}
+	
 
 	}
 

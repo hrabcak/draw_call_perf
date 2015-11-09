@@ -289,6 +289,8 @@ struct config {
         , tex_size(64)
         , dont_rnd_cubes(false)
 		, procedural_scene(false)
+		, blades_per_tuft(16)
+		, use_instancing(true)
         //, use_nor_uv(false)
     {}
 
@@ -309,6 +311,11 @@ struct config {
     int tex_mode;
     int tex_freq;
     int tex_size;
+
+	// grass params
+
+	int blades_per_tuft;
+	bool use_instancing;
 };
 
 config& cfg();
