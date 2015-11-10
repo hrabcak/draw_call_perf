@@ -6,10 +6,6 @@ precision highp int;
 #define TWO_PI 6.28318530717958647692
 #define SQRT_2 1.414213562
 
-#define BLADESPERTUFT			16
-#define BLOCKSPERROW			64
-#define TILEWIDTH				10.0
-
 // IN
 struct context_data
 {
@@ -26,7 +22,11 @@ layout(std140) uniform context
 uniform vec2 tile_pos;
 
 out Color{
-	vec3 color;
+	#ifdef USE_TEXTURE
+		vec2 uv;
+	#else
+		vec3 color;
+	#endif
 }color_out;
 
 out vec3 blade_tangent;
@@ -51,18 +51,20 @@ void main()
 {
 	const float block_width = TILEWIDTH / float(BLOCKSPERROW);
 	const float half_block_width = 0.5*block_width;
+	const int bpr_log2 = int(log2(BLOCKSPERROW));
 	int vertex_id = gl_VertexID;
-	vec2 block_pos = tile_pos*TILEWIDTH + vec2((vertex_id%BLOCKSPERROW) * block_width, (vertex_id / BLOCKSPERROW) * block_width) + half_block_width;
+	vec2 block_pos = tile_pos*TILEWIDTH + vec2((vertex_id & (BLOCKSPERROW - 1)) * block_width, (vertex_id >> bpr_log2) * block_width) + half_block_width;
 	vec4 rnd = random_2d_perm(ivec2(block_pos * gl_InstanceID * BLOCKSPERROW));
 
 	vec4 turf_pos = vec4(block_pos.x + rnd.x*half_block_width, 0.0, block_pos.y + rnd.y*half_block_width, 1.0);
 
+#ifndef USE_TEXTURE
 	color_out.color = vec3(0.0, 0.29215, 0.0);
+#endif
 
 	const float tan_angle = (TWO_PI / float(BLADESPERTUFT)) * gl_InstanceID - PI_HALF;
 
 	blade_tangent = vec3(cos(tan_angle), 0.0, sin(tan_angle));
 
 	gl_Position = turf_pos;
-
 }

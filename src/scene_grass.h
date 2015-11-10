@@ -13,6 +13,12 @@ namespace base{
 	class app;
 }
 
+struct grass_data{
+	int _blades_per_tuft;
+	int _blocks_per_row;
+	float _tile_width;
+};
+
 class scene_grass :
 	public scene_i
 {
@@ -22,12 +28,18 @@ protected:
 	GLuint _prg_grass;
 	GLint _prg_grs_ctx;
 	GLint _prg_grs_pos;
+	GLint _prg_grs_tex;
+	GLint _prg_grs_data;
 	
 	GLuint _prg_floor;
 	GLint _prg_flr_ctx;
 	GLint _prg_flr_pos;
 
 	GLuint _prg_tg;
+
+	GLuint _grass_tex;
+
+	grass_data _grs_data;
 
 	glm::vec2 _grass_tiles[MAX_GRASS_TILES];
 

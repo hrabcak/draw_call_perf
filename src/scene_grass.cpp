@@ -3,10 +3,6 @@
 #include "base/base.h"
 #include "base/frame_context.h"
 
-#define GRASS_TILE_W			10.0
-#define GRASS_TUFTS_PER_TILE	4096
-#define GRASS_BLADES_PER_TUFT	16
-
 scene_grass::scene_grass(base::app * app)
 	: _app(app)
 	
@@ -16,8 +12,17 @@ scene_grass::scene_grass(base::app * app)
 
 	, _prg_grass(0)
 	, _prg_tg(0)
-{
 
+	, _grass_tex(0)
+{
+	base::stats_data & stats = base::stats();
+	stats._ndrawcalls = base::cfg().ngrass_tiles;
+	stats._nvertices = base::cfg().ngrass_tiles * base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * base::cfg().vert_per_blade;
+	stats._ntriangles = base::cfg().ngrass_tiles * base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * (base::cfg().vert_per_blade - 2);
+
+	_grs_data._blades_per_tuft = base::cfg().blades_per_tuft;
+	_grs_data._blocks_per_row = glm::sqrt(base::cfg().tufts_per_tile);
+	_grs_data._tile_width = 10.0f;
 }
 
 scene_grass::~scene_grass()
@@ -27,9 +32,34 @@ scene_grass::~scene_grass()
 
 void scene_grass::init_gpu_stuff(const base::source_location &loc) 
 {
+	char inject_buf[512];
+
 	std::string cfg;
 
 	cfg += "#version 430\n";
+
+	sprintf(&inject_buf[0], "#define BLADESPERTUFT %d \n", _grs_data._blades_per_tuft);
+
+	cfg += inject_buf;
+
+	sprintf(&inject_buf[0], "#define BLOCKSPERROW %d \n", _grs_data._blocks_per_row);
+
+	cfg += inject_buf;
+
+	sprintf(&inject_buf[0], "#define TILEWIDTH %f \n", _grs_data._tile_width);
+
+	cfg += inject_buf;
+
+	if (base::cfg().use_grass_blade_tex) {
+		cfg += "#define USE_TEXTURE\n";
+	}
+
+	//cfg += "#define WITHOUT_BENDING\n"; // ohybat listy
+
+	sprintf(&inject_buf[0], "#define VERT_PER_BLADE %d\n", base::cfg().vert_per_blade);
+
+	cfg += inject_buf;
+
 
 
 	_prg_floor = base::create_program(
@@ -88,11 +118,16 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 	_prg_grs_ctx = glGetUniformBlockIndex(_prg_grass, "context");
 	_prg_grs_pos = base::get_uniform_location(loc, _prg_grass, "tile_pos");
 	
+	if (base::cfg().use_grass_blade_tex) {
+		_prg_grs_tex = base::get_uniform_location(loc, _prg_grass, "grass_tex");
+	}
+	_grass_tex = base::create_texture_from_file(loc, "tex/grass_blade_d.tga", false);
+
+	//_grs_data_vbo = 
 }
 
 void scene_grass::post_gpu_init()
 {
-
 }
 
 void scene_grass::update(base::frame_context * const ctx)
@@ -103,14 +138,15 @@ void scene_grass::update(base::frame_context * const ctx)
 
 void scene_grass::gpu_draw(base::frame_context * const ctx){
 	base::hptimer timer;
-	timer.start();
 
 	memset(_grass_tiles, 0, MAX_GRASS_TILES*sizeof(glm::vec2));
-	calculate_visible_tiles(16, GRASS_TILE_W);
+	calculate_visible_tiles(base::cfg().ngrass_tiles, _grs_data._tile_width);
 
 	glDisable(GL_CULL_FACE);
 
 	glUseProgram(_prg_floor);	
+
+	
 
 	glBindBufferRange(
 		GL_UNIFORM_BUFFER,
@@ -120,13 +156,21 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 		sizeof(base::ctx_data));
 
 
-	for (int i = 0; i < 16; i++){
+	for (int i = 0; i < base::cfg().ngrass_tiles; i++){
 		glUniform2f(_prg_flr_pos, _grass_tiles[i].x, _grass_tiles[i].y);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 
 	glUseProgram(_prg_grass);
 
+	timer.start();
+
+	if (base::cfg().use_grass_blade_tex) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, _grass_tex);
+		glUniform1i(_prg_grs_tex, 0);
+	}
+	
 	glBindBufferRange(GL_UNIFORM_BUFFER,
 		_prg_grs_ctx,
 		ctx->_ctx_vbo,
@@ -135,13 +179,13 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 
 	glQueryCounter(ctx->_time_queries[0], GL_TIMESTAMP);
 	
-	for (int i = 0; i < 16; i++){
+	for (int i = 0; i < base::cfg().ngrass_tiles; i++){
 		glUniform2f(_prg_grs_pos, _grass_tiles[i].x, _grass_tiles[i].y);
 		if (base::cfg().use_instancing){
-			glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 9 * GRASS_BLADES_PER_TUFT, GRASS_TUFTS_PER_TILE); // without GS
+			glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, (base::cfg().vert_per_blade+2) * _grs_data._blades_per_tuft, _grs_data._blocks_per_row*_grs_data._blocks_per_row); // without GS
 		}
 		else{
-			glDrawArraysInstanced(GL_POINTS, 0, GRASS_TUFTS_PER_TILE, GRASS_BLADES_PER_TUFT); // with GS
+			glDrawArraysInstanced(GL_POINTS, 0, _grs_data._blocks_per_row*_grs_data._blocks_per_row, _grs_data._blades_per_tuft); // with GS
 		}
 	}
 	

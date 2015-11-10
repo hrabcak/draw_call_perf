@@ -23,12 +23,20 @@ layout(std140) uniform context
 	context_data _ctx;
 };
 
-in Color{ 
+in Color{
+#ifdef USE_TEXTURE
+	vec2 uv;
+#else
 	vec3 color;
-}color_in [];
+#endif
+}color_in[];
 
-out Color{ 
+out Color{
+#ifdef USE_TEXTURE
+	vec2 uv;
+#else
 	vec3 color;
+#endif
 }color_out;
 
 in vec3 blade_tangent[];
@@ -42,31 +50,14 @@ void main(){
 
 	vec3 bend = cross(up, blade_tangent[0]);
 
+#ifndef USE_TEXTURE
 	color_out.color = color_in[0].color;
-	
-	vec4 base_position = gl_in[0].gl_Position;
-
-	/*const float step = TWO_PI / float(TRICOUNT);
+#endif
 
 	vec4 base_position = gl_in[0].gl_Position;
-
-	vec4 base_proj = _ctx._mvp * base_position;
-
-	for (int i = 0; i < TRICOUNT; i++){
-		gl_Position = base_proj;
-		EmitVertex();
-
-		vec4 p = base_position + vec4(cos(i*step)*RADIUS, 0.0, sin(i*step)*RADIUS, 0.0);
-		gl_Position = _ctx._mvp * p;
-		EmitVertex();
-
-		p = base_position + vec4(cos((i + 1)*step)*RADIUS, 0.0, sin((i + 1)*step)*RADIUS, 0.0);
-		gl_Position = _ctx._mvp * p;
-		EmitVertex();
-	}*/
 
 	vec3 bx_dis = blade_tangent[0] * BLADE_WIDTH;
-	vec4 blade_up_displace = vec4(up * BLADE_HEIGHT,0.0);
+	vec4 blade_up_displace = vec4(up * BLADE_HEIGHT,0.0) / 3.0;
 
 	for (int i = 0; i < 7; i++){
 		float k = (i >> 1) * hcf ;
@@ -76,6 +67,12 @@ void main(){
 		norm = normalize(cross(blade_up_displace.xyz + bend_displace, bx_dis));
 
 		gl_Position = _ctx._mvp * (base_position + vec4(bx_dis * (1.0 - k*k) * ((i & 1) - 0.5) + bend_displace, 0.0));
+
+
+#ifdef USE_TEXTURE
+		color_out.uv = vec2(0.5 + ((i & 1) - 0.5)* (1.0 - k*k), k);
+#endif
+
 		EmitVertex();
 
 		if ((i & 1) == 1 && i > 0){

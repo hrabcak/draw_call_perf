@@ -289,9 +289,13 @@ struct config {
         , one_mesh(false)
         , tex_size(64)
         , dont_rnd_cubes(false)
-		, procedural_scene(false)
-		, blades_per_tuft(16)
-		, use_instancing(false)
+		, procedural_scene(true)
+		, blades_per_tuft(16) // pocet listov na jeden interny draw call
+		, tufts_per_tile(4096)	// pocet internych drawcall-ov (prerozdenelenie velkeho tile-u na 64*64 blokov)
+		, ngrass_tiles(16)	// pocet drawcall-ov
+		,vert_per_blade(7) // toto bolo len ked sa testovalo 5 trojuholnikov vs. 1 trojuholnik
+		, use_instancing(true)
+		, use_grass_blade_tex(true)
         //, use_nor_uv(false)
     {}
 
@@ -316,7 +320,11 @@ struct config {
 	// grass params
 
 	int blades_per_tuft;
+	int tufts_per_tile;
+	int ngrass_tiles;
+	int vert_per_blade;
 	bool use_instancing;
+	bool use_grass_blade_tex;
 };
 
 config& cfg();

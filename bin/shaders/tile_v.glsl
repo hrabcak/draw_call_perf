@@ -1,5 +1,3 @@
-#define TILEWIDTH		10.0
-
 // IN
 struct context_data
 {
