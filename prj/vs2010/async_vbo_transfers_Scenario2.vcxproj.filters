@@ -167,5 +167,8 @@
     <None Include="..\..\bin\shaders\tile_v.glsl">
       <Filter>src\shaders</Filter>
     </None>
+    <None Include="..\..\bin\shaders\heightgen_c.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

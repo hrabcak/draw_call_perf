@@ -242,6 +242,7 @@
     <None Include="..\..\bin\shaders\block_v.glsl" />
     <None Include="..\..\bin\shaders\canvas_f.glsl" />
     <None Include="..\..\bin\shaders\canvas_v.glsl" />
+    <None Include="..\..\bin\shaders\heightgen_c.glsl" />
     <None Include="..\..\bin\shaders\mipgen_c.glsl" />
     <None Include="..\..\bin\shaders\proc_f.glsl" />
     <None Include="..\..\bin\shaders\proc_g.glsl" />

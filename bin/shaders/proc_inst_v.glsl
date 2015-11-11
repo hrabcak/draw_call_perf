@@ -25,6 +25,8 @@ layout(std140) uniform context
 
 uniform vec2 tile_pos;
 
+uniform usampler2D height_map;
+
 out Color{
 #ifdef USE_TEXTURE
 	vec2 uv;
@@ -57,15 +59,41 @@ void main(){
 	const float block_width = TILEWIDTH / float(BLOCKSPERROW);
 	const int bpr_log2 = int(log2(BLOCKSPERROW));
 	const float half_block_width = 0.5*block_width;
-	int vertex_id = gl_VertexID % (VERT_PER_BLADE + 2);
+
+	const int verts_per_block = (VERT_PER_BLADE + 2)*BLADESPERTUFT;
+	const int block_part = gl_VertexID % verts_per_block;
+	const int instance_part = (gl_VertexID - block_part) / verts_per_block;
+
+#ifdef ONE_BATCH
+
+	int vertex_id = block_part % (VERT_PER_BLADE + 2);
+	vertex_id = (vertex_id == 0) ? 0 : vertex_id - 1;
+	vertex_id = (vertex_id == VERT_PER_BLADE) ? VERT_PER_BLADE - 1 : vertex_id;
+	int instance_id = block_part / (VERT_PER_BLADE + 2);
+
+	ivec2 block_pos_r = ivec2(instance_part & (BLOCKSPERROW - 1), (instance_part >> bpr_log2));
+#else
+	const int subdc_per_row = int(sqrt(DC_COUNT));
+	const int subdc_per_row_log2 = int(log2(subdc_per_row));
+
+	const int blocks_per_dc = BLOCKSPERROW / subdc_per_row;
+	const int blocks_per_dc_log2 = int(log2(blocks_per_dc));
+
+	ivec2 subdc_origin = ivec2((gl_InstanceID & (subdc_per_row - 1)), (gl_InstanceID >> subdc_per_row_log2)) * blocks_per_dc;
+	
+	int vertex_id = block_part % (VERT_PER_BLADE + 2);
 	vertex_id = (vertex_id == 0) ? 0 : vertex_id - 1;
 	vertex_id = (vertex_id == VERT_PER_BLADE) ? VERT_PER_BLADE-1 : vertex_id;
-	int instance_id = gl_VertexID / (VERT_PER_BLADE + 2);
+	int instance_id = block_part / (VERT_PER_BLADE + 2);
+	
+	ivec2 block_pos_r = subdc_origin + ivec2(instance_part & (blocks_per_dc - 1), (instance_part >> blocks_per_dc_log2));
+	//vec2 block_pos_uv = block_pos_r / BLOCKSPERROW;
+#endif
+	uvec4 height = texelFetch(height_map, block_pos_r,0);
 
-	//float base_col = (gl_InstanceID >> bpr_log2)*BLOCKSPERROW + (gl_InstanceID & (BLOCKSPERROW - 1))*BLOCKSPERROW + instance_id;
-	//base_col = (base_col == 0) ? 0 : 255.0 / base_col;
+	const float grass_h = float(height.x) / float(0xffff);
 
-	vec2 block_pos = tile_pos*TILEWIDTH + vec2((gl_InstanceID & (BLOCKSPERROW - 1)) * block_width, (gl_InstanceID >> bpr_log2) * block_width) + half_block_width;
+	vec2 block_pos = tile_pos*TILEWIDTH + vec2(block_pos_r.x * block_width, block_pos_r.y * block_width) + half_block_width;
 	vec4 rnd = random_2d_perm(ivec2(block_pos * instance_id * BLOCKSPERROW));
 
 	vec4 turf_pos = vec4(block_pos.x + rnd.x*half_block_width, 0.0, block_pos.y + rnd.y*half_block_width, 1.0);
@@ -76,7 +104,7 @@ void main(){
 
 	vec3 bx_dis = blade_tangent * BLADE_WIDTH;
 
-	vec4 blade_up_displace = vec4(up * BLADE_HEIGHT, 0.0);
+	vec4 blade_up_displace = vec4(up * grass_h, 0.0);
 
 	float k = (vertex_id >> 1) * hcf;
 
@@ -91,7 +119,7 @@ void main(){
 #else
 	vec3 bend = cross(up, blade_tangent);
 
-	vec3 bend_displace = bend*(1 - exp2(-1))*k*k*BLADE_HEIGHT;
+	vec3 bend_displace = bend*(1 - exp2(-1))*k*k*grass_h;
 
 	norm = normalize(cross(blade_up_displace.xyz + bend_displace, bx_dis));
 
@@ -102,6 +130,5 @@ void main(){
 	color_out.uv = vec2(0.5 + (0.5*((vertex_id & 1) - 0.5)* (1.0 - k*k)), k);
 #else
 	color_out.color = vec3(0.0, 0.29215, 0.0);
-	//color_out.color = vec3(base_col, base_col, base_col);
 #endif
 }

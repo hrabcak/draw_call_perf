@@ -30,18 +30,22 @@ protected:
 	GLint _prg_grs_pos;
 	GLint _prg_grs_tex;
 	GLint _prg_grs_data;
+	GLint _prg_grs_hmap;
 	
 	GLuint _prg_floor;
 	GLint _prg_flr_ctx;
 	GLint _prg_flr_pos;
 
 	GLuint _prg_tg;
+	GLint _prg_tg_tex;
+	GLint _prg_tg_pos;
 
 	GLuint _grass_tex;
 
 	grass_data _grs_data;
 
 	glm::vec2 _grass_tiles[MAX_GRASS_TILES];
+	GLuint _height_tex[MAX_GRASS_TILES];
 
 	glm::vec3 _cam_pos;
 public:
@@ -56,6 +60,7 @@ public:
 
 protected:
 	void calculate_visible_tiles(int ntiles, float tile_size);
+	void create_height_texs();
 };
 
 #endif

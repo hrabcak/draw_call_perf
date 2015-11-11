@@ -5,13 +5,17 @@
 
 scene_grass::scene_grass(base::app * app)
 	: _app(app)
-	
+
 	, _prg_floor(0)
 	, _prg_flr_ctx(-1)
 	, _prg_flr_pos(-1)
+	, _prg_grs_hmap(-1)
 
 	, _prg_grass(0)
+
 	, _prg_tg(0)
+	, _prg_tg_tex(-1)
+	, _prg_tg_pos(-1)
 
 	, _grass_tex(0)
 {
@@ -21,8 +25,9 @@ scene_grass::scene_grass(base::app * app)
 	cfg.tufts_per_tile = 4096;	// pocet internych drawcall-ov (prerozdenelenie velkeho tile-u na 64*64 blokov)
 	cfg.ngrass_tiles = 16;	// pocet drawcall-ov
 	cfg.vert_per_blade = 7; // toto bolo len ked sa testovalo 5 trojuholnikov vs. 1 trojuholnik
-	cfg.use_instancing = true;
-	cfg.use_grass_blade_tex = true;
+	cfg.use_instancing = false;
+	cfg.use_grass_blade_tex = false;
+	cfg.dc_per_tile = 1;
 
 
 	base::stats_data & stats = base::stats();
@@ -40,7 +45,7 @@ scene_grass::~scene_grass()
 
 }
 
-void scene_grass::init_gpu_stuff(const base::source_location &loc) 
+void scene_grass::init_gpu_stuff(const base::source_location &loc)
 {
 	char inject_buf[512];
 
@@ -70,6 +75,20 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 
 	cfg += inject_buf;
 
+	if (base::cfg().dc_per_tile == 1) {
+		cfg += "#define ONE_BATCH\n";
+	}
+	else{
+		
+		sprintf(&inject_buf[0]
+			, "#define VERTS_PER_DC %d\n#define DC_COUNT %d\n"
+			, ((base::cfg().vert_per_blade + 2) * _grs_data._blades_per_tuft
+			* _grs_data._blocks_per_row*_grs_data._blocks_per_row) / base::cfg().dc_per_tile
+			, base::cfg().dc_per_tile);
+
+		cfg += inject_buf;
+	}
+
 
 
 	_prg_floor = base::create_program(
@@ -85,7 +104,7 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 		"shaders/tile_f.glsl",
 		GL_FRAGMENT_SHADER));
 
-	base::link_program(loc,_prg_floor);
+	base::link_program(loc, _prg_floor);
 
 	_prg_flr_ctx = glGetUniformBlockIndex(_prg_floor, "context");
 	_prg_flr_pos = base::get_uniform_location(loc, _prg_floor, "tile_pos");
@@ -123,17 +142,31 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 			GL_FRAGMENT_SHADER));
 	}
 
-	base::link_program(loc,_prg_grass);
+	base::link_program(loc, _prg_grass);
 
 	_prg_grs_ctx = glGetUniformBlockIndex(_prg_grass, "context");
 	_prg_grs_pos = base::get_uniform_location(loc, _prg_grass, "tile_pos");
-	
+	_prg_grs_hmap = base::get_uniform_location(loc, _prg_grass, "height_map");
+
 	if (base::cfg().use_grass_blade_tex) {
 		_prg_grs_tex = base::get_uniform_location(loc, _prg_grass, "grass_tex");
 	}
 	_grass_tex = base::create_texture_from_file(loc, "tex/grass_blade_d.tga", false);
 
-	//_grs_data_vbo = 
+	_prg_tg = base::create_program(
+		0, 0, 0,
+		base::create_and_compile_shader(
+		SRC_LOCATION,
+		cfg,
+		"shaders/heightgen_c.glsl",
+		GL_COMPUTE_SHADER));
+	base::link_program(loc, _prg_tg);
+
+	_prg_tg_tex = get_uniform_location(loc, _prg_tg, "dst");
+	_prg_tg_pos = get_uniform_location(loc, _prg_tg, "pos");
+
+	calculate_visible_tiles(base::cfg().ngrass_tiles, _grs_data._tile_width);
+	create_height_texs();
 }
 
 void scene_grass::post_gpu_init()
@@ -154,9 +187,9 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 
 	glDisable(GL_CULL_FACE);
 
-	glUseProgram(_prg_floor);	
+	glUseProgram(_prg_floor);
 
-	
+
 
 	glBindBufferRange(
 		GL_UNIFORM_BUFFER,
@@ -180,7 +213,7 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 		glBindTexture(GL_TEXTURE_2D, _grass_tex);
 		glUniform1i(_prg_grs_tex, 0);
 	}
-	
+
 	glBindBufferRange(GL_UNIFORM_BUFFER,
 		_prg_grs_ctx,
 		ctx->_ctx_vbo,
@@ -188,17 +221,42 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 		sizeof(base::ctx_data));
 
 	glQueryCounter(ctx->_time_queries[0], GL_TIMESTAMP);
-	
+
 	for (int i = 0; i < base::cfg().ngrass_tiles; i++){
 		glUniform2f(_prg_grs_pos, _grass_tiles[i].x, _grass_tiles[i].y);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, _height_tex[i]);
+		glUniform1i(_prg_grs_hmap, 1);
+
 		if (base::cfg().use_instancing){
-			glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, (base::cfg().vert_per_blade+2) * _grs_data._blades_per_tuft, _grs_data._blocks_per_row*_grs_data._blocks_per_row); // without GS
+			if (base::cfg().dc_per_tile == 1){
+				glDrawArrays(GL_TRIANGLE_STRIP, 0, (base::cfg().vert_per_blade + 2) * _grs_data._blades_per_tuft
+					* _grs_data._blocks_per_row*_grs_data._blocks_per_row);
+			}
+			else{
+				glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0
+					, ((base::cfg().vert_per_blade + 2) * _grs_data._blades_per_tuft
+					* _grs_data._blocks_per_row*_grs_data._blocks_per_row) / base::cfg().dc_per_tile
+					, base::cfg().dc_per_tile); // without GS
+
+			}
 		}
 		else{
-			glDrawArraysInstanced(GL_POINTS, 0, _grs_data._blocks_per_row*_grs_data._blocks_per_row, _grs_data._blades_per_tuft); // with GS
+			if (base::cfg().dc_per_tile == 1){
+				glDrawArrays(GL_POINTS, 0
+					, _grs_data._blocks_per_row*_grs_data._blocks_per_row * _grs_data._blades_per_tuft); // with GS
+			}
+			else{
+				glDrawArraysInstanced(GL_POINTS, 0
+					, (_grs_data._blocks_per_row*_grs_data._blocks_per_row * _grs_data._blades_per_tuft) / base::cfg().dc_per_tile
+					, base::cfg().dc_per_tile);
+			}
+			
+			
 		}
 	}
-	
+
 	glQueryCounter(ctx->_time_queries[1], GL_TIMESTAMP);
 
 	ctx->_cpu_render_time = timer.elapsed_time();
@@ -230,4 +288,45 @@ void scene_grass::calculate_visible_tiles(int ntiles, float tile_size)
 			break;
 		}
 	}
+}
+
+void scene_grass::create_height_texs(){
+	const int width = _grs_data._blocks_per_row;
+	const int tex_size = width * width;
+	const int ntex = MAX_GRASS_TILES;
+	const base::pixelfmt pf = base::PF_R32UI;
+	const int tex_size_bytes = tex_size * base::get_pfd(pf)->_size;
+
+	glUseProgram(_prg_tg);
+	glUniform1i(_prg_tg_tex, 0);
+
+	for (int i = 0; i < ntex; i++){
+		GLuint tex;
+		glGenTextures(1, &tex);
+
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+		glTextureStorage2D(
+			tex,
+			1,
+			base::get_pfd(pf)->_internal,
+			width,
+			width);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		_height_tex[i] = tex;
+
+		glBindImageTexture(0, tex, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R32UI);
+		glUniform2i(_prg_tg_pos, int(_grass_tiles[i].x), int(_grass_tiles[i].y));
+
+		glDispatchCompute(width >> 4, width >> 4, 1);
+	}
+
+	glUseProgram(0);
+
 }

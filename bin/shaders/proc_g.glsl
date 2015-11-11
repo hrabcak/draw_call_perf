@@ -41,6 +41,8 @@ out Color{
 
 in vec3 blade_tangent[];
 
+in float grass_h[];
+
 out vec3 norm;
 
 void main(){
@@ -57,12 +59,12 @@ void main(){
 	vec4 base_position = gl_in[0].gl_Position;
 
 	vec3 bx_dis = blade_tangent[0] * BLADE_WIDTH;
-	vec4 blade_up_displace = vec4(up * BLADE_HEIGHT,0.0) / 3.0;
+	vec4 blade_up_displace = vec4(up * grass_h[0], 0.0) / 3.0;
 
 	for (int i = 0; i < 7; i++){
-		float k = (i >> 1) * hcf ;
+		float k = (i >> 1) * hcf;
 
-		vec3 bend_displace = bend*(1 - exp2(-1))*k*k*BLADE_HEIGHT;
+		vec3 bend_displace = bend*(1 - exp2(-1))*k*k*grass_h[0];
 
 		norm = normalize(cross(blade_up_displace.xyz + bend_displace, bx_dis));
 
