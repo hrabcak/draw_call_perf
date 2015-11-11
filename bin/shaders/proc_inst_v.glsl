@@ -62,6 +62,9 @@ void main(){
 	vertex_id = (vertex_id == VERT_PER_BLADE) ? VERT_PER_BLADE-1 : vertex_id;
 	int instance_id = gl_VertexID / (VERT_PER_BLADE + 2);
 
+	//float base_col = (gl_InstanceID >> bpr_log2)*BLOCKSPERROW + (gl_InstanceID & (BLOCKSPERROW - 1))*BLOCKSPERROW + instance_id;
+	//base_col = (base_col == 0) ? 0 : 255.0 / base_col;
+
 	vec2 block_pos = tile_pos*TILEWIDTH + vec2((gl_InstanceID & (BLOCKSPERROW - 1)) * block_width, (gl_InstanceID >> bpr_log2) * block_width) + half_block_width;
 	vec4 rnd = random_2d_perm(ivec2(block_pos * instance_id * BLOCKSPERROW));
 
@@ -99,5 +102,6 @@ void main(){
 	color_out.uv = vec2(0.5 + (0.5*((vertex_id & 1) - 0.5)* (1.0 - k*k)), k);
 #else
 	color_out.color = vec3(0.0, 0.29215, 0.0);
+	//color_out.color = vec3(base_col, base_col, base_col);
 #endif
 }

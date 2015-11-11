@@ -295,7 +295,7 @@ struct config {
 		, ngrass_tiles(16)	// pocet drawcall-ov
 		,vert_per_blade(7) // toto bolo len ked sa testovalo 5 trojuholnikov vs. 1 trojuholnik
 		, use_instancing(true)
-		, use_grass_blade_tex(true)
+		, use_grass_blade_tex(false)
         //, use_nor_uv(false)
     {}
 

@@ -15,6 +15,16 @@ scene_grass::scene_grass(base::app * app)
 
 	, _grass_tex(0)
 {
+	base::config & cfg = base::cfg();
+
+	cfg.blades_per_tuft = 16; // pocet listov na jeden interny draw call
+	cfg.tufts_per_tile = 4096;	// pocet internych drawcall-ov (prerozdenelenie velkeho tile-u na 64*64 blokov)
+	cfg.ngrass_tiles = 16;	// pocet drawcall-ov
+	cfg.vert_per_blade = 7; // toto bolo len ked sa testovalo 5 trojuholnikov vs. 1 trojuholnik
+	cfg.use_instancing = true;
+	cfg.use_grass_blade_tex = true;
+
+
 	base::stats_data & stats = base::stats();
 	stats._ndrawcalls = base::cfg().ngrass_tiles;
 	stats._nvertices = base::cfg().ngrass_tiles * base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * base::cfg().vert_per_blade;
