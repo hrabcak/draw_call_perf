@@ -170,5 +170,14 @@
     <None Include="..\..\bin\shaders\heightgen_c.glsl">
       <Filter>src\shaders</Filter>
     </None>
+    <None Include="..\..\bin\shaders\proc_tess_v.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\proc_tess_tcs.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\proc_tess_tes.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

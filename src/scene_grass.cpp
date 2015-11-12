@@ -25,7 +25,7 @@ scene_grass::scene_grass(base::app * app)
 	cfg.tufts_per_tile = 4096;	// pocet internych drawcall-ov (prerozdenelenie velkeho tile-u na 64*64 blokov)
 	cfg.ngrass_tiles = 16;	// pocet drawcall-ov
 	cfg.vert_per_blade = 7; // toto bolo len ked sa testovalo 5 trojuholnikov vs. 1 trojuholnik
-	cfg.use_instancing = false;
+	cfg.proc_scene_type = base::proc_scn_type::psTessShader;
 	cfg.use_grass_blade_tex = false;
 	cfg.dc_per_tile = 1;
 
@@ -109,7 +109,7 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 	_prg_flr_ctx = glGetUniformBlockIndex(_prg_floor, "context");
 	_prg_flr_pos = base::get_uniform_location(loc, _prg_floor, "tile_pos");
 
-	if (base::cfg().use_instancing){
+	if (base::cfg().proc_scene_type == base::proc_scn_type::psVertexShader){
 		_prg_grass = base::create_program(
 			base::create_and_compile_shader(
 			SRC_LOCATION,
@@ -123,7 +123,7 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 			"shaders/proc_f.glsl",
 			GL_FRAGMENT_SHADER));
 	}
-	else{
+	else if (base::cfg().proc_scene_type == base::proc_scn_type::psGeometryShader){
 		_prg_grass = base::create_program(
 			base::create_and_compile_shader(
 			SRC_LOCATION,
@@ -140,6 +140,30 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 			cfg,
 			"shaders/proc_f.glsl",
 			GL_FRAGMENT_SHADER));
+	}
+	else if (base::cfg().proc_scene_type == base::proc_scn_type::psTessShader){
+		_prg_grass = base::create_program(base::create_and_compile_shader(
+			SRC_LOCATION,
+			cfg,
+			"shaders/proc_tess_v.glsl",
+			GL_VERTEX_SHADER),
+			0,
+			base::create_and_compile_shader(
+			SRC_LOCATION,
+			cfg,
+			"shaders/proc_f.glsl",
+			GL_FRAGMENT_SHADER),
+			0,
+			base::create_and_compile_shader(
+			SRC_LOCATION,
+			cfg,
+			"shaders/proc_tess_tcs.glsl",
+			GL_TESS_CONTROL_SHADER), 
+			base::create_and_compile_shader(
+			SRC_LOCATION,
+			cfg,
+			"shaders/proc_tess_tes.glsl",
+			GL_TESS_EVALUATION_SHADER));
 	}
 
 	base::link_program(loc, _prg_grass);
@@ -180,6 +204,8 @@ void scene_grass::update(base::frame_context * const ctx)
 }
 
 void scene_grass::gpu_draw(base::frame_context * const ctx){
+	glPolygonMode(GL_FRONT, GL_LINE);
+	
 	base::hptimer timer;
 
 	memset(_grass_tiles, 0, MAX_GRASS_TILES*sizeof(glm::vec2));
@@ -229,7 +255,7 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 		glBindTexture(GL_TEXTURE_2D, _height_tex[i]);
 		glUniform1i(_prg_grs_hmap, 1);
 
-		if (base::cfg().use_instancing){
+		if (base::cfg().proc_scene_type == base::proc_scn_type::psVertexShader) {
 			if (base::cfg().dc_per_tile == 1){
 				glDrawArrays(GL_TRIANGLE_STRIP, 0, (base::cfg().vert_per_blade + 2) * _grs_data._blades_per_tuft
 					* _grs_data._blocks_per_row*_grs_data._blocks_per_row);
@@ -242,7 +268,7 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 
 			}
 		}
-		else{
+		else if (base::cfg().proc_scene_type == base::proc_scn_type::psGeometryShader) {
 			if (base::cfg().dc_per_tile == 1){
 				glDrawArrays(GL_POINTS, 0
 					, _grs_data._blocks_per_row*_grs_data._blocks_per_row * _grs_data._blades_per_tuft); // with GS
@@ -251,9 +277,11 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 				glDrawArraysInstanced(GL_POINTS, 0
 					, (_grs_data._blocks_per_row*_grs_data._blocks_per_row * _grs_data._blades_per_tuft) / base::cfg().dc_per_tile
 					, base::cfg().dc_per_tile);
-			}
-			
-			
+			}	
+		}
+		else if (base::cfg().proc_scene_type == base::proc_scn_type::psTessShader){
+			glPatchParameteri(GL_PATCH_VERTICES, 3);
+			glDrawArraysInstanced(GL_PATCHES, 0, 4 * _grs_data._blades_per_tuft, (_grs_data._blocks_per_row*_grs_data._blocks_per_row));
 		}
 	}
 

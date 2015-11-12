@@ -142,6 +142,24 @@ GLuint base::create_program(
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+GLuint base::create_program(
+	const GLuint vs,
+	const GLuint gs,
+	const GLuint fs,
+	const GLuint cs,
+	const GLuint tcs,
+	const GLuint tes)
+{
+	GLuint prg = base::create_program(vs, gs, fs, cs);
+
+	if (tcs) glAttachShader(prg, tcs);
+	if (tes) glAttachShader(prg, tes);
+
+	return prg;
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 void base::link_program(
 	const base::source_location &loc,
 	const GLuint prg)

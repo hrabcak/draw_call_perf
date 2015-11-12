@@ -41,6 +41,13 @@ namespace base {
 
 class app;
 
+enum proc_scn_type{
+	psGeometryShader = 0,
+	psVertexShader = 1,
+	psTessShader = 2,
+	psCount
+};
+
 struct stats_data
 {
     uint64 _buffer_mem;
@@ -205,6 +212,17 @@ GLuint create_program(
     const GLuint cs = 0);
 
 ///
+
+GLuint create_program(
+	const GLuint vs,
+	const GLuint gs,
+	const GLuint fs,
+	const GLuint cs,
+	const GLuint tcs,
+	const GLuint tes);
+
+///
+
 void link_program(
 	const base::source_location &loc,
 	const GLuint prg);
@@ -294,7 +312,7 @@ struct config {
 		, tufts_per_tile(4096)	// pocet internych drawcall-ov (prerozdenelenie velkeho tile-u na 64*64 blokov)
 		, ngrass_tiles(16)	// pocet drawcall-ov
 		,vert_per_blade(7) // toto bolo len ked sa testovalo 5 trojuholnikov vs. 1 trojuholnik
-		, use_instancing(true)
+		, proc_scene_type(proc_scn_type(0))
 		, dc_per_tile(1)
 		, use_grass_blade_tex(false)
         //, use_nor_uv(false)
@@ -324,7 +342,7 @@ struct config {
 	int tufts_per_tile;
 	int ngrass_tiles;
 	int vert_per_blade;
-	bool use_instancing;
+	proc_scn_type proc_scene_type;
 	bool use_grass_blade_tex;
 	int dc_per_tile;
 };
