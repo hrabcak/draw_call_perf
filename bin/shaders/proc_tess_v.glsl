@@ -63,7 +63,7 @@ void main(){
 
 	vec4 turf_pos = vec4(block_pos.x + rnd.x*half_block_width, 0.0, block_pos.y + rnd.y*half_block_width, 1.0);
 
-	const float tan_angle = (TWO_PI / float(BLADESPERTUFT)) * instance_id - PI_HALF;
+	const float tan_angle = 0;//(TWO_PI / float(BLADESPERTUFT)) * instance_id - PI_HALF;
 
 	vec3 blade_tangent = vec3(cos(tan_angle), 0.0, sin(tan_angle));
 
@@ -75,7 +75,7 @@ void main(){
 
 	norm_cs_in = normalize(cross(blade_up_displace.xyz, bx_dis));
 
-	vert_cs_in = ((turf_pos + vec4(bx_dis * (1.0 - k) * ((vert_id & 1) - 0.5) + vec3(0, 0, 0), 0.0) + (blade_up_displace * k))).xyz;
+	vert_cs_in = ((turf_pos + vec4(bx_dis  * ((vert_id & 1) - 0.5) + vec3(0, 0, 0), 0.0) + (blade_up_displace * k))).xyz;
 
 
 #ifdef USE_TEXTURE

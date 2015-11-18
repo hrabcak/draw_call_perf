@@ -24,16 +24,40 @@ scene_grass::scene_grass(base::app * app)
 	cfg.blades_per_tuft = 16; // pocet listov na jeden interny draw call
 	cfg.tufts_per_tile = 4096;	// pocet internych drawcall-ov (prerozdenelenie velkeho tile-u na 64*64 blokov)
 	cfg.ngrass_tiles = 16;	// pocet drawcall-ov
-	cfg.vert_per_blade = 7; // toto bolo len ked sa testovalo 5 trojuholnikov vs. 1 trojuholnik
-	cfg.proc_scene_type = base::proc_scn_type::psTessShader;
+	cfg.proc_scene_type = base::proc_scn_type::psVertexShader;
 	cfg.use_grass_blade_tex = false;
-	cfg.dc_per_tile = 1;
-
+	cfg.dc_per_tile = 1024;
+	cfg.use_end_primitive = false;
+	cfg.blades_per_geom_run = 2;
 
 	base::stats_data & stats = base::stats();
-	stats._ndrawcalls = base::cfg().ngrass_tiles;
-	stats._nvertices = base::cfg().ngrass_tiles * base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * base::cfg().vert_per_blade;
-	stats._ntriangles = base::cfg().ngrass_tiles * base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * (base::cfg().vert_per_blade - 2);
+
+	if (base::cfg().proc_scene_type == base::proc_scn_type::psVertexShader) {
+		if (base::cfg().dc_per_tile == 1){
+			stats._ndrawcalls = 1;
+		}
+		else{
+			stats._ndrawcalls = base::cfg().dc_per_tile;
+		}
+	}
+	else if (base::cfg().proc_scene_type == base::proc_scn_type::psGeometryShader) {
+		if (base::cfg().dc_per_tile == 1){
+			if (!base::cfg().use_end_primitive) {
+				stats._ndrawcalls = 1;
+			}
+			else{
+				stats._ndrawcalls = 1;
+			}
+		}
+		else{
+			stats._ndrawcalls = base::cfg().dc_per_tile;
+		}
+	}
+
+	stats._ndrawcalls *= base::cfg().ngrass_tiles;
+
+	stats._nvertices = base::cfg().ngrass_tiles * base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * 7;
+	stats._ntriangles = base::cfg().ngrass_tiles * base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * 5;
 
 	_grs_data._blades_per_tuft = base::cfg().blades_per_tuft;
 	_grs_data._blocks_per_row = glm::sqrt(base::cfg().tufts_per_tile);
@@ -65,13 +89,23 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 
 	cfg += inject_buf;
 
+	if (base::cfg().use_end_primitive){
+		cfg += "#define USE_END_PRIMITIVE\n";
+
+		sprintf(&inject_buf[0], "#define BLADES_PER_GEOM_RUN %d\n", base::cfg().blades_per_geom_run);
+		cfg += inject_buf;
+
+		sprintf(&inject_buf[0], "#define VERTS_PER_GEOM_RUN %d\n", 7*base::cfg().blades_per_geom_run);
+		cfg += inject_buf;
+	}
+
 	if (base::cfg().use_grass_blade_tex) {
 		cfg += "#define USE_TEXTURE\n";
 	}
 
 	//cfg += "#define WITHOUT_BENDING\n"; // ohybat listy
 
-	sprintf(&inject_buf[0], "#define VERT_PER_BLADE %d\n", base::cfg().vert_per_blade);
+	sprintf(&inject_buf[0], "#define VERT_PER_BLADE %d\n", 7);
 
 	cfg += inject_buf;
 
@@ -82,7 +116,7 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 		
 		sprintf(&inject_buf[0]
 			, "#define VERTS_PER_DC %d\n#define DC_COUNT %d\n"
-			, ((base::cfg().vert_per_blade + 2) * _grs_data._blades_per_tuft
+			, (9 * _grs_data._blades_per_tuft
 			* _grs_data._blocks_per_row*_grs_data._blocks_per_row) / base::cfg().dc_per_tile
 			, base::cfg().dc_per_tile);
 
@@ -204,7 +238,7 @@ void scene_grass::update(base::frame_context * const ctx)
 }
 
 void scene_grass::gpu_draw(base::frame_context * const ctx){
-	glPolygonMode(GL_FRONT, GL_LINE);
+	//glPolygonMode(GL_FRONT, GL_LINE);
 	
 	base::hptimer timer;
 
@@ -257,12 +291,12 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 
 		if (base::cfg().proc_scene_type == base::proc_scn_type::psVertexShader) {
 			if (base::cfg().dc_per_tile == 1){
-				glDrawArrays(GL_TRIANGLE_STRIP, 0, (base::cfg().vert_per_blade + 2) * _grs_data._blades_per_tuft
+				glDrawArrays(GL_TRIANGLE_STRIP, 0, 9 * _grs_data._blades_per_tuft
 					* _grs_data._blocks_per_row*_grs_data._blocks_per_row);
 			}
 			else{
 				glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0
-					, ((base::cfg().vert_per_blade + 2) * _grs_data._blades_per_tuft
+					, (9 * _grs_data._blades_per_tuft
 					* _grs_data._blocks_per_row*_grs_data._blocks_per_row) / base::cfg().dc_per_tile
 					, base::cfg().dc_per_tile); // without GS
 
@@ -270,8 +304,14 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 		}
 		else if (base::cfg().proc_scene_type == base::proc_scn_type::psGeometryShader) {
 			if (base::cfg().dc_per_tile == 1){
-				glDrawArrays(GL_POINTS, 0
-					, _grs_data._blocks_per_row*_grs_data._blocks_per_row * _grs_data._blades_per_tuft); // with GS
+				if (!base::cfg().use_end_primitive) {
+					glDrawArrays(GL_POINTS, 0
+						, _grs_data._blocks_per_row*_grs_data._blocks_per_row * _grs_data._blades_per_tuft); // with GS
+				}
+				else{
+					glDrawArrays(GL_POINTS, 0
+						, (base::cfg().blades_per_tuft / base::cfg().blades_per_geom_run) * _grs_data._blocks_per_row*_grs_data._blocks_per_row);
+				}
 			}
 			else{
 				glDrawArraysInstanced(GL_POINTS, 0
@@ -280,7 +320,7 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 			}	
 		}
 		else if (base::cfg().proc_scene_type == base::proc_scn_type::psTessShader){
-			glPatchParameteri(GL_PATCH_VERTICES, 3);
+			glPatchParameteri(GL_PATCH_VERTICES, 4);
 			glDrawArraysInstanced(GL_PATCHES, 0, 4 * _grs_data._blades_per_tuft, (_grs_data._blocks_per_row*_grs_data._blocks_per_row));
 		}
 	}
@@ -292,7 +332,16 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 
 const char* scene_grass::get_test_name(const int i) const
 {
-	return "";
+	if ( base::cfg().proc_scene_type == base::proc_scn_type::psVertexShader ) {
+		return "VS";
+	}
+	else if ( base::cfg().proc_scene_type == base::proc_scn_type::psGeometryShader ){
+		return "GS";
+	}
+	else{
+		return "! ! ! UNDEFINED_TEST ! ! !";
+	}
+	
 }
 
 void scene_grass::calculate_visible_tiles(int ntiles, float tile_size)

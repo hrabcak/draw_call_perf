@@ -33,12 +33,14 @@ void main(){
 	
 	vert_es_in[gl_InvocationID] = vert_cs_in[gl_InvocationID];
 
-	gl_TessLevelOuter[0] = 1;
-	gl_TessLevelOuter[1] = 1;
-	gl_TessLevelOuter[2] = 1;
-	gl_TessLevelOuter[3] = 1;
+	if (gl_InvocationID == 0){
+		gl_TessLevelOuter[0] = 3;
+		gl_TessLevelOuter[1] = 1;
+		gl_TessLevelOuter[2] = 3;
+		gl_TessLevelOuter[3] = 1;
 
-	gl_TessLevelInner[0] = 0;
-	gl_TessLevelInner[1] = 0;
+		gl_TessLevelInner[0] = 0;
+		gl_TessLevelInner[1] = 3;
+	}
 	
 }

@@ -10,6 +10,8 @@ precision highp int;
 #define BLADE_WIDTH			0.02
 #define BLADE_HEIGHT		0.1
 
+
+
 // IN
 struct context_data
 {
@@ -96,7 +98,7 @@ void main(){
 	vec2 block_pos = tile_pos*TILEWIDTH + vec2(block_pos_r.x * block_width, block_pos_r.y * block_width) + half_block_width;
 	vec4 rnd = random_2d_perm(ivec2(block_pos * instance_id * BLOCKSPERROW));
 
-	vec4 turf_pos = vec4(block_pos.x + rnd.x*half_block_width, 0.0, block_pos.y + rnd.y*half_block_width, 1.0);
+	vec4 blade_pos = vec4(block_pos.x + rnd.x*half_block_width, 0.0, block_pos.y + rnd.y*half_block_width, 1.0);
 
 	const float tan_angle = (TWO_PI / float(BLADESPERTUFT)) * instance_id - PI_HALF;
 
@@ -121,9 +123,9 @@ void main(){
 
 	vec3 bend_displace = bend*(1 - exp2(-1))*k*k*grass_h;
 
-	norm = normalize(cross(blade_up_displace.xyz + bend_displace, bx_dis));
+	norm = normalize(cross(blade_up_displace.xyz * hcf + bend_displace, bx_dis));
 
-	gl_Position = _ctx._mvp * (turf_pos + vec4(bx_dis * (1.0 - k*k) * ((vertex_id & 1) - 0.5) + bend_displace, 0.0) + (blade_up_displace * k));
+	gl_Position = _ctx._mvp * (blade_pos + vec4(bx_dis * (1.0 - k*k) * ((vertex_id & 1) - 0.5) + bend_displace, 0.0) + (blade_up_displace * k));
 #endif
 	
 #ifdef USE_TEXTURE

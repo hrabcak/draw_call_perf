@@ -53,6 +53,19 @@ vec4 random_2d_perm(ivec2 coord)
 
 void main()
 {
+#ifdef USE_END_PRIMITIVE
+	const int bpr_log2 = int(log2(BLOCKSPERROW));
+	const int blades_per_dc = BLADESPERTUFT / BLADES_PER_GEOM_RUN;
+ 	const int bpdc_log2 = int(log2(blades_per_dc));
+	ivec2 block_pos_r = ivec2((gl_VertexID >> (bpdc_log2)) & (BLOCKSPERROW - 1), gl_VertexID >> (bpdc_log2 + bpr_log2));
+	uvec4 height = texelFetch(height_map, block_pos_r, 0);
+	grass_h = float(height.x) / float(0xffff);
+	gl_Position = vec4(block_pos_r, gl_VertexID & (blades_per_dc - 1), 1.0);
+
+#ifndef USE_TEXTURE
+	color_out.color = vec3(0.0, 0.29215, 0.0);
+#endif
+#else
 	const float block_width = TILEWIDTH / float(BLOCKSPERROW);
 	const float half_block_width = 0.5*block_width;
 	const int inst_part = gl_VertexID % BLADESPERTUFT;
@@ -91,4 +104,5 @@ void main()
 	grass_h = float(height.x) / float(0xffff);
 
 	gl_Position = turf_pos;
+#endif
 }

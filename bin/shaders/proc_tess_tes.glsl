@@ -1,4 +1,4 @@
-layout(triangles, equal_spacing, ccw) in;
+layout(quads, equal_spacing, ccw) in;
 
 struct context_data
 {
@@ -44,7 +44,8 @@ vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2)
 }
 
 void main(){
-	gl_Position = _ctx._mvp * vec4(interpolate3D(vert_es_in[0], vert_es_in[1], vert_es_in[2]),1.0);
+	gl_Position = _ctx._mvp * vec4(mix(mix(vert_es_in[0], vert_es_in[1],gl_TessCoord.x),
+									mix(vert_es_in[2], vert_es_in[3], gl_TessCoord.x),gl_TessCoord.y),1.0);
 #ifdef USE_TEXTURE
 	color_out.uv = interpolate2D(color_in[0].uv, color_in[1].uv, color_in[2].uv);
 #else

@@ -75,6 +75,13 @@ private:
 		const float time,
 		const int nframes);
 
+	bool grass_write_test_data_csv(
+		const char * file_name,
+		const base::stats_data & stats,
+		const float time,
+		const int nframes);
+
+
 	const char * get_texturing_mode_str(int mode);
 	void get_mesh_size_str(char * out_str, ushort nvert, ushort nelem);
 };

@@ -359,6 +359,62 @@ bool benchmark::write_test_data_csv(
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+bool benchmark::grass_write_test_data_csv(
+	const char * file_name,
+	const base::stats_data & stats,
+	const float time,
+	const int nframes)
+{
+	FILE * pFile;
+	pFile = fopen(file_name, "r+");
+
+	if (pFile == NULL){
+		pFile = fopen(file_name, "w");
+		if (pFile == NULL){
+			return false;
+		}
+
+		fputs(
+			"grass_method,"
+			"gpu_gl_name,"
+			"tris_per_dc,"
+			"dc_per_frame,"
+			"tris_per_frame"
+
+			,pFile);
+	}
+	else{
+		fseek(pFile, 0, SEEK_END);
+	}
+
+	fprintf(
+		pFile,
+		"\n%s,%s,%s,%i,%u,%i,%s,%u,%f,%f,%f,%u,%llu,%llu,%u,%u",
+		this->get_test_name(),
+		_renderer->get_gpu_str(),
+		base::cfg().use_vbo ? "true" : "false",
+		base::cfg().tex_freq,
+		base::cfg().tex_mode,
+		base::cfg().mesh_size,
+		base::cfg().one_mesh ? "true" : "false",
+		nframes,
+		time,
+		stats._cpu_time,
+		stats._gpu_time,
+		stats._ndrawcalls,
+		stats._ntriangles,
+		stats._nvertices,
+		stats._buffer_mem >> 20,
+		stats._texture_mem >> 20);
+
+	fclose(pFile);
+
+	return true;
+}
+
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 const char * benchmark::get_texturing_mode_str(int mode){
 	switch (mode){
 	case 0: return "No texture";

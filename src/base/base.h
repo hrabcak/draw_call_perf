@@ -308,13 +308,14 @@ struct config {
         , tex_size(64)
         , dont_rnd_cubes(false)
 		, procedural_scene(true)
-		, blades_per_tuft(16) // pocet listov na jeden interny draw call
-		, tufts_per_tile(4096)	// pocet internych drawcall-ov (prerozdenelenie velkeho tile-u na 64*64 blokov)
-		, ngrass_tiles(16)	// pocet drawcall-ov
-		,vert_per_blade(7) // toto bolo len ked sa testovalo 5 trojuholnikov vs. 1 trojuholnik
+		, blades_per_tuft(16) 
+		, tufts_per_tile(4096)	
+		, ngrass_tiles(16)	
 		, proc_scene_type(proc_scn_type(0))
 		, dc_per_tile(1)
 		, use_grass_blade_tex(false)
+		, use_end_primitive(false)
+		, blades_per_geom_run(2)
         //, use_nor_uv(false)
     {}
 
@@ -341,10 +342,11 @@ struct config {
 	int blades_per_tuft;
 	int tufts_per_tile;
 	int ngrass_tiles;
-	int vert_per_blade;
 	proc_scn_type proc_scene_type;
 	bool use_grass_blade_tex;
 	int dc_per_tile;
+	bool use_end_primitive;
+	int blades_per_geom_run;
 };
 
 config& cfg();
