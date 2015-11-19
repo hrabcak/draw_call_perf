@@ -316,6 +316,8 @@ struct config {
 		, use_grass_blade_tex(false)
 		, use_end_primitive(false)
 		, blades_per_geom_run(2)
+		, in_vtx_per_dc(-1)
+		, pure_color(false)
         //, use_nor_uv(false)
     {}
 
@@ -346,7 +348,9 @@ struct config {
 	bool use_grass_blade_tex;
 	int dc_per_tile;
 	bool use_end_primitive;
+	bool pure_color;
 	int blades_per_geom_run;
+	int in_vtx_per_dc;
 };
 
 config& cfg();

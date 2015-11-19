@@ -153,5 +153,6 @@ void main(){
 			base_position += blade_up_displace;
 		}
 	}
+
 #endif
 }

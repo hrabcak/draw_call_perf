@@ -232,8 +232,13 @@ void benchmark::draw_frame()
 				dtime_total += dtf;
 			}
 
-			if (base::cfg().test != -1 &&  test_cycles == 3){
-				write_test_data_csv("test.csv", _test_stats, dtime_total, nframes_total);
+			if (base::cfg().test != -1 && test_cycles == 3){
+				if (base::cfg().procedural_scene) {
+					grass_write_test_data_csv("grass_test.csv", _test_stats, dtime_total, nframes_total);
+				}
+				else{
+					write_test_data_csv("test.csv", _test_stats, dtime_total, nframes_total);
+				}
 				_shutdown = true;
 			}
 
@@ -377,10 +382,16 @@ bool benchmark::grass_write_test_data_csv(
 		fputs(
 			"grass_method,"
 			"gpu_gl_name,"
-			"tris_per_dc,"
-			"dc_per_frame,"
-			"tris_per_frame"
-
+			"frames,"
+			"render_time,"
+			"cpu_render_time (ms),"
+			"gpu_render_time (ms),"
+			"dc,"
+			"ntri,"
+			"use_texture,"
+			"tris_per_frame,"
+			"geom_blade_out,"
+			"in_vtx_per_dc"
 			,pFile);
 	}
 	else{
@@ -388,24 +399,21 @@ bool benchmark::grass_write_test_data_csv(
 	}
 
 	fprintf(
-		pFile,
-		"\n%s,%s,%s,%i,%u,%i,%s,%u,%f,%f,%f,%u,%llu,%llu,%u,%u",
-		this->get_test_name(),
-		_renderer->get_gpu_str(),
-		base::cfg().use_vbo ? "true" : "false",
-		base::cfg().tex_freq,
-		base::cfg().tex_mode,
-		base::cfg().mesh_size,
-		base::cfg().one_mesh ? "true" : "false",
-		nframes,
-		time,
-		stats._cpu_time,
-		stats._gpu_time,
-		stats._ndrawcalls,
-		stats._ntriangles,
-		stats._nvertices,
-		stats._buffer_mem >> 20,
-		stats._texture_mem >> 20);
+		pFile
+		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%s,%u,%u,%u"
+		, this->get_test_name()
+		, _renderer->get_gpu_str()
+		, nframes
+		, time
+		, stats._cpu_time
+		, stats._gpu_time
+		, stats._ndrawcalls
+		, stats._ntriangles
+		, base::cfg().use_grass_blade_tex ? "true" : "false"
+		, base::cfg().ngrass_tiles*base::cfg().blades_per_tuft*base::cfg().tufts_per_tile * 5
+		, (base::cfg().proc_scene_type == base::proc_scn_type::psGeometryShader) ? base::cfg().blades_per_geom_run : 0
+		, base::cfg().in_vtx_per_dc
+		);
 
 	fclose(pFile);
 

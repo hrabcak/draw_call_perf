@@ -54,6 +54,7 @@ vec4 random_2d_perm(ivec2 coord)
 void main()
 {
 #ifdef USE_END_PRIMITIVE
+#ifdef ONE_BATCH
 	const int bpr_log2 = int(log2(BLOCKSPERROW));
 	const int blades_per_dc = BLADESPERTUFT / BLADES_PER_GEOM_RUN;
  	const int bpdc_log2 = int(log2(blades_per_dc));
@@ -61,7 +62,13 @@ void main()
 	uvec4 height = texelFetch(height_map, block_pos_r, 0);
 	grass_h = float(height.x) / float(0xffff);
 	gl_Position = vec4(block_pos_r, gl_VertexID & (blades_per_dc - 1), 1.0);
-
+#else
+	const int bpr_log2 = int(log2(BLOCKSPERROW));
+	ivec2 block_pos_r = ivec2(gl_VertexID  & (BLOCKSPERROW - 1), gl_VertexID >> (bpr_log2));
+	uvec4 height = texelFetch(height_map, block_pos_r, 0);
+	grass_h = float(height.x) / float(0xffff);
+	gl_Position = vec4(block_pos_r, gl_InstanceID, 1.0);
+#endif
 #ifndef USE_TEXTURE
 	color_out.color = vec3(0.0, 0.29215, 0.0);
 #endif

@@ -24,35 +24,16 @@ scene_grass::scene_grass(base::app * app)
 	cfg.blades_per_tuft = 16; // pocet listov na jeden interny draw call
 	cfg.tufts_per_tile = 4096;	// pocet internych drawcall-ov (prerozdenelenie velkeho tile-u na 64*64 blokov)
 	cfg.ngrass_tiles = 16;	// pocet drawcall-ov
-	cfg.proc_scene_type = base::proc_scn_type::psVertexShader;
+	cfg.proc_scene_type = base::proc_scn_type::psGeometryShader;
 	cfg.use_grass_blade_tex = false;
-	cfg.dc_per_tile = 1024;
-	cfg.use_end_primitive = false;
+	cfg.dc_per_tile = 1;
+	cfg.use_end_primitive = true;
 	cfg.blades_per_geom_run = 2;
+	cfg.pure_color = true;
+
+	base::cfg().test = -1;
 
 	base::stats_data & stats = base::stats();
-
-	if (base::cfg().proc_scene_type == base::proc_scn_type::psVertexShader) {
-		if (base::cfg().dc_per_tile == 1){
-			stats._ndrawcalls = 1;
-		}
-		else{
-			stats._ndrawcalls = base::cfg().dc_per_tile;
-		}
-	}
-	else if (base::cfg().proc_scene_type == base::proc_scn_type::psGeometryShader) {
-		if (base::cfg().dc_per_tile == 1){
-			if (!base::cfg().use_end_primitive) {
-				stats._ndrawcalls = 1;
-			}
-			else{
-				stats._ndrawcalls = 1;
-			}
-		}
-		else{
-			stats._ndrawcalls = base::cfg().dc_per_tile;
-		}
-	}
 
 	stats._ndrawcalls *= base::cfg().ngrass_tiles;
 
@@ -62,6 +43,41 @@ scene_grass::scene_grass(base::app * app)
 	_grs_data._blades_per_tuft = base::cfg().blades_per_tuft;
 	_grs_data._blocks_per_row = glm::sqrt(base::cfg().tufts_per_tile);
 	_grs_data._tile_width = 10.0f;
+
+	if (base::cfg().proc_scene_type == base::proc_scn_type::psVertexShader) {
+		if (base::cfg().dc_per_tile == 1){
+			stats._ndrawcalls = 1;
+			base::cfg().in_vtx_per_dc = 9 * _grs_data._blades_per_tuft
+				* _grs_data._blocks_per_row*_grs_data._blocks_per_row;
+		}
+		else{
+			stats._ndrawcalls = base::cfg().dc_per_tile;
+			base::cfg().in_vtx_per_dc = (9 * _grs_data._blades_per_tuft
+				* _grs_data._blocks_per_row*_grs_data._blocks_per_row) / base::cfg().dc_per_tile;
+		}
+	}
+	else if (base::cfg().proc_scene_type == base::proc_scn_type::psGeometryShader) {
+		if (!base::cfg().use_end_primitive) {
+			if (base::cfg().dc_per_tile == 1) {
+				stats._ndrawcalls = 1;
+				base::cfg().in_vtx_per_dc = _grs_data._blocks_per_row*_grs_data._blocks_per_row * _grs_data._blades_per_tuft;
+			}
+			else {
+				stats._ndrawcalls = base::cfg().dc_per_tile;
+				base::cfg().in_vtx_per_dc = _grs_data._blocks_per_row*_grs_data._blocks_per_row;
+			}
+		}
+		else {
+			if (base::cfg().dc_per_tile == 1) {
+				stats._ndrawcalls = 1;
+				base::cfg().in_vtx_per_dc = (base::cfg().blades_per_tuft / base::cfg().blades_per_geom_run) * _grs_data._blocks_per_row*_grs_data._blocks_per_row;
+			}
+			else {
+				stats._ndrawcalls = (base::cfg().blades_per_tuft / base::cfg().blades_per_geom_run);
+				base::cfg().in_vtx_per_dc = (_grs_data._blocks_per_row*_grs_data._blocks_per_row);
+			}
+		}
+	}
 }
 
 scene_grass::~scene_grass()
@@ -101,6 +117,10 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 
 	if (base::cfg().use_grass_blade_tex) {
 		cfg += "#define USE_TEXTURE\n";
+	}
+
+	if (base::cfg().pure_color){
+		cfg += "#define PURE_COLOR\n";
 	}
 
 	//cfg += "#define WITHOUT_BENDING\n"; // ohybat listy
@@ -266,6 +286,10 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 
 	glUseProgram(_prg_grass);
 
+	GLuint dum = glGetUniformLocation (_prg_grass,"dummy");
+
+	glUniform3f(dum, 1.f, 1.f, 1.f);
+
 	timer.start();
 
 	if (base::cfg().use_grass_blade_tex) {
@@ -303,20 +327,26 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 			}
 		}
 		else if (base::cfg().proc_scene_type == base::proc_scn_type::psGeometryShader) {
-			if (base::cfg().dc_per_tile == 1){
-				if (!base::cfg().use_end_primitive) {
+			if (!base::cfg().use_end_primitive) {
+				if (base::cfg().dc_per_tile == 1){
 					glDrawArrays(GL_POINTS, 0
 						, _grs_data._blocks_per_row*_grs_data._blocks_per_row * _grs_data._blades_per_tuft); // with GS
 				}
 				else{
-					glDrawArrays(GL_POINTS, 0
-						, (base::cfg().blades_per_tuft / base::cfg().blades_per_geom_run) * _grs_data._blocks_per_row*_grs_data._blocks_per_row);
+					glDrawArraysInstanced(GL_POINTS, 0
+						, _grs_data._blocks_per_row*_grs_data._blocks_per_row
+						, base::cfg().dc_per_tile);
 				}
 			}
 			else{
-				glDrawArraysInstanced(GL_POINTS, 0
-					, (_grs_data._blocks_per_row*_grs_data._blocks_per_row * _grs_data._blades_per_tuft) / base::cfg().dc_per_tile
-					, base::cfg().dc_per_tile);
+				if (base::cfg().dc_per_tile == 1) {
+					glDrawArrays(GL_POINTS, 0
+						, (base::cfg().blades_per_tuft / base::cfg().blades_per_geom_run) * _grs_data._blocks_per_row*_grs_data._blocks_per_row);
+				} else {
+					glDrawArraysInstanced(GL_POINTS, 0
+						, (_grs_data._blocks_per_row*_grs_data._blocks_per_row)
+						, (base::cfg().blades_per_tuft / base::cfg().blades_per_geom_run));
+				}
 			}	
 		}
 		else if (base::cfg().proc_scene_type == base::proc_scn_type::psTessShader){
@@ -352,8 +382,8 @@ void scene_grass::calculate_visible_tiles(int ntiles, float tile_size)
 
 	glm::vec2 mid_pos = glm::vec2(glm::floor(_cam_pos.x / tile_size), glm::floor(_cam_pos.z / tile_size));
 
-	for (int z = mid_pos.y - side; z < int(mid_pos.y) + side; z++){
-		for (int x = mid_pos.x - side; x < int(mid_pos.x) + side; x++){
+	for (int z = int(mid_pos.y - side); z < int(mid_pos.y) + side; z++){
+		for (int x = int(mid_pos.x - side); x < int(mid_pos.x) + side; x++){
 			_grass_tiles[ntil] = glm::vec2(float(x), float(z));
 			ntil++;
 			if (ntil >= ntiles){
