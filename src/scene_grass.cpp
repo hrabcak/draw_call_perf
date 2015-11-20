@@ -24,14 +24,6 @@ scene_grass::scene_grass(base::app * app)
 	cfg.blades_per_tuft = 16; // pocet listov na jeden interny draw call
 	cfg.tufts_per_tile = 4096;	// pocet internych drawcall-ov (prerozdenelenie velkeho tile-u na 64*64 blokov)
 	cfg.ngrass_tiles = 16;	// pocet drawcall-ov
-	cfg.proc_scene_type = base::proc_scn_type::psGeometryShader;
-	cfg.use_grass_blade_tex = false;
-	cfg.dc_per_tile = 1;
-	cfg.use_end_primitive = true;
-	cfg.blades_per_geom_run = 2;
-	cfg.pure_color = true;
-
-	base::cfg().test = -1;
 
 	base::stats_data & stats = base::stats();
 
@@ -64,7 +56,7 @@ scene_grass::scene_grass(base::app * app)
 			}
 			else {
 				stats._ndrawcalls = base::cfg().dc_per_tile;
-				base::cfg().in_vtx_per_dc = _grs_data._blocks_per_row*_grs_data._blocks_per_row;
+				base::cfg().in_vtx_per_dc = ((_grs_data._blocks_per_row*_grs_data._blocks_per_row) / base::cfg().dc_per_tile) * _grs_data._blades_per_tuft;
 			}
 		}
 		else {
@@ -122,8 +114,6 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 	if (base::cfg().pure_color){
 		cfg += "#define PURE_COLOR\n";
 	}
-
-	//cfg += "#define WITHOUT_BENDING\n"; // ohybat listy
 
 	sprintf(&inject_buf[0], "#define VERT_PER_BLADE %d\n", 7);
 
@@ -227,7 +217,7 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 	_prg_grs_hmap = base::get_uniform_location(loc, _prg_grass, "height_map");
 
 	if (base::cfg().use_grass_blade_tex) {
-		_prg_grs_tex = base::get_uniform_location(loc, _prg_grass, "grass_tex");
+		_prg_grs_tex = glGetUniformLocation(_prg_grass, "grass_tex");//base::get_uniform_location(loc, _prg_grass, "grass_tex");
 	}
 	_grass_tex = base::create_texture_from_file(loc, "tex/grass_blade_d.tga", false);
 
@@ -269,8 +259,6 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 
 	glUseProgram(_prg_floor);
 
-
-
 	glBindBufferRange(
 		GL_UNIFORM_BUFFER,
 		_prg_flr_ctx,
@@ -283,12 +271,8 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 		glUniform2f(_prg_flr_pos, _grass_tiles[i].x, _grass_tiles[i].y);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
-
+	
 	glUseProgram(_prg_grass);
-
-	GLuint dum = glGetUniformLocation (_prg_grass,"dummy");
-
-	glUniform3f(dum, 1.f, 1.f, 1.f);
 
 	timer.start();
 
@@ -334,7 +318,7 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 				}
 				else{
 					glDrawArraysInstanced(GL_POINTS, 0
-						, _grs_data._blocks_per_row*_grs_data._blocks_per_row
+						, ((_grs_data._blocks_per_row*_grs_data._blocks_per_row) / base::cfg().dc_per_tile) * _grs_data._blades_per_tuft
 						, base::cfg().dc_per_tile);
 				}
 			}
@@ -349,7 +333,7 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 				}
 			}	
 		}
-		else if (base::cfg().proc_scene_type == base::proc_scn_type::psTessShader){
+		else if (base::cfg().proc_scene_type == base::proc_scn_type::psTessShader) {
 			glPatchParameteri(GL_PATCH_VERTICES, 4);
 			glDrawArraysInstanced(GL_PATCHES, 0, 4 * _grs_data._blades_per_tuft, (_grs_data._blocks_per_row*_grs_data._blocks_per_row));
 		}

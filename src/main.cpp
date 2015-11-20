@@ -177,6 +177,36 @@ int WINAPI WinMain(
 			}
 			else if (stricmp(argv[i], "--proc_use_inst") == 0){
 			}
+			else if (stricmp(argv[i], "--dc_per_tile") == 0){
+				base::cfg().dc_per_tile = atoi(argv[i + 1]);
+				++i;
+			}
+			else if (stricmp(argv[i], "--pure_color") == 0){
+				base::cfg().pure_color = true;
+			}
+			else if (stricmp(argv[i], "--use_grass_tex") == 0){
+				base::cfg().use_grass_blade_tex = true;
+			}
+			else if (stricmp(argv[i], "--gs_use_end_primitive") == 0){
+				base::cfg().use_end_primitive = true;
+			}
+			else if (stricmp(argv[i], "--gs_blades_per_run") == 0){
+				base::cfg().blades_per_geom_run = atoi(argv[i + 1]);
+				++i;
+			}
+			else if (stricmp(argv[i], "--proc_scene_mode") == 0) {
+				int opt = argv[i + 1][0] - '0';
+				if (opt == 0){
+					base::cfg().proc_scene_type = base::proc_scn_type::psVertexShader;
+				}
+				else if (opt == 1){
+					base::cfg().proc_scene_type = base::proc_scn_type::psGeometryShader;
+				}
+				else{
+					return -1;
+				}
+				++i;
+			}
             else {
 				MessageBoxA(
                     NULL,
@@ -211,9 +241,19 @@ int WINAPI WinMain(
                     "--one-mesh - Use one geometry for all meshes\n"
                     "--use-vbo - Use classic buffer for vertex data instead of texture buffer\n"
                     "--dont-rnd-cubes - Turn off cube randomization (better utilization of post-transform cache)\n"
+					"--use_nor_uv - Will use additional vertex data normal and uv compressed to 8 bytes (16bytes vertex data)\n\n"
+
 					"--procedural-scene - Use procedural scene instead of the meshes\n"
-					"--proc_use_inst - Use instancing instead of geometry shader\n"
-					"--use_nor_uv - Will use additional vertex data normal and uv compressed to 8 bytes (16bytes vertex data)",
+					"--proc_scene_mode VALUE - Mode of grass generation. Values: 0 = Vertex Shader, 1 = Geometry Shader\n"
+					"--proc_use_inst - Use instanced drawcall\n"
+					"--dc_per_tile  VALUE - Drawcalls per grass tile. Values: 1,4,16,64,256,1024. In case of instanced GS use -1\n"
+					"--pure_color - Use only pure color without shading in FS.\n"
+					"--use_grass_tex - Use grass texture instead of default color.\n"
+					"--gs_use_end_primitive - Use end primitive in geometry shader."
+					"--gs_blades_per_run VALUE - Number of grass blades generated per GS run. Values:1, 2, 4, 8\n\n"
+
+
+					,
                     "Command line options",
                     MB_APPLMODAL);
 				return -1;

@@ -101,8 +101,8 @@ void main()
 #ifndef USE_TEXTURE
 	color_out.color = vec3(0.0, 0.29215, 0.0);
 #endif
-
-	const float tan_angle = (TWO_PI / float(BLADESPERTUFT)) * inst_part - PI_HALF;
+	const float rad_per_blade = (TWO_PI / float(BLADESPERTUFT));
+	const float tan_angle = rad_per_blade * inst_part - PI_HALF;
 
 	blade_tangent = vec3(cos(tan_angle), 0.0, sin(tan_angle));
 
