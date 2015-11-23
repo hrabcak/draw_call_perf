@@ -38,7 +38,6 @@ base::app* base::app::_app = 0;
 base::app::app()
 	: _velocity_boost(false)
     , _position(0.0, 10.3, 0.0)
-	//, _position(0.0, 1.8, 0.0)
 	, _frame_number(0)
     , _fovy(45.f)
     , _aspect(float(get_wnd_width()) / float(get_wnd_height()))
@@ -53,6 +52,10 @@ base::app::app()
 	base::set_mouse_pos(glm::ivec2(200));
 	_last_mouse_pos = base::get_mouse_pos();
 	_mouse_pos = glm::ivec2(0);
+
+	if (base::cfg().procedural_scene){
+		_position = glm::vec3(0.0, 1.8, 0.0);
+	}
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
