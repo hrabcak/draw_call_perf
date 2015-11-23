@@ -42,6 +42,6 @@ void main()
 	imageStore(
 		dst,
 		ivec2(gl_GlobalInvocationID.xy),
-		ivec4(int(((0.35 + rnd.x * 0.25) * 0xffff))));
+		uvec4(((0.35 + rnd.x * 0.25) * 0xffff)));
 		//ivec4(0));
 }
