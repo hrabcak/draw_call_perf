@@ -194,6 +194,12 @@ int WINAPI WinMain(
 				base::cfg().blades_per_geom_run = atoi(argv[i + 1]);
 				++i;
 			}
+			else if (stricmp(argv[i], "--use_idx_buf") == 0) {
+				base::cfg().use_idx_buf = true;
+			}
+			else if (stricmp(argv[i], "--use_triangles") == 0) {
+				base::cfg().use_triangles = true;
+			}
 			else if (stricmp(argv[i], "--proc_scene_mode") == 0) {
 				int opt = argv[i + 1][0] - '0';
 				if (opt == 0){
@@ -249,7 +255,9 @@ int WINAPI WinMain(
 					"--dc_per_tile  VALUE - Drawcalls per grass tile. Values: 1,4,16,64,256,1024. In case of instanced GS use -1\n"
 					"--pure_color - Use only pure color without shading in FS.\n"
 					"--use_grass_tex - Use grass texture instead of default color.\n"
-					"--gs_use_end_primitive - Use end primitive in geometry shader."
+					"--gs_use_end_primitive - Use end primitive in geometry shader.\n"
+					"--use_idx_buf - Use indnex buffer in mode 0.\n"
+					"--use_triangles - Use triagles instead of triangle strip. (in mode 0 and idx buf used)\n"
 					"--gs_blades_per_run VALUE - Number of grass blades generated per GS run. Values:1, 2, 4, 8\n\n"
 
 

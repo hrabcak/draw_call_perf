@@ -10,8 +10,6 @@ precision highp int;
 #define BLADE_WIDTH			0.02
 #define BLADE_HEIGHT		0.1
 
-
-
 // IN
 struct context_data
 {
@@ -62,19 +60,29 @@ void main(){
 	const int bpr_log2 = int(log2(BLOCKSPERROW));
 	const float half_block_width = 0.5*block_width;
 
+#ifdef USE_IDX_BUF
+	const int verts_per_block = VERT_PER_BLADE*BLADESPERTUFT;
+#else
 	const int verts_per_block = (VERT_PER_BLADE + 2)*BLADESPERTUFT;
+#endif
+	
 	const int block_part = gl_VertexID % verts_per_block;
 	const int instance_part = (gl_VertexID - block_part) / verts_per_block;
 
 #ifdef ONE_BATCH
-
+#ifdef USE_IDX_BUF
+	int vertex_id = block_part % (VERT_PER_BLADE );
+	int instance_id = block_part / VERT_PER_BLADE;
+#else
 	int vertex_id = block_part % (VERT_PER_BLADE + 2);
 	vertex_id = (vertex_id == 0) ? 0 : vertex_id - 1;
 	vertex_id = (vertex_id == VERT_PER_BLADE) ? VERT_PER_BLADE - 1 : vertex_id;
 	int instance_id = block_part / (VERT_PER_BLADE + 2);
-
+#endif
 	ivec2 block_pos_r = ivec2(instance_part & (BLOCKSPERROW - 1), (instance_part >> bpr_log2));
 #else
+
+
 	const int subdc_per_row = int(sqrt(DC_COUNT));
 	const int subdc_per_row_log2 = int(log2(subdc_per_row));
 
@@ -82,14 +90,23 @@ void main(){
 	const int blocks_per_dc_log2 = int(log2(blocks_per_dc));
 
 	ivec2 subdc_origin = ivec2((gl_InstanceID & (subdc_per_row - 1)), (gl_InstanceID >> subdc_per_row_log2)) * blocks_per_dc;
-	
+#ifndef USE_TRIANGLES 	
+#ifdef USE_IDX_BUF
+	int vertex_id = block_part % (VERT_PER_BLADE );
+	int instance_id = block_part / VERT_PER_BLADE;
+#else
 	int vertex_id = block_part % (VERT_PER_BLADE + 2);
 	vertex_id = (vertex_id == 0) ? 0 : vertex_id - 1;
 	vertex_id = (vertex_id == VERT_PER_BLADE) ? VERT_PER_BLADE-1 : vertex_id;
 	int instance_id = block_part / (VERT_PER_BLADE + 2);
-	
+#endif
 	ivec2 block_pos_r = subdc_origin + ivec2(instance_part & (blocks_per_dc - 1), (instance_part >> blocks_per_dc_log2));
-	//vec2 block_pos_uv = block_pos_r / BLOCKSPERROW;
+#else
+	int vertex_id = gl_VertexID & 7;
+	int instance_id = (gl_VertexID >> 4) & 15;
+	ivec2 block_pos_r = subdc_origin + ivec2((gl_VertexID >> 12) & 15, (gl_VertexID >> 8) & 15);
+#endif	
+
 #endif
 	uvec4 height = texelFetch(height_map, block_pos_r,0);
 

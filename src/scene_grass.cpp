@@ -3,6 +3,10 @@
 #include "base/base.h"
 #include "base/frame_context.h"
 
+#define NIDX_PER_BLADE_TSTRIP 8
+#define NIDX_PER_BLADE_T 15
+
+
 scene_grass::scene_grass(base::app * app)
 	: _app(app)
 
@@ -18,6 +22,10 @@ scene_grass::scene_grass(base::app * app)
 	, _prg_tg_pos(-1)
 
 	, _grass_tex(0)
+
+	, _idx_buf_i(nullptr)
+	, _idx_buf_us(nullptr)
+	, _idx_buf_h(-1)
 {
 	base::config & cfg = base::cfg();
 
@@ -26,8 +34,6 @@ scene_grass::scene_grass(base::app * app)
 	cfg.ngrass_tiles = 16;	// pocet drawcall-ov
 
 	base::stats_data & stats = base::stats();
-
-	stats._ndrawcalls *= base::cfg().ngrass_tiles;
 
 	stats._nvertices = base::cfg().ngrass_tiles * base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * 7;
 	stats._ntriangles = base::cfg().ngrass_tiles * base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * 5;
@@ -47,6 +53,48 @@ scene_grass::scene_grass(base::app * app)
 			base::cfg().in_vtx_per_dc = (9 * _grs_data._blades_per_tuft
 				* _grs_data._blocks_per_row*_grs_data._blocks_per_row) / base::cfg().dc_per_tile;
 		}
+
+		if (base::cfg().use_idx_buf) {
+			if (base::cfg().use_triangles){
+				int subtile_w = _grs_data._blocks_per_row / glm::sqrt<int>(base::cfg().dc_per_tile);
+				int max_idx = (base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * NIDX_PER_BLADE_T) / base::cfg().dc_per_tile;
+
+				_idx_buf_us = new ushort[max_idx];
+
+				int curr_buf_pos = 0;
+
+				for (ushort y = 0; y < subtile_w; y++){
+					for (ushort x = 0; x < subtile_w; x++){
+						for (ushort b_id = 0; b_id < base::cfg().blades_per_tuft; b_id++){
+							for (ushort t_id = 0; t_id < 5; t_id++){
+								ushort idx_base = ((x & 15) << 12) | ((y & 15) << 8) | ((b_id & 15) << 4);
+								_idx_buf_us[curr_buf_pos] = (idx_base | t_id);
+
+								if ((t_id & 1)){
+									_idx_buf_us[curr_buf_pos + 1] = (idx_base | (t_id + 2));
+									_idx_buf_us[curr_buf_pos + 2] = (idx_base | (t_id + 1));
+								}
+								else{
+									_idx_buf_us[curr_buf_pos + 1] = (idx_base | (t_id + 1));
+									_idx_buf_us[curr_buf_pos + 2] = (idx_base | (t_id + 2));
+								}
+
+								curr_buf_pos += 3;
+							}
+						}
+					}
+				}
+
+			} else {
+				int max_idx = (base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * NIDX_PER_BLADE_TSTRIP) / base::cfg().dc_per_tile;
+				_idx_buf_us = new ushort[max_idx];
+
+				for (ushort i = 0, curr_idx = 0; i < max_idx; i++){
+					_idx_buf_us[i] = ((i & 7) == 7) ? 0xffff : curr_idx++;
+				}
+			}
+		}
+
 	}
 	else if (base::cfg().proc_scene_type == base::proc_scn_type::psGeometryShader) {
 		if (!base::cfg().use_end_primitive) {
@@ -70,6 +118,8 @@ scene_grass::scene_grass(base::app * app)
 			}
 		}
 	}
+
+	stats._ndrawcalls *= base::cfg().ngrass_tiles;
 }
 
 scene_grass::~scene_grass()
@@ -105,6 +155,13 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 
 		sprintf(&inject_buf[0], "#define VERTS_PER_GEOM_RUN %d\n", 7*base::cfg().blades_per_geom_run);
 		cfg += inject_buf;
+	}
+
+	if (base::cfg().use_idx_buf){
+		cfg += "#define USE_IDX_BUF\n";
+		if (base::cfg().use_triangles){
+			cfg += "#define USE_TRIANGLES\n";
+		}
 	}
 
 	if (base::cfg().use_grass_blade_tex) {
@@ -217,7 +274,7 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 	_prg_grs_hmap = base::get_uniform_location(loc, _prg_grass, "height_map");
 
 	if (base::cfg().use_grass_blade_tex) {
-		_prg_grs_tex = glGetUniformLocation(_prg_grass, "grass_tex");//base::get_uniform_location(loc, _prg_grass, "grass_tex");
+		_prg_grs_tex = base::get_uniform_location(loc, _prg_grass, "grass_tex");
 	}
 	_grass_tex = base::create_texture_from_file(loc, "tex/grass_blade_d.tga", false);
 
@@ -235,6 +292,20 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 
 	calculate_visible_tiles(base::cfg().ngrass_tiles, _grs_data._tile_width);
 	create_height_texs();
+
+	if (base::cfg().use_idx_buf && base::cfg().proc_scene_type == base::proc_scn_type::psVertexShader && !base::cfg().use_triangles){
+		glEnable(GL_PRIMITIVE_RESTART);
+		glPrimitiveRestartIndex(0xffff);
+	}
+
+	int idx_buf_size = (base::cfg().use_triangles)
+		? (base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * NIDX_PER_BLADE_T) / base::cfg().dc_per_tile
+		: (base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * NIDX_PER_BLADE_TSTRIP) / base::cfg().dc_per_tile;
+
+	_idx_buf_h = base::create_buffer<ushort>(
+		idx_buf_size,
+		nullptr,
+		_idx_buf_us);
 }
 
 void scene_grass::post_gpu_init()
@@ -288,6 +359,13 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 		ctx->_ctx_id * sizeof(base::ctx_data),
 		sizeof(base::ctx_data));
 
+	if (base::cfg().proc_scene_type == base::proc_scn_type::psVertexShader &&
+		base::cfg().dc_per_tile > 1 &&
+		base::cfg().use_idx_buf) {
+		
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _idx_buf_h);
+	}
+
 	glQueryCounter(ctx->_time_queries[0], GL_TIMESTAMP);
 
 	for (int i = 0; i < base::cfg().ngrass_tiles; i++){
@@ -298,15 +376,41 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 		glUniform1i(_prg_grs_hmap, 1);
 
 		if (base::cfg().proc_scene_type == base::proc_scn_type::psVertexShader) {
-			if (base::cfg().dc_per_tile == 1){
-				glDrawArrays(GL_TRIANGLE_STRIP, 0, 9 * _grs_data._blades_per_tuft
-					* _grs_data._blocks_per_row*_grs_data._blocks_per_row);
+			if (!base::cfg().use_idx_buf) {
+				if (base::cfg().dc_per_tile == 1){
+					glDrawArrays(GL_TRIANGLE_STRIP, 0, 9 * _grs_data._blades_per_tuft
+						* _grs_data._blocks_per_row*_grs_data._blocks_per_row);
+				}
+				else{
+					glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0
+						, (9 * _grs_data._blades_per_tuft
+						* _grs_data._blocks_per_row*_grs_data._blocks_per_row) / base::cfg().dc_per_tile
+						, base::cfg().dc_per_tile); // without GS
+				}
 			}
 			else{
-				glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0
-					, (9 * _grs_data._blades_per_tuft
-					* _grs_data._blocks_per_row*_grs_data._blocks_per_row) / base::cfg().dc_per_tile
-					, base::cfg().dc_per_tile); // without GS
+				if (base::cfg().dc_per_tile == 1){
+					glDrawElements(GL_TRIANGLE_STRIP
+						, (base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * NIDX_PER_BLADE_TSTRIP)
+						, GL_UNSIGNED_INT,
+						0);
+				}
+				else{
+					if (base::cfg().use_triangles){
+						glDrawElementsInstanced(GL_TRIANGLES
+							, (base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * NIDX_PER_BLADE_T) / base::cfg().dc_per_tile
+							, GL_UNSIGNED_SHORT
+							, 0
+							, base::cfg().dc_per_tile);
+					}
+					else{
+						glDrawElementsInstanced(GL_TRIANGLE_STRIP
+							, (base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * NIDX_PER_BLADE_TSTRIP) / base::cfg().dc_per_tile
+							, GL_UNSIGNED_SHORT
+							, 0
+							, base::cfg().dc_per_tile);
+					}
+				}
 
 			}
 		}
