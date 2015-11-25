@@ -172,6 +172,11 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 		cfg += "#define PURE_COLOR\n";
 	}
 
+	if (base::cfg().ip_count != 0){
+		sprintf(inject_buf, "#define IP_%dF\n", base::cfg().ip_count);
+		cfg += inject_buf;
+	}
+
 	sprintf(&inject_buf[0], "#define VERT_PER_BLADE %d\n", 7);
 
 	cfg += inject_buf;

@@ -52,7 +52,17 @@ in Color{
 #ifdef USE_TEXTURE
 	vec2 uv;
 #else
-	vec3 color;
+	#ifdef IP_1F
+		float color;
+	#elif defined(IP_2F)
+		vec2 color;
+	#elif defined(IP_3F)
+		vec3 color;
+	#elif defined(IP_4F)
+		vec4 color;
+	#else
+		vec3 color;
+	#endif
 #endif
 }color_in[];
 
@@ -60,7 +70,17 @@ out Color{
 #ifdef USE_TEXTURE
 	vec2 uv;
 #else
-	vec3 color;
+	#ifdef IP_1F
+		float color;
+	#elif defined(IP_2F)
+		vec2 color;
+	#elif defined(IP_3F)
+		vec3 color;
+	#elif defined(IP_4F)
+		vec4 color;
+	#else
+		vec3 color;
+	#endif
 #endif
 }color_out;
 
@@ -103,6 +123,10 @@ void main(){
 		vec3 bend = normalize(cross(up, bx_dis));
 
 		for (int i = 0; i < 7; i++){
+#if defined(IP_1F) || defined(IP_2F) || defined(IP_3F) || defined(IP_4F) 
+			color_out.color = color_in[0].color * (i/7.0);
+#endif
+
 			float k = (i >> 1) * hcf;
 
 			vec3 bend_displace = bend*(1 - exp2(-1))*k*k*grass_h[0];
@@ -134,6 +158,9 @@ void main(){
 	vec3 bend = normalize(cross(up, blade_tangent[0]));
 
 	for (int i = 0; i < 7; i++){
+#if defined(IP_1F) || defined(IP_2F) || defined(IP_3F) || defined(IP_4F) 
+		color_out.color = color_in[0].color * (i/7.0);
+#endif
 		float k = (i >> 1) * hcf;
 
 		vec3 bend_displace = bend*(1 - exp2(-1))*k*k*grass_h[0];
