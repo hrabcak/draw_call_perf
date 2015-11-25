@@ -390,9 +390,11 @@ bool benchmark::grass_write_test_data_csv(
 			"ntri,"
 			"use_texture,"
 			"pure_color,"
+			"use_idx_buf,"
 			"tris_per_frame,"
 			"geom_blade_out,"
-			"in_vtx_per_dc"
+			"in_vtx_per_dc,"
+			"use_triangles"
 			,pFile);
 	}
 	else{
@@ -401,7 +403,7 @@ bool benchmark::grass_write_test_data_csv(
 
 	fprintf(
 		pFile
-		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%s,%s,%u,%u,%u"
+		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%s,%s,%s,%u,%u,%u,%s"
 		, this->get_test_name()
 		, _renderer->get_gpu_str()
 		, nframes
@@ -412,9 +414,11 @@ bool benchmark::grass_write_test_data_csv(
 		, stats._ntriangles
 		, base::cfg().use_grass_blade_tex ? "true" : "false"
 		, base::cfg().pure_color ? "true" : "false"
+		, base::cfg().use_idx_buf ? "true" : "false"
 		, base::cfg().ngrass_tiles*base::cfg().blades_per_tuft*base::cfg().tufts_per_tile * 5
 		, (base::cfg().proc_scene_type == base::proc_scn_type::psGeometryShader) ? base::cfg().blades_per_geom_run : 0
 		, base::cfg().in_vtx_per_dc
+		, base::cfg().use_triangles ? "true" : "false"
 		);
 
 	fclose(pFile);

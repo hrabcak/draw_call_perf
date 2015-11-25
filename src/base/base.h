@@ -299,18 +299,18 @@ struct config {
 		, use_nvidia_fast_download(false)
 		, use_async_readback(false)
 
-        , test(-1)
-        , mesh_size(2)
-        , tex_mode(2)
-        , tex_freq(1)
-        , use_vbo(false)
-        , one_mesh(false)
-        , tex_size(64)
-        , dont_rnd_cubes(false)
+		, test(-1)
+		, mesh_size(2)
+		, tex_mode(2)
+		, tex_freq(1)
+		, use_vbo(false)
+		, one_mesh(false)
+		, tex_size(64)
+		, dont_rnd_cubes(false)
 		, procedural_scene(false)
-		, blades_per_tuft(16) 
-		, tufts_per_tile(4096)	
-		, ngrass_tiles(16)	
+		, blades_per_tuft(16)
+		, tufts_per_tile(4096)
+		, ngrass_tiles(16)
 		, proc_scene_type(proc_scn_type(0))
 		, dc_per_tile(1)
 		, use_grass_blade_tex(false)
@@ -318,6 +318,8 @@ struct config {
 		, blades_per_geom_run(1)
 		, in_vtx_per_dc(-1)
 		, pure_color(false)
+		, use_idx_buf(false)
+		, use_triangles(false)
         //, use_nor_uv(false)
     {}
 
@@ -351,6 +353,8 @@ struct config {
 	bool pure_color;
 	int blades_per_geom_run;
 	int in_vtx_per_dc;
+	bool use_idx_buf;
+	bool use_triangles;
 };
 
 config& cfg();

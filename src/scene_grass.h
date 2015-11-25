@@ -47,6 +47,11 @@ protected:
 	glm::vec2 _grass_tiles[MAX_GRASS_TILES];
 	GLuint _height_tex[MAX_GRASS_TILES];
 
+	GLuint _idx_buf_h;
+
+	int * _idx_buf_i;
+	ushort * _idx_buf_us;
+
 	glm::vec3 _cam_pos;
 public:
 	scene_grass(base::app * app);

@@ -35,9 +35,12 @@ void main(){
 #ifdef PURE_COLOR
 	_retval = color_in.color; 
 #else
+	const vec3 c = vec3(0.9, 0, 0);
 	const vec3 sun_color = vec3(1.0f, 0.9725f, 0.9490f);
 	float LdN = clamp(dot(norm, normalize(vec3(-1, 1, -0.5))), 0, 1);
-	_retval = color_in.color *0.15 + LdN * color_in.color * sun_color;
+	//_retval = color_in.color *0.15 + LdN * color_in.color * sun_color;
+
+	_retval = c * 0.15 + LdN * c * sun_color;
 #endif
 
 #endif
