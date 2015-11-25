@@ -70,6 +70,7 @@ void main(){
 	const int instance_part = (gl_VertexID - block_part) / verts_per_block;
 
 #ifdef ONE_BATCH
+#ifndef USE_TRIANGLES
 #ifdef USE_IDX_BUF
 	int vertex_id = block_part % (VERT_PER_BLADE );
 	int instance_id = block_part / VERT_PER_BLADE;
@@ -80,6 +81,13 @@ void main(){
 	int instance_id = block_part / (VERT_PER_BLADE + 2);
 #endif
 	ivec2 block_pos_r = ivec2(instance_part & (BLOCKSPERROW - 1), (instance_part >> bpr_log2));
+#else
+	int vertex_id = gl_VertexID & 7;
+	int instance_id = (gl_VertexID >> 4) & 15;
+	ivec2 block_pos_r = ivec2((gl_VertexID >> 14) & 0x3f, (gl_VertexID >> 8) & 0x3f);
+#endif
+
+
 #else
 
 
@@ -104,7 +112,7 @@ void main(){
 #else
 	int vertex_id = gl_VertexID & 7;
 	int instance_id = (gl_VertexID >> 4) & 15;
-	ivec2 block_pos_r = subdc_origin + ivec2((gl_VertexID >> 12) & 15, (gl_VertexID >> 8) & 15);
+	ivec2 block_pos_r = subdc_origin + ivec2((gl_VertexID >> 14) & 0x3f, (gl_VertexID >> 8) & 0x3f);
 #endif	
 
 #endif
