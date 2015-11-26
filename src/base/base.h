@@ -320,6 +320,7 @@ struct config {
 		, pure_color(false)
 		, use_idx_buf(false)
 		, use_triangles(false)
+		, ip_count(0)
         //, use_nor_uv(false)
     {}
 
@@ -355,6 +356,8 @@ struct config {
 	int in_vtx_per_dc;
 	bool use_idx_buf;
 	bool use_triangles;
+
+	ushort ip_count;
 };
 
 config& cfg();

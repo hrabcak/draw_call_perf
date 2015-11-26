@@ -200,6 +200,18 @@ int WINAPI WinMain(
 			else if (stricmp(argv[i], "--use_triangles") == 0) {
 				base::cfg().use_triangles = true;
 			}
+			else if (stricmp(argv[i], "--ip1f") == 0) {
+				base::cfg().ip_count = 1;
+			}
+			else if (stricmp(argv[i], "--ip2f") == 0) {
+				base::cfg().ip_count = 2;
+			}
+			else if (stricmp(argv[i], "--ip3f") == 0) {
+				base::cfg().ip_count = 3;
+			}
+			else if (stricmp(argv[i], "--ip4f") == 0) {
+				base::cfg().ip_count = 4;
+			}
 			else if (stricmp(argv[i], "--proc_scene_mode") == 0) {
 				int opt = argv[i + 1][0] - '0';
 				if (opt == 0){

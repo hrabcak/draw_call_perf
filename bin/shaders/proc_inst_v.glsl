@@ -7,8 +7,9 @@ precision highp int;
 #define SQRT_2 1.414213562
 
 
-#define BLADE_WIDTH			0.02
+#define BLADE_WIDTH			0.002
 #define BLADE_HEIGHT		0.1
+
 
 // IN
 struct context_data
@@ -27,11 +28,22 @@ uniform vec2 tile_pos;
 
 uniform usampler2D height_map;
 
+
 out Color{
 #ifdef USE_TEXTURE
 	vec2 uv;
 #else
-	vec3 color;
+	#ifdef IP_1F
+		float color;
+	#elif defined(IP_2F)
+		vec2 color;
+	#elif defined(IP_3F)
+		vec3 color;
+	#elif defined(IP_4F)
+		vec4 color;
+	#else
+		vec3 color;
+	#endif
 #endif
 }color_out;
 
@@ -151,11 +163,24 @@ void main(){
 	norm = normalize(cross(blade_up_displace.xyz * hcf + bend_displace, bx_dis));
 
 	gl_Position = _ctx._mvp * (blade_pos + vec4(bx_dis * (1.0 - k*k) * ((vertex_id & 1) - 0.5) + bend_displace, 0.0) + (blade_up_displace * k));
+
 #endif
 	
 #ifdef USE_TEXTURE
 	color_out.uv = vec2(0.5 + (0.5*((vertex_id & 1) - 0.5)* (1.0 - k*k)), k);
 #else
-	color_out.color = vec3(0.0, 0.29215, 0.0);
+	rnd = random_2d_perm(ivec2(gl_VertexID))*0.5 + 0.5;
+	#ifdef IP_1F
+		color_out.color = rnd.x;
+	#elif defined(IP_2F)
+		color_out.color = rnd.xy;
+	#elif defined(IP_3F)
+		color_out.color = rnd.xyz;
+	#elif defined(IP_4F)
+		color_out.color = rnd;
+	#else
+		color_out.color = vec3(0.0, 0.29215, 0.0);
+	#endif
+
 #endif
 }

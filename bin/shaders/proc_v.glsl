@@ -27,7 +27,17 @@ out Color{
 	#ifdef USE_TEXTURE
 		vec2 uv;
 	#else
-		vec3 color;
+		#ifdef IP_1F
+			float color;
+		#elif defined(IP_2F)
+			vec2 color;
+		#elif defined(IP_3F)
+			vec3 color;
+		#elif defined(IP_4F)
+			vec4 color;
+		#else
+			vec3 color;
+		#endif
 	#endif
 }color_out;
 
@@ -62,15 +72,17 @@ void main()
 	uvec4 height = texelFetch(height_map, block_pos_r, 0);
 	grass_h = float(height.x) / float(0xffff);
 	gl_Position = vec4(block_pos_r, gl_VertexID & (blades_per_dc - 1), 1.0);
+	
+	vec4 rnd = random_2d_perm(ivec2(block_pos_r * height.x * BLOCKSPERROW));
 #else
 	const int bpr_log2 = int(log2(BLOCKSPERROW));
 	ivec2 block_pos_r = ivec2(gl_VertexID  & (BLOCKSPERROW - 1), gl_VertexID >> (bpr_log2));
 	uvec4 height = texelFetch(height_map, block_pos_r, 0);
 	grass_h = float(height.x) / float(0xffff);
 	gl_Position = vec4(block_pos_r, gl_InstanceID, 1.0);
-#endif
-#ifndef USE_TEXTURE
-	color_out.color = vec3(0.0, 0.29215, 0.0);
+
+	vec4 rnd = random_2d_perm(ivec2(block_pos_r * height.x * BLOCKSPERROW));
+
 #endif
 #else
 	const float block_width = TILEWIDTH / float(BLOCKSPERROW);
@@ -98,9 +110,6 @@ void main()
 
 	vec4 turf_pos = vec4(block_pos.x + rnd.x*half_block_width, 0.0, block_pos.y+ rnd.y*half_block_width, 1.0);
 
-#ifndef USE_TEXTURE
-	color_out.color = vec3(0.0, 0.29215, 0.0);
-#endif
 	const float rad_per_blade = (TWO_PI / float(BLADESPERTUFT));
 	const float tan_angle = rad_per_blade * inst_part - PI_HALF;
 
@@ -111,5 +120,20 @@ void main()
 	grass_h = float(height.x) / float(0xffff);
 
 	gl_Position = turf_pos;
+#endif
+
+#ifndef USE_TEXTURE
+
+#ifdef IP_1F
+		color_out.color = rnd.x;
+	#elif defined(IP_2F)
+		color_out.color = rnd.xy;
+	#elif defined(IP_3F)
+		color_out.color = rnd.xyz;
+	#elif defined(IP_4F)
+		color_out.color = rnd;
+	#else
+			color_out.color = vec3(0.0, 0.29215, 0.0);
+	#endif
 #endif
 }
