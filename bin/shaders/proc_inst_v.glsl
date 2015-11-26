@@ -65,6 +65,32 @@ vec4 random_2d_perm(ivec2 coord)
 	return vec4(p) * float(1.0 / 0x8000);
 }
 
+
+#ifdef VARIABLE_BLADES_PER_INSTANCE
+
+void get_blade_data_variable_blades_per_dc(out int blade_vtx_id, out int blade_instance_id, out ivec2 tuft_pos_r){
+	const int inst_per_tuft = BLADESPERTUFT / BLADES_PER_INSTANCE;
+	const int inst_per_tuft_log2 = int(log2(inst_per_tuft));
+	const int bpr_log2 = int(log2(BLOCKSPERROW));
+
+#ifdef USE_IDX_BUF
+	blade_vtx_id = gl_VertexID % VERT_PER_BLADE;
+	blade_instance_id = (gl_InstanceID & (inst_per_tuft - 1))*BLADES_PER_INSTANCE + (gl_VertexID / VERT_PER_BLADE);
+#else
+	blade_vtx_id = gl_VertexID % (VERT_PER_BLADE + 2);
+	blade_vtx_id = (blade_vtx_id == 0) ? 0 : blade_vtx_id - 1;
+	blade_vtx_id = (blade_vtx_id == VERT_PER_BLADE) ? VERT_PER_BLADE - 1 : blade_vtx_id;
+
+	blade_instance_id = (gl_InstanceID & (inst_per_tuft - 1))*BLADES_PER_INSTANCE + (gl_VertexID / (VERT_PER_BLADE + 2));
+#endif
+	int tuft_pos_part = gl_InstanceID >> inst_per_tuft_log2;
+
+	tuft_pos_r.x = tuft_pos_part & (BLOCKSPERROW - 1);
+	tuft_pos_r.y = tuft_pos_part >> bpr_log2;
+}
+
+#endif
+
 void main(){
 	const float hcf = 1.0 / (VERT_PER_BLADE >> 1);
 	const vec3 up = vec3(0.0, 1.0, 0.0);
@@ -81,7 +107,15 @@ void main(){
 	const int block_part = gl_VertexID % verts_per_block;
 	const int instance_part = (gl_VertexID - block_part) / verts_per_block;
 
-#ifdef ONE_BATCH
+
+#ifdef VARIABLE_BLADES_PER_INSTANCE
+	int vertex_id = -1;
+	int instance_id = -1;
+	ivec2 block_pos_r;
+
+	get_blade_data_variable_blades_per_dc(vertex_id,instance_id,block_pos_r);
+
+#elif defined(ONE_BATCH)
 #ifndef USE_TRIANGLES
 #ifdef USE_IDX_BUF
 	int vertex_id = block_part % (VERT_PER_BLADE );
@@ -98,8 +132,6 @@ void main(){
 	int instance_id = (gl_VertexID >> 4) & 15;
 	ivec2 block_pos_r = ivec2((gl_VertexID >> 14) & 0x3f, (gl_VertexID >> 8) & 0x3f);
 #endif
-
-
 #else
 
 
