@@ -109,7 +109,7 @@ void base::app::update_camera(frame_context * const fc)
 	fc->_view = glm::rotate(
 		glm::rotate(
 			glm::mat4(1),
-			glm::radians(-_mouse_pos.x)+glm::pi<float>(),
+			glm::radians(-_mouse_pos.x) + glm::pi<float>(),
 			glm::vec3(0,1,0)),
 			glm::radians (- _mouse_pos.y), glm::vec3(1, 0, 0));
 

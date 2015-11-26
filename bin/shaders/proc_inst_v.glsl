@@ -7,7 +7,7 @@ precision highp int;
 #define SQRT_2 1.414213562
 
 
-#define BLADE_WIDTH			0.002
+#define BLADE_WIDTH			0.02
 #define BLADE_HEIGHT		0.1
 
 
