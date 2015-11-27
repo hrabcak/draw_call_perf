@@ -361,7 +361,7 @@ struct config {
 	bool vs_variable_blades_per_dc;
 
 	ushort ip_count;
-	ushort blades_per_dc;
+	int blades_per_dc;
 };
 
 config& cfg();

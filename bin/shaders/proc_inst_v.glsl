@@ -69,24 +69,31 @@ vec4 random_2d_perm(ivec2 coord)
 #ifdef VARIABLE_BLADES_PER_INSTANCE
 
 void get_blade_data_variable_blades_per_dc(out int blade_vtx_id, out int blade_instance_id, out ivec2 tuft_pos_r){
-	const int inst_per_tuft = BLADESPERTUFT / BLADES_PER_INSTANCE;
-	const int inst_per_tuft_log2 = int(log2(inst_per_tuft));
 	const int bpr_log2 = int(log2(BLOCKSPERROW));
+	int global_blade_id = -1;
 
 #ifdef USE_IDX_BUF
 	blade_vtx_id = gl_VertexID % VERT_PER_BLADE;
-	blade_instance_id = (gl_InstanceID & (inst_per_tuft - 1))*BLADES_PER_INSTANCE + (gl_VertexID / VERT_PER_BLADE);
+	global_blade_id = gl_InstanceID * BLADES_PER_INSTANCE + (gl_VertexID / VERT_PER_BLADE);
 #else
-	blade_vtx_id = gl_VertexID % (VERT_PER_BLADE + 2);
-	blade_vtx_id = (blade_vtx_id == 0) ? 0 : blade_vtx_id - 1;
-	blade_vtx_id = (blade_vtx_id == VERT_PER_BLADE) ? VERT_PER_BLADE - 1 : blade_vtx_id;
+	if(BLADES_PER_INSTANCE==1){
+		blade_vtx_id = gl_VertexID;
+		global_blade_id = gl_InstanceID;
 
-	blade_instance_id = (gl_InstanceID & (inst_per_tuft - 1))*BLADES_PER_INSTANCE + (gl_VertexID / (VERT_PER_BLADE + 2));
+	}else {
+		blade_vtx_id = gl_VertexID % (VERT_PER_BLADE + 2);
+		blade_vtx_id = (blade_vtx_id == 0) ? 0 : blade_vtx_id - 1;
+		blade_vtx_id = (blade_vtx_id == VERT_PER_BLADE) ? VERT_PER_BLADE - 1 : blade_vtx_id;
+
+		global_blade_id = gl_InstanceID * BLADES_PER_INSTANCE + (gl_VertexID / (VERT_PER_BLADE + 2));
+	}
 #endif
-	int tuft_pos_part = gl_InstanceID >> inst_per_tuft_log2;
 
-	tuft_pos_r.x = tuft_pos_part & (BLOCKSPERROW - 1);
-	tuft_pos_r.y = tuft_pos_part >> bpr_log2;
+	blade_instance_id = global_blade_id & 15;
+
+	tuft_pos_r.x = (global_blade_id >> 4) & 63;
+	tuft_pos_r.y = global_blade_id >> 10;
+
 }
 
 #endif
@@ -108,11 +115,11 @@ void main(){
 	const int instance_part = (gl_VertexID - block_part) / verts_per_block;
 
 
-#ifdef VARIABLE_BLADES_PER_INSTANCE
+#ifdef VARIABLE_BLADES_PER_INSTANCE 
 	int vertex_id = -1;
 	int instance_id = -1;
 	ivec2 block_pos_r;
-
+	
 	get_blade_data_variable_blades_per_dc(vertex_id,instance_id,block_pos_r);
 
 #elif defined(ONE_BATCH)
@@ -213,6 +220,5 @@ void main(){
 	#else
 		color_out.color = vec3(0.0, 0.29215, 0.0);
 	#endif
-
 #endif
 }

@@ -216,7 +216,7 @@ int WINAPI WinMain(
 				base::cfg().vs_variable_blades_per_dc = true;
 			}
 			else if (stricmp(argv[i], "--blades_per_dc") == 0) {
-				base::cfg().blades_per_dc = base::cfg().blades_per_geom_run = atoi(argv[i + 1]);
+				base::cfg().blades_per_dc = atoi(argv[i + 1]);
 				++i;
 			}
 			else if (stricmp(argv[i], "--proc_scene_mode") == 0) {
