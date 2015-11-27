@@ -89,6 +89,16 @@ void get_blade_data_variable_blades_per_dc(out int blade_vtx_id, out int blade_i
 	}
 #endif
 
+	global_blade_id = ((global_blade_id & 1) << 15 ) | 
+		((global_blade_id & 2) << 13 ) |
+		((global_blade_id & 4) << 11 ) |
+		((global_blade_id & 8) << 9 ) |
+		((global_blade_id & 16) << 7 ) |
+		((global_blade_id & 32) << 5 ) |
+		((global_blade_id & 64) << 3 ) |
+		((global_blade_id & 128) << 1 ) |
+		((global_blade_id & 0xff00) >> 8 );
+
 	blade_instance_id = global_blade_id & 15;
 
 	tuft_pos_r.x = (global_blade_id >> 4) & 63;
