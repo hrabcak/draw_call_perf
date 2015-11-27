@@ -212,6 +212,13 @@ int WINAPI WinMain(
 			else if (stricmp(argv[i], "--ip4f") == 0) {
 				base::cfg().ip_count = 4;
 			}
+			else if (stricmp(argv[i], "--vs_variable_blades_per_dc") == 0) {
+				base::cfg().vs_variable_blades_per_dc = true;
+			}
+			else if (stricmp(argv[i], "--blades_per_dc") == 0) {
+				base::cfg().blades_per_dc = atoi(argv[i + 1]);
+				++i;
+			}
 			else if (stricmp(argv[i], "--proc_scene_mode") == 0) {
 				int opt = argv[i + 1][0] - '0';
 				if (opt == 0){

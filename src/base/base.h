@@ -320,7 +320,9 @@ struct config {
 		, pure_color(false)
 		, use_idx_buf(false)
 		, use_triangles(false)
+		, vs_variable_blades_per_dc(false)
 		, ip_count(0)
+		, blades_per_dc(16)
         //, use_nor_uv(false)
     {}
 
@@ -356,8 +358,10 @@ struct config {
 	int in_vtx_per_dc;
 	bool use_idx_buf;
 	bool use_triangles;
+	bool vs_variable_blades_per_dc;
 
 	ushort ip_count;
+	int blades_per_dc;
 };
 
 config& cfg();
