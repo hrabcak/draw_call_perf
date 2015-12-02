@@ -253,7 +253,9 @@ void scene_grass::init_gpu_stuff(const base::source_location &loc)
 		cfg += inject_buf;
 	}
 
-
+	if (base::cfg().rnd_blade_id){
+		cfg += "#define RND_BLADE_ID\n";
+	}
 
 	_prg_floor = base::create_program(
 		base::create_and_compile_shader(

@@ -323,6 +323,7 @@ struct config {
 		, vs_variable_blades_per_dc(false)
 		, ip_count(0)
 		, blades_per_dc(16)
+		, rnd_blade_id(false)
         //, use_nor_uv(false)
     {}
 
@@ -359,6 +360,7 @@ struct config {
 	bool use_idx_buf;
 	bool use_triangles;
 	bool vs_variable_blades_per_dc;
+	bool rnd_blade_id;
 
 	ushort ip_count;
 	int blades_per_dc;

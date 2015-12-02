@@ -219,6 +219,9 @@ int WINAPI WinMain(
 				base::cfg().blades_per_dc = atoi(argv[i + 1]);
 				++i;
 			}
+			else if (stricmp(argv[i], "--rnd_blade_id") == 0) {
+				base::cfg().rnd_blade_id = true;
+			}
 			else if (stricmp(argv[i], "--proc_scene_mode") == 0) {
 				int opt = argv[i + 1][0] - '0';
 				if (opt == 0){
