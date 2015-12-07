@@ -80,7 +80,7 @@ void base::frame_context::create_buffers()
 
         _scene_vbo = __scene_buffer = create_buffer(
             scene::MAX_BLOCK_COUNT * POOL_SIZE,
-            &__scene_data_ptr);
+            &__scene_data_ptr, 0);
         _scene_data_ptr = __scene_data_ptr;
         _scene_data_offset = 0;
 

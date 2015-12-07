@@ -126,6 +126,9 @@ protected:
     GLuint _buffer_nor_uv;
     GLuint _buffer_tex_handles;
 
+    GLuint _buffer_entity_data;
+    GLuint _tb_entity_data;
+
     std::vector<GLuint> _texs;
     std::vector<GLuint64> _tex_handles;
 

@@ -313,7 +313,7 @@ struct config {
 config& cfg();
 
 template<class T>
-unsigned create_buffer(const unsigned nelem, T** const ptr, void * const data = 0)
+unsigned create_buffer(const unsigned nelem, T** const ptr, void * const data = 0, const bool client_mem = false)
 {
     GLuint handle = 0;
 
@@ -326,7 +326,7 @@ unsigned create_buffer(const unsigned nelem, T** const ptr, void * const data = 
 
     stats()._buffer_mem += size;
 
-    glBufferStorage(GL_ARRAY_BUFFER, size, data, flags);
+    glBufferStorage(GL_ARRAY_BUFFER, size, data, flags | (client_mem ? GL_CLIENT_STORAGE_BIT : 0));
 
     if (ptr != 0) {
         *ptr = reinterpret_cast<T*>(
@@ -336,6 +336,20 @@ unsigned create_buffer(const unsigned nelem, T** const ptr, void * const data = 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     return handle;
+}
+
+inline GLuint create_texture_buffer(const GLuint buffer, const base::pixelfmt fmt)
+{
+    GLuint tb;
+
+    glGenTextures(1, &tb);
+    glBindTexture(GL_TEXTURE_BUFFER, tb);
+    glTexBuffer(GL_TEXTURE_BUFFER, 
+        base::get_pfd(fmt)->_internal,
+        buffer);
+    glBindTexture(GL_TEXTURE_BUFFER, 0);
+
+    return tb;
 }
 
 inline glm::ivec2 pack_to_pos3x21b(const glm::dvec3 &pos, const double scale)

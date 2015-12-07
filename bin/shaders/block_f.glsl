@@ -23,7 +23,7 @@ THE SOFTWARE.
 precision highp float;
 precision highp int;
 
-in vec3 color;
+//in vec3 color;
 in vec2 uv;
 in vec3 wpos;
 

@@ -60,6 +60,9 @@ scene::scene(benchmark * const app)
     , _buffer_pos(0)
     , _buffer_nor_uv(0)
     , _buffer_tex_handles(0)
+    
+    , _buffer_entity_data(0)
+    , _tb_entity_data(0)
 
     , _tb_pos(0)
     , _tb_tex_handles(0)
@@ -367,6 +370,12 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 		base::get_pfd(base::PF_RG32I)->_internal,
 		_buffer_nor_uv);
 	glBindTexture(GL_TEXTURE_BUFFER, 0);
+    
+    // ELEMENT DATA
+    {
+        _buffer_entity_data = base::create_buffer<mat4>(MAX_BLOCK_COUNT * 4, 0);
+        _tb_entity_data = base::create_texture_buffer(_buffer_entity_data, base::PF_RGBA32F);
+    }
 
     if (_tex_mode != BenchTexNone) {
         create_textures(loc);
@@ -706,6 +715,18 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
     timer.start();
 
+    /*static int ccc = 0;
+
+    if (ccc < 4) {
+        glCopyNamedBufferSubData(
+            ctx->_scene_vbo,
+            _buffer_entity_data,
+            ctx->_scene_data_offset * sizeof(mat4),
+            ctx->_scene_data_offset * sizeof(mat4),
+            ctx->_num_visible_blocks[0] * sizeof(mat4));
+        ++ccc;
+    }*/
+
     // SET FRAME RENDER STATES
 
     bool fast_drawcall = false;
@@ -727,6 +748,7 @@ void scene::gpu_draw(base::frame_context * const ctx)
 	// bind texture buffer with block data
     glUniform1i(_prg_tb_blocks, 0);
     glBindMultiTextureEXT(GL_TEXTURE0, GL_TEXTURE_BUFFER, ctx->_scene_tb);
+    //glBindMultiTextureEXT(GL_TEXTURE0, GL_TEXTURE_BUFFER, _tb_entity_data);
 
     // bind texture buffer with vertex data
     glUniform1i(_prg_tb_pos, 1);

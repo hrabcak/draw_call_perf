@@ -173,7 +173,7 @@ void base::init_opengl_win()
 		0,								// no accumulation buffer
 		0, 0, 0, 0,						// accum bits ignored
 		24,								// 32-bit z-buffer
-		8,								// 8-bit stencil buffer
+		0,								// 8-bit stencil buffer
 		0,								// no auxiliary buffer
 		PFD_MAIN_PLANE,					// main layer
 		0,								// reserved

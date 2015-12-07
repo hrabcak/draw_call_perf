@@ -79,7 +79,7 @@ ivec2 get_norm_uv_data(int vertex_id)
 #endif
 
 //OUT 
-out vec3 color;
+//out vec3 color;
 out vec2 uv;
 out vec3 wpos;
 
@@ -133,5 +133,5 @@ void main()
 
     wpos = (tm * vec4(pos, 1)).xyz;
     gl_Position = _ctx._mvp * vec4(wpos,1);
-	color = pos * 0.5 + 0.5;
+	//color = pos * 0.5 + 0.5;
 }
