@@ -288,8 +288,8 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 	const int * vtx_tbl = scene::get_vtx_tbl();
 	const int * ele_tbl = scene::get_ele_tbl();
 
-	uint nvertices = vtx_tbl[_mesh_size_opt] * 2;
-	uint nelements = ele_tbl[_mesh_size_opt] * 2;
+	uint nvertices = vtx_tbl[_mesh_size_opt];
+	uint nelements = ele_tbl[_mesh_size_opt];
 
 	std::vector<ushort> elements;
 	std::vector<int2> vertices;
