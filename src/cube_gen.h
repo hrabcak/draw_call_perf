@@ -15,21 +15,25 @@ void get_face_and_vert_count_for_tess_level(
     uint32 & vert_count);
 
 void gen_cube_imp(
-	ushort tess_level,
+	ushort tess_level_x,
+	ushort tess_level_y,
+	ushort tess_level_z,
 	float * pos_data,
 	float * norm_uv_data,
 	ushort * index_array,
 	short * voxel_map,
 	voxel_info * voxel_inf,
-    uint32 & element_count,
-    uint32 & vert_count,
+	uint32 & element_count,
+	uint32 & vert_count,
 	bool use_int,
 	bool deform,
 	bool multipass);
 
 template < class V >
 void gen_cube(
-    ushort tess_level,
+	ushort tess_level_x,
+	ushort tess_level_y,
+	ushort tess_level_z,
     V * const vert_data,
     V * const norm_uv_data,
     ushort * index_array,
@@ -42,7 +46,9 @@ void gen_cube(
 
 template <>
 static void gen_cube<float>(
-    ushort tess_level,
+	ushort tess_level_x,
+	ushort tess_level_y,
+	ushort tess_level_z,
     float * const vert_data,
     float * const norm_uv_data,
     ushort * index_array,
@@ -54,7 +60,9 @@ static void gen_cube<float>(
 	bool multipass)
 {
 	gen_cube_imp(
-        tess_level,
+        tess_level_x,
+		tess_level_y,
+		tess_level_z,
         vert_data,
         norm_uv_data,
         index_array,
@@ -69,7 +77,9 @@ static void gen_cube<float>(
 
 template<>
 static void gen_cube<glm::int2>(
-    ushort tess_level,
+	ushort tess_level_x,
+	ushort tess_level_y,
+	ushort tess_level_z,
     glm::int2 * const vert_data,
     glm::int2 * const norm_uv_data,
     ushort * index_array,
@@ -81,7 +91,9 @@ static void gen_cube<glm::int2>(
 	bool multipass)
 {
 	gen_cube_imp(
-        tess_level,
+		tess_level_x,
+		tess_level_y,
+		tess_level_z,
         reinterpret_cast<float*>(vert_data),
         reinterpret_cast<float*>(norm_uv_data),
         index_array,

@@ -144,14 +144,18 @@ int WINAPI WinMain(
                 || stricmp(argv[i], "--tex-size64") == 0
                 || stricmp(argv[i], "--tex-size128") == 0) {
                 base::cfg().tex_size = atoi(argv[i] + 10);
-            }
+			}
+			else if(stricmp(argv[i], "--mesh-size-opt") == 0){
+				base::cfg().mesh_size_opt = atoi(argv[i + 1]);
+				++i;
+			}
             else if (
                    stricmp(argv[i], "--mesh-size0") == 0
                 || stricmp(argv[i], "--mesh-size1") == 0
                 || stricmp(argv[i], "--mesh-size2") == 0
                 || stricmp(argv[i], "--mesh-size3") == 0
                 || stricmp(argv[i], "--mesh-size4") == 0) {
-                base::cfg().mesh_size = argv[i][11] - '0';
+				base::cfg().mesh_size_opt = argv[i][11] - '0';
             }
             else if (
                    stricmp(argv[i], "--tex-freq0") == 0
@@ -171,7 +175,10 @@ int WINAPI WinMain(
             }
             else if (stricmp(argv[i], "--use_nor_uv") == 0) {
                 base::cfg().dont_rnd_cubes = true;
-			} 
+			}
+			else if (stricmp(argv[i], "--smoother_tri_count") == 0){
+				base::cfg().smoother_tri_count = true;
+			}
 			else if (stricmp(argv[i], "--procedural-scene") == 0) {
 				base::cfg().procedural_scene = true;
 			}
@@ -255,8 +262,10 @@ int WINAPI WinMain(
                     "--tex-size64 - Texture 64x64 BGRA8 (default)\n"
                     "--tex-size128 - Texture 128x128 BGRA8\n\n"
 
-                    "--mesh-size0 - Meshes with 12 faces\n"
-                    "--mesh-size1 - Meshes with ~48 faces\n"
+					"--mesh-size-opt VALUE - Meshes with ??? faces\n\n"
+
+					"--mesh-size0 - Meshes with 12 faces\n"
+					"--mesh-size1 - Meshes with ~48 faces\n"
                     "--mesh-size2 - Meshes with ~108 faces (default)\n"
                     "--mesh-size3 - Meshes with ~192 faces\n"
                     "--mesh-size4 - Meshes with ~300 faces\n\n"

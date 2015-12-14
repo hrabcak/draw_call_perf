@@ -300,13 +300,14 @@ struct config {
 		, use_async_readback(false)
 
 		, test(-1)
-		, mesh_size(2)
+		, mesh_size_opt(0)
 		, tex_mode(2)
 		, tex_freq(1)
 		, use_vbo(false)
 		, one_mesh(false)
 		, tex_size(64)
 		, dont_rnd_cubes(false)
+		, smoother_tri_count(false)
 		, procedural_scene(false)
 		, blades_per_tuft(16)
 		, tufts_per_tile(4096)
@@ -336,11 +337,12 @@ struct config {
     bool one_mesh : 1;
     bool dont_rnd_cubes : 1;
 	bool procedural_scene : 1;
+	bool smoother_tri_count : 1;
     //bool use_nor_uv : 1;
 
     // tests
     int test;
-    int mesh_size;
+	int mesh_size_opt;
     int tex_mode;
     int tex_freq;
     int tex_size;

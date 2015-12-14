@@ -148,8 +148,8 @@ void benchmark::draw_frame()
             const float r_nframes = 1.0f / float(nframes);
 
 			get_mesh_size_str(mesh_size_str,
-				scene::get_vtx_tbl()[base::cfg().mesh_size],
-				scene::get_ele_tbl()[base::cfg().mesh_size]);
+				scene::get_vtx_tbl()[base::cfg().mesh_size_opt],
+				scene::get_ele_tbl()[base::cfg().mesh_size_opt]);
 
 			if (base::cfg().procedural_scene)
 			{
@@ -345,7 +345,7 @@ bool benchmark::write_test_data_csv(
 		base::cfg().use_vbo ? "true" : "false",
 		base::cfg().tex_freq,
 		base::cfg().tex_mode,
-		base::cfg().mesh_size,
+		base::cfg().mesh_size_opt,
 		base::cfg().one_mesh ? "true" : "false",
 		nframes,
 		time,
