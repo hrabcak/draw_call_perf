@@ -245,6 +245,7 @@
     <None Include="..\..\bin\shaders\buildings_f.glsl" />
     <None Include="..\..\bin\shaders\buildings_g.glsl" />
     <None Include="..\..\bin\shaders\buildings_v.glsl" />
+    <None Include="..\..\bin\shaders\buildings_v_n.glsl" />
     <None Include="..\..\bin\shaders\canvas_f.glsl" />
     <None Include="..\..\bin\shaders\canvas_v.glsl" />
     <None Include="..\..\bin\shaders\heightgen_c.glsl" />

@@ -194,5 +194,8 @@
     <None Include="..\..\bin\shaders\buildings_v.glsl">
       <Filter>src\shaders</Filter>
     </None>
+    <None Include="..\..\bin\shaders\buildings_v_n.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

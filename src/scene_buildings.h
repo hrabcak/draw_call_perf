@@ -28,13 +28,9 @@ public:
 	void load_data();
 
 private:
-	unsigned _vertices_vbo;
-	unsigned _vertices_tb;
-	glm::vec2* _vertices_data_ptr;
-
-	unsigned _flags_vbo;
-	unsigned _flags_tb;
-	uint32* _flags_data_ptr;
+	unsigned _blocks_vbo;
+	unsigned _blocks_tb;
+	glm::ivec4* _blocks_data_ptr;
 
 	unsigned _indices_vbo;
 	unsigned _indices_tb;
@@ -49,8 +45,7 @@ protected:
 	base::app * _app;
 
 	GLuint _prg;
-	GLint _prg_tb_vertices;
-	GLint _prg_tb_flags;
+	GLint _prg_tb_blocks;
 	GLint _prg_mvp;
 };
 
