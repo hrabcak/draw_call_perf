@@ -189,6 +189,7 @@
     <ClInclude Include="..\..\src\gen_tex.h" />
     <ClInclude Include="..\..\src\renderer.h" />
     <ClInclude Include="..\..\src\scene.h" />
+    <ClInclude Include="..\..\src\scene_buildings.h" />
     <ClInclude Include="..\..\src\scene_grass.h" />
     <ClInclude Include="..\..\src\scene_i.h" />
   </ItemGroup>
@@ -235,11 +236,15 @@
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\renderer.cpp" />
     <ClCompile Include="..\..\src\scene.cpp" />
+    <ClCompile Include="..\..\src\scene_buildings.cpp" />
     <ClCompile Include="..\..\src\scene_grass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\bin\shaders\block_f.glsl" />
     <None Include="..\..\bin\shaders\block_v.glsl" />
+    <None Include="..\..\bin\shaders\buildings_f.glsl" />
+    <None Include="..\..\bin\shaders\buildings_g.glsl" />
+    <None Include="..\..\bin\shaders\buildings_v.glsl" />
     <None Include="..\..\bin\shaders\canvas_f.glsl" />
     <None Include="..\..\bin\shaders\canvas_v.glsl" />
     <None Include="..\..\bin\shaders\heightgen_c.glsl" />

@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "base/canvas.h"
 #include "scene.h"
 #include "scene_grass.h"
+#include "scene_buildings.h"
 #include "renderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -39,12 +40,14 @@ benchmark::benchmark()
     _stats_str.resize(4096);
     memset(&_stats_str[0], 0, _stats_str.size());
 
-	if (base::cfg().procedural_scene){
+	_scene = std::auto_ptr<scene_i>(new scene_buildings(this));
+
+/*	if (base::cfg().procedural_scene){
 		_scene = std::auto_ptr<scene_i>(new scene_grass(this));
 	}
 	else{
 		_scene = std::auto_ptr<scene_i>(new scene(this));
-	}
+	}*/
 	
 }
 

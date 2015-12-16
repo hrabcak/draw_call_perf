@@ -61,6 +61,9 @@
     <ClInclude Include="..\..\src\scene_grass.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\scene_buildings.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\base\base.cpp">
@@ -115,6 +118,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\scene_grass.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\scene_buildings.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -177,6 +183,15 @@
       <Filter>src\shaders</Filter>
     </None>
     <None Include="..\..\bin\shaders\proc_tess_tes.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\buildings_f.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\buildings_g.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\bin\shaders\buildings_v.glsl">
       <Filter>src\shaders</Filter>
     </None>
   </ItemGroup>
