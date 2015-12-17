@@ -5,6 +5,7 @@
 
 #include <fstream>
 #include <vector>
+#include <string>
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -26,7 +27,10 @@ scene_buildings::scene_buildings(base::app * app)
 	:_app(app),
 	_prg(0),
 	_prg_tb_blocks(-1),
-	_prg_mvp(-1)
+	_prg_mvp(-1),
+
+	_indices_vbo(0),
+	_indices_tb(0)
 {
 }
 
@@ -39,10 +43,19 @@ scene_buildings::~scene_buildings() {}
 void scene_buildings::init_gpu_stuff(const base::source_location &loc){
 	assert(_prg == 0);
 
+	char inject_buf[512];
+
+	std::string cfg;
+
+	cfg += "#version 430\n";
+
+	sprintf(&inject_buf[0], "#define BLOCKS_PER_IDC %d\n", base::cfg().blocks_per_idc);
+	cfg += inject_buf;
+
 	_prg = base::create_program(
 		base::create_and_compile_shader(
 		SRC_LOCATION,
-		"",
+		cfg,
 		"shaders/buildings_v_n.glsl",
 		GL_VERTEX_SHADER),
 		0,/*base::create_and_compile_shader(
@@ -55,9 +68,40 @@ void scene_buildings::init_gpu_stuff(const base::source_location &loc){
 	base::link_program(loc, _prg);
 
 	_prg_tb_blocks = get_uniform_location(loc, _prg, "tb_blocks");
+	_prg_tile_offset = get_uniform_location(loc, _prg, "tile_offset");
 	_prg_mvp = get_uniform_location(loc, _prg, "mvp");
 
-	load_data();
+	load_tile(glm::ivec2(0, 0));
+	load_tile(glm::ivec2(0, 1));
+	load_tile(glm::ivec2(0, 2));
+	load_tile(glm::ivec2(1, 0));
+	load_tile(glm::ivec2(1, 1));
+	load_tile(glm::ivec2(1, 2));
+	load_tile(glm::ivec2(1, 3));
+	load_tile(glm::ivec2(2, 0));
+	load_tile(glm::ivec2(2, 1));
+	load_tile(glm::ivec2(2, 2));
+	load_tile(glm::ivec2(2, 3));
+	load_tile(glm::ivec2(3, 0));
+	load_tile(glm::ivec2(3, 1));
+	load_tile(glm::ivec2(3, 2));
+	load_tile(glm::ivec2(3, 3));
+
+	//base::stats()._ntriangles = 25 * _tiles[0]._blocks_count * 10;
+
+	const ushort indices_base[][3] = { { 0, 1, 4 }, { 1, 5, 4 }, { 1, 2, 5 }, { 2, 6, 5 }, { 2, 3, 6 }, { 3, 7, 6 }, { 3, 0, 7 }, { 0, 4, 7 }, { 4, 5, 6 }, { 6, 7, 4 } };
+
+	std::vector<ushort> indices;
+	indices.resize(10 * 3 * base::cfg().blocks_per_idc);
+
+	for (int b = 0; b < base::cfg().blocks_per_idc; b++){
+		int offset = b * 8;
+		for (int i = 0; i < 30; i++){
+			indices[b * 30 + i] = (&indices_base[0][0])[i] + offset;
+		}
+	}
+
+	_indices_vbo = base::create_buffer<ushort>(30 * base::cfg().blocks_per_idc, 0, indices.begin()._Ptr);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -83,14 +127,31 @@ void scene_buildings::gpu_draw(base::frame_context * const ctx){
 	//base::set_attr0_vbo_amd_wa();
 
 	glUniformMatrix4fv(_prg_mvp, 1, GL_FALSE, glm::value_ptr(ctx->_mvp));
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indices_vbo);
 
 	// bind scene texture buffers
-	glUniform1i(_prg_tb_blocks, 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_BUFFER, _blocks_tb);
+	
+	for (int i = 0; i < _tiles.size(); i++){
+		int x = _tiles[i]._tile_pos.x;
+		int y = _tiles[i]._tile_pos.y;
+		glUniform2i(_prg_tile_offset, x,y);
+		glUniform1i(_prg_tb_blocks, 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_BUFFER, _tiles[i]._blocks_tb);
+	
+		glDrawElementsInstanced(GL_TRIANGLES, 10 * 3 * base::cfg().blocks_per_idc, GL_UNSIGNED_SHORT, 0, _tiles[i]._blocks_count / base::cfg().blocks_per_idc);
+	}
+	/*const int max = 5;
+	for (int y = 0; y < max; y++){
+		for (int x = 0; x < max; x++){
+			glUniform2i(_prg_tile_offset, x, y);
+			glUniform1i(_prg_tb_blocks, 0);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_BUFFER, _tiles[0]._blocks_tb);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indices_vbo);
-	glDrawElementsInstanced(GL_TRIANGLES, 12 * 3, GL_UNSIGNED_SHORT, 0, _block_count);
+			glDrawElementsInstanced(GL_TRIANGLES, 12 * 3, GL_UNSIGNED_SHORT, 0, _tiles[0]._blocks_count);
+		}
+	}*/
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -101,11 +162,18 @@ const char* scene_buildings::get_test_name(const int i) const{
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void scene_buildings::load_data()
+void scene_buildings::load_tile(glm::ivec2 pos)
 { 
-	
+	BuildingTileDCData building;
+	building._tile_pos = pos;
+
+	std::string file_name = "buildingTile";
+	file_name += '0' + pos.x;
+	file_name += '0' + pos.y;
+	file_name += ".osm.bin";
+
 	// load buildings
-	std::ifstream bif("output.osm.bin",std::ios::binary);
+	std::ifstream bif(file_name.c_str(),std::ios::binary);
 
 	if (!bif.is_open()){
 		_app->shutdown();
@@ -117,7 +185,7 @@ void scene_buildings::load_data()
 
 	bif.read((char*)(&blockCount),sizeof(uint32));
 
-	base::stats()._ntriangles = blockCount * 10;
+	base::stats()._ntriangles += blockCount * 10;
 
 	std::vector<glm::ivec4> blocks;
 
@@ -125,20 +193,18 @@ void scene_buildings::load_data()
 
 	bif.read((char*)(blocks.begin()._Ptr), sizeof(glm::ivec4)*blockCount);
 
-	const ushort indices[][3] = { { 0, 1, 4 }, { 1, 5, 4 }, { 1, 2, 5 }, { 2, 6, 5 }, { 2, 3, 6 }, { 3, 7, 6 }, { 3, 0, 7 }, { 0, 4, 7 }, { 4, 5, 6 }, { 6, 7, 4 } };
-	static_assert(sizeof(indices) < 12 * 3 * 2, "Error!");
-	
-	_indices_vbo = base::create_buffer<ushort>(sizeof(indices), nullptr, (void *)(&(indices[0][0])));
+	building._blocks_count = blockCount;
 
-	_block_count = blockCount;
+	building._blocks_vbo = base::create_buffer<glm::int4>(blockCount, 0, blocks.begin()._Ptr);
 
-	_blocks_vbo = base::create_buffer<glm::int4>(blockCount, nullptr, blocks.begin()._Ptr);
-
-	glGenTextures(1,&_blocks_tb);
-	glBindTexture(GL_TEXTURE_BUFFER, _blocks_tb);
+	glGenTextures(1, &building._blocks_tb);
+	glBindTexture(GL_TEXTURE_BUFFER, building._blocks_tb);
 	glTexBuffer(GL_TEXTURE_BUFFER,
-		base::get_pfd(base::PF_R32I)->_internal,
-		_blocks_vbo);
+		base::get_pfd(base::PF_RGBA32I)->_internal,
+		building._blocks_vbo);
+	glBindTexture(GL_TEXTURE_BUFFER, 0);
+
+	_tiles.push_back(building);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

@@ -6,11 +6,20 @@
 
 #include <gl/glew.h>
 
+#include <vector>
+
 namespace base {
 	struct frame_context;
 	class source_location;
 	class app;
 }
+
+struct BuildingTileDCData{
+	glm::ivec2 _tile_pos;
+	GLuint _blocks_vbo;
+	GLuint _blocks_tb;
+	uint32 _blocks_count;
+};
 
 class scene_buildings: public scene_i
 {
@@ -25,27 +34,18 @@ public:
 	virtual void gpu_draw(base::frame_context * const ctx) override;
 	virtual const char* get_test_name(const int i) const override;
 
-	void load_data();
+	void load_tile(glm::ivec2 pos);
 
 private:
-	unsigned _blocks_vbo;
-	unsigned _blocks_tb;
-	glm::ivec4* _blocks_data_ptr;
-
+	std::vector<BuildingTileDCData> _tiles;
 	unsigned _indices_vbo;
 	unsigned _indices_tb;
-	ushort* _indices_data_ptr;
-
-	uint32 _block_count;
-
-	void create_buffers(uint32 blockCount);
-	void unmap_buffers();
-
 protected:
 	base::app * _app;
 
 	GLuint _prg;
 	GLint _prg_tb_blocks;
+	GLint _prg_tile_offset;
 	GLint _prg_mvp;
 };
 

@@ -325,6 +325,7 @@ struct config {
 		, ip_count(0)
 		, blades_per_dc(16)
 		, rnd_blade_id(false)
+		, blocks_per_idc(1)
         //, use_nor_uv(false)
     {}
 
@@ -366,6 +367,9 @@ struct config {
 
 	ushort ip_count;
 	int blades_per_dc;
+
+	// building test params
+	int blocks_per_idc;
 };
 
 config& cfg();
