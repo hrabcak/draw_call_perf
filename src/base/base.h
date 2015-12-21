@@ -292,6 +292,12 @@ void swap_buffers();
 void sleep_ms(const int time);
 
 struct config {
+	enum SceneType{
+		stCubes = 0,
+		stGrass = 1,
+		stBuildings = 2
+	};
+
 	config()
 		: use_debug_context(false)
 		, use_debug_sync(false)
@@ -308,7 +314,7 @@ struct config {
 		, tex_size(64)
 		, dont_rnd_cubes(false)
 		, smoother_tri_count(false)
-		, procedural_scene(false)
+		, sceneType(stCubes)
 		, blades_per_tuft(16)
 		, tufts_per_tile(4096)
 		, ngrass_tiles(16)
@@ -326,6 +332,7 @@ struct config {
 		, blades_per_dc(16)
 		, rnd_blade_id(false)
 		, blocks_per_idc(1)
+		, buildings_count(0)
         //, use_nor_uv(false)
     {}
 
@@ -337,9 +344,10 @@ struct config {
     bool use_vbo : 1;
     bool one_mesh : 1;
     bool dont_rnd_cubes : 1;
-	bool procedural_scene : 1;
 	bool smoother_tri_count : 1;
     //bool use_nor_uv : 1;
+
+	SceneType sceneType;
 
     // tests
     int test;
@@ -369,7 +377,9 @@ struct config {
 	int blades_per_dc;
 
 	// building test params
+	
 	int blocks_per_idc;
+	uint32 buildings_count;
 };
 
 config& cfg();

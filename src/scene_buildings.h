@@ -47,6 +47,7 @@ protected:
 	GLint _prg_tb_blocks;
 	GLint _prg_tile_offset;
 	GLint _prg_mvp;
+	GLint _prg_total_count;
 };
 
 #endif // __SCENE_BUILDINGS_H__

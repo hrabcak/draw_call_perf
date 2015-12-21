@@ -180,7 +180,10 @@ int WINAPI WinMain(
 				base::cfg().smoother_tri_count = true;
 			}
 			else if (stricmp(argv[i], "--procedural-scene") == 0) {
-				base::cfg().procedural_scene = true;
+				base::cfg().sceneType = base::config::stGrass;
+			}
+			else if (stricmp(argv[i], "--buildings-scene") == 0){
+				base::cfg().sceneType = base::config::stBuildings;
 			}
 			else if (stricmp(argv[i], "--proc_use_inst") == 0){
 			}
@@ -229,7 +232,7 @@ int WINAPI WinMain(
 			else if (stricmp(argv[i], "--rnd_blade_id") == 0) {
 				base::cfg().rnd_blade_id = true;
 			}
-			else if (stricmp(argv[i], "--blocks_per_idc") == 0) {
+			else if (stricmp(argv[i], "--blocks_per_tile") == 0) {
 				base::cfg().blocks_per_idc = atoi(argv[i + 1]);
 				i++;
 			}
@@ -294,6 +297,9 @@ int WINAPI WinMain(
 					"--use_idx_buf - Use indnex buffer in mode 0.\n"
 					"--use_triangles - Use triagles instead of triangle strip. (in mode 0 and idx buf used)\n"
 					"--gs_blades_per_run VALUE - Number of grass blades generated per GS run. Values:1, 2, 4, 8\n\n"
+
+					"--buildings-scene - Use building scene.\n"
+					"--blocks_per_tile - Subdivide tile into n batches of buildings.\n\n"
 
 
 					,

@@ -51,13 +51,15 @@ base::app::app()
 	// init mouse stuff
 	base::set_mouse_pos(glm::ivec2(200));
 	_last_mouse_pos = base::get_mouse_pos();
-	_mouse_pos = glm::ivec2(45.8000183, 23.6000042);
+	_mouse_pos = glm::ivec2(180, 0);
 
-	if (base::cfg().procedural_scene){
+	if (base::cfg().sceneType == base::config::stGrass){
 		_position = glm::vec3(0.0, 1.8, 0.0);
-	}
-
-	_position = glm::vec3(-1335.44604, 261.017517, 1306.41760);
+	} 
+	else if (base::cfg().sceneType == base::config::stBuildings){
+		_mouse_pos = glm::ivec2(45.8000183, 23.6000042);
+		_position = glm::vec3(-1335.44604, 261.017517, 1306.41760);
+	}	
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

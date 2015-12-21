@@ -28,6 +28,7 @@ scene_buildings::scene_buildings(base::app * app)
 	_prg(0),
 	_prg_tb_blocks(-1),
 	_prg_mvp(-1),
+	_prg_total_count(-1),
 
 	_indices_vbo(0),
 	_indices_tb(0)
@@ -70,6 +71,7 @@ void scene_buildings::init_gpu_stuff(const base::source_location &loc){
 	_prg_tb_blocks = get_uniform_location(loc, _prg, "tb_blocks");
 	_prg_tile_offset = get_uniform_location(loc, _prg, "tile_offset");
 	_prg_mvp = get_uniform_location(loc, _prg, "mvp");
+	_prg_total_count = get_uniform_location(loc, _prg, "total_count");
 
 	load_tile(glm::ivec2(0, 0));
 	load_tile(glm::ivec2(0, 1));
@@ -89,9 +91,9 @@ void scene_buildings::init_gpu_stuff(const base::source_location &loc){
 
 	//base::stats()._ntriangles = 25 * _tiles[0]._blocks_count * 10;
 
-	const ushort indices_base[][3] = { { 0, 1, 4 }, { 1, 5, 4 }, { 1, 2, 5 }, { 2, 6, 5 }, { 2, 3, 6 }, { 3, 7, 6 }, { 3, 0, 7 }, { 0, 4, 7 }, { 4, 5, 6 }, { 6, 7, 4 } };
+	const uint32 indices_base[][3] = { { 0, 1, 4 }, { 1, 5, 4 }, { 1, 2, 5 }, { 2, 6, 5 }, { 2, 3, 6 }, { 3, 7, 6 }, { 3, 0, 7 }, { 0, 4, 7 }, { 4, 5, 6 }, { 6, 7, 4 } };
 
-	std::vector<ushort> indices;
+	std::vector<uint32> indices;
 	indices.resize(10 * 3 * base::cfg().blocks_per_idc);
 
 	for (int b = 0; b < base::cfg().blocks_per_idc; b++){
@@ -101,7 +103,7 @@ void scene_buildings::init_gpu_stuff(const base::source_location &loc){
 		}
 	}
 
-	_indices_vbo = base::create_buffer<ushort>(30 * base::cfg().blocks_per_idc, 0, indices.begin()._Ptr);
+	_indices_vbo = base::create_buffer<uint32>(30 * base::cfg().blocks_per_idc, 0, indices.begin()._Ptr);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -119,6 +121,9 @@ void scene_buildings::update(base::frame_context * const ctx){
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 void scene_buildings::gpu_draw(base::frame_context * const ctx){
+	base::hptimer timer;
+	timer.start();
+
 	glEnable(GL_CULL_FACE);
 	glUseProgram(_prg);
 
@@ -126,32 +131,30 @@ void scene_buildings::gpu_draw(base::frame_context * const ctx){
 	// to have attr0 array anabled
 	//base::set_attr0_vbo_amd_wa();
 
+	
+	glQueryCounter(ctx->_time_queries[0], GL_TIMESTAMP);
+
 	glUniformMatrix4fv(_prg_mvp, 1, GL_FALSE, glm::value_ptr(ctx->_mvp));
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indices_vbo);
+	glUniform1i(_prg_tb_blocks, 0);
+	glActiveTexture(GL_TEXTURE0);
 
 	// bind scene texture buffers
+
 	
+
 	for (int i = 0; i < _tiles.size(); i++){
 		int x = _tiles[i]._tile_pos.x;
 		int y = _tiles[i]._tile_pos.y;
 		glUniform2i(_prg_tile_offset, x,y);
-		glUniform1i(_prg_tb_blocks, 0);
-		glActiveTexture(GL_TEXTURE0);
+		glUniform1ui(_prg_total_count,_tiles[i]._blocks_count);
 		glBindTexture(GL_TEXTURE_BUFFER, _tiles[i]._blocks_tb);
-	
-		glDrawElementsInstanced(GL_TRIANGLES, 10 * 3 * base::cfg().blocks_per_idc, GL_UNSIGNED_SHORT, 0, _tiles[i]._blocks_count / base::cfg().blocks_per_idc);
+		glDrawElementsInstanced(GL_TRIANGLES, 10 * 3 * base::cfg().blocks_per_idc, GL_UNSIGNED_INT, 0, (_tiles[i]._blocks_count / base::cfg().blocks_per_idc) + 1);
 	}
-	/*const int max = 5;
-	for (int y = 0; y < max; y++){
-		for (int x = 0; x < max; x++){
-			glUniform2i(_prg_tile_offset, x, y);
-			glUniform1i(_prg_tb_blocks, 0);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_BUFFER, _tiles[0]._blocks_tb);
 
-			glDrawElementsInstanced(GL_TRIANGLES, 12 * 3, GL_UNSIGNED_SHORT, 0, _tiles[0]._blocks_count);
-		}
-	}*/
+	ctx->_cpu_render_time = timer.elapsed_time();
+
+	glQueryCounter(ctx->_time_queries[1], GL_TIMESTAMP);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -186,6 +189,8 @@ void scene_buildings::load_tile(glm::ivec2 pos)
 	bif.read((char*)(&blockCount),sizeof(uint32));
 
 	base::stats()._ntriangles += blockCount * 10;
+	base::stats()._nvertices += blockCount * 8;
+	base::stats()._ndrawcalls++;
 
 	std::vector<glm::ivec4> blocks;
 
@@ -205,6 +210,8 @@ void scene_buildings::load_tile(glm::ivec2 pos)
 	glBindTexture(GL_TEXTURE_BUFFER, 0);
 
 	_tiles.push_back(building);
+
+	base::cfg().buildings_count += blockCount;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

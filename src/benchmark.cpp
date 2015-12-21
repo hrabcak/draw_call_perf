@@ -40,14 +40,15 @@ benchmark::benchmark()
     _stats_str.resize(4096);
     memset(&_stats_str[0], 0, _stats_str.size());
 
-	_scene = std::auto_ptr<scene_i>(new scene_buildings(this));
-
-/*	if (base::cfg().procedural_scene){
+	if (base::cfg().sceneType == base::config::stGrass){
 		_scene = std::auto_ptr<scene_i>(new scene_grass(this));
 	}
-	else{
+	else if (base::cfg().sceneType == base::config::stCubes){
 		_scene = std::auto_ptr<scene_i>(new scene(this));
-	}*/
+	}
+	else if (base::cfg().sceneType == base::config::stBuildings){
+		_scene = std::auto_ptr<scene_i>(new scene_buildings(this));
+	}
 	
 }
 
@@ -154,7 +155,7 @@ void benchmark::draw_frame()
 				scene::get_vtx_tbl()[base::cfg().mesh_size_opt],
 				scene::get_ele_tbl()[base::cfg().mesh_size_opt]);
 
-			if (base::cfg().procedural_scene)
+			if (base::cfg().sceneType == base::config::stGrass)
 			{
 				sprintf(
 					&_stats_str[0],
@@ -167,6 +168,7 @@ void benchmark::draw_frame()
 					"gpu:      %.3f ms\n"
 					"cpu:      %.3f ms\n"
 					"fps:      %.0f\n\n"
+					"GPU driver: %s\n"
 					"GPU: %s\n\n"
 					"%s",
 
@@ -179,10 +181,11 @@ void benchmark::draw_frame()
 					stats._gpu_time * r_nframes,
 					stats._cpu_time * r_nframes,
 					fps,
+					_renderer->get_gpu_driver_str(),
 					_renderer->get_gpu_str(),
 					get_test_name());
 			}
-			else
+			else if (base::cfg().sceneType == base::config::stCubes)
 			{
 				sprintf(
 					&_stats_str[0],
@@ -203,6 +206,7 @@ void benchmark::draw_frame()
 					"textures: %ux%u BGRA8\n"
 					"tex freq: %u\n"
 					"tex mode: %s\n"
+					"GPU driver: %s\n"
 					"GPU: %s\n\n"
 					"%s",
 
@@ -223,6 +227,39 @@ void benchmark::draw_frame()
 					base::cfg().tex_size, base::cfg().tex_size,
 					base::cfg().tex_freq,
 					get_texturing_mode_str(base::cfg().tex_mode),
+					_renderer->get_gpu_driver_str(),
+					_renderer->get_gpu_str(),
+					get_test_name());
+			}else if (base::cfg().sceneType == base::config::stBuildings)
+			{
+				sprintf(
+					&_stats_str[0],
+					"NBuildings:%u\n"
+					"Block size:%d\n"
+					"MVtx/s:   %.0f\n"
+					"MVtx:     %.3f\n"
+					"MTris/s:  %.0f\n"
+					"MTris:    %.3f\n"
+					"KDraw/s:  %.0f\n"
+					"KDraw:    %.3f\n"
+					"gpu:      %.3f ms\n"
+					"cpu:      %.3f ms\n"
+					"fps:      %.0f\n\n"
+					"GPU driver: %s\n"
+					"GPU: %s\n\n"
+					"%s",
+					base::cfg().buildings_count,
+					base::cfg().blocks_per_idc,
+					float(stats._nvertices) * 0.000001 / dtf,
+					float(stats._nvertices) * 0.000001 / float(nframes),
+					float(stats._ntriangles) * 0.000001 / dtf,
+					float(stats._ntriangles) * 0.000001 / float(nframes),
+					float(stats._ndrawcalls) * 0.001 / dtf,
+					float(stats._ndrawcalls) * 0.001 / nframes,
+					stats._gpu_time * r_nframes,
+					stats._cpu_time * r_nframes,
+					fps,
+					_renderer->get_gpu_driver_str(),
 					_renderer->get_gpu_str(),
 					get_test_name());
 			}
@@ -236,11 +273,14 @@ void benchmark::draw_frame()
 			}
 
 			if (base::cfg().test != -1 && test_cycles == 3){
-				if (base::cfg().procedural_scene) {
+				if (base::cfg().sceneType == base::config::stGrass) {
 					grass_write_test_data_csv("grass_test.csv", _test_stats, dtime_total, nframes_total);
 				}
-				else{
+				else if (base::cfg().sceneType == base::config::stCubes){
 					write_test_data_csv("test.csv", _test_stats, dtime_total, nframes_total);
+				}
+				else if (base::cfg().sceneType == base::config::stBuildings){
+					buildings_write_test_data_csv("test.csv", _test_stats, dtime_total, nframes_total);
 				}
 				_shutdown = true;
 			}
@@ -429,6 +469,57 @@ bool benchmark::grass_write_test_data_csv(
 	return true;
 }
 
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+bool benchmark::buildings_write_test_data_csv(
+	const char * file_name,
+	const base::stats_data & stats,
+	const float time,
+	const int nframes)
+{
+	FILE * pFile;
+	pFile = fopen(file_name, "r+");
+
+	if (pFile == NULL){
+		pFile = fopen(file_name, "w");
+		if (pFile == NULL){
+			return false;
+		}
+
+		fputs(
+			"gpu_gl_name,"
+			"gpu_driver,"
+			"frames,"
+			"render_time,"
+			"cpu_render_time (ms),"
+			"gpu_render_time (ms),"
+			"dc,"
+			"ntri,"
+			"blocks_per_tile"
+			, pFile);
+	}
+	else{
+		fseek(pFile, 0, SEEK_END);
+	}
+
+	fprintf(
+		pFile
+		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%d"
+		, _renderer->get_gpu_str()
+		, _renderer->get_gpu_driver_str()
+		, nframes
+		, time
+		, stats._cpu_time
+		, stats._gpu_time
+		, stats._ndrawcalls
+		, stats._ntriangles
+		, base::cfg().blocks_per_idc
+		);
+
+	fclose(pFile);
+
+	return true;
+}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 

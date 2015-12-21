@@ -4,6 +4,7 @@ precision highp int;
 uniform isamplerBuffer tb_blocks;
 uniform ivec2 tile_offset;
 uniform mat4 mvp;
+uniform uint total_count;
 
 out OUT{
 	vec3 wpos;
@@ -45,6 +46,12 @@ void main()
 	const float t_width = 2500.0f;
 	int vtxID = gl_VertexID & 7;
 	int index = gl_InstanceID * BLOCKS_PER_IDC + (gl_VertexID >> 3);
+
+	if (index >= total_count){
+		gl_Position = vec4(0.0, 0.0, 0.0, 0.0);
+		return;
+	}
+
 	ivec4 block = texelFetch(tb_blocks, index);
 	Building b = unpack_ivec4_to_building(block);
 

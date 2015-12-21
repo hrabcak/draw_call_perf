@@ -46,6 +46,7 @@ protected:
 	bool _shutdown;
 	base::app *_app;
 	std::string _graphic_card_name;
+	std::string _graphic_card_driver;
 
 public:
 
@@ -67,6 +68,7 @@ public:
 	base::frame_context* pop_frame_context_from_pool();
 
     const char* get_gpu_str() const { return _graphic_card_name.c_str(); }
+	const char* get_gpu_driver_str() const { return _graphic_card_driver.c_str(); }
 
     bool is_alive() { return !_shutdown; };
 };

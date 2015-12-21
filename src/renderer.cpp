@@ -67,6 +67,7 @@ void renderer::run()
         base::init_opengl_dbg_win();
 
         _graphic_card_name = (char*)glGetString(GL_RENDERER);
+		_graphic_card_driver = (char*)glGetString(GL_VERSION);
 
         // create frame_context pool
         {
