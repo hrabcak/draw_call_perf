@@ -76,19 +76,39 @@ void scene_buildings::init_gpu_stuff(const base::source_location &loc){
 	load_tile(glm::ivec2(0, 0));
 	load_tile(glm::ivec2(0, 1));
 	load_tile(glm::ivec2(0, 2));
+	load_tile(glm::ivec2(0, 3));
+	load_tile(glm::ivec2(0, 4));
+	load_tile(glm::ivec2(0, 5));
 	load_tile(glm::ivec2(1, 0));
 	load_tile(glm::ivec2(1, 1));
 	load_tile(glm::ivec2(1, 2));
 	load_tile(glm::ivec2(1, 3));
+	load_tile(glm::ivec2(1, 4));
+	load_tile(glm::ivec2(1, 5));
 	load_tile(glm::ivec2(2, 0));
 	load_tile(glm::ivec2(2, 1));
 	load_tile(glm::ivec2(2, 2));
 	load_tile(glm::ivec2(2, 3));
+	load_tile(glm::ivec2(2, 4));
+	load_tile(glm::ivec2(2, 5));
 	load_tile(glm::ivec2(3, 0));
 	load_tile(glm::ivec2(3, 1));
 	load_tile(glm::ivec2(3, 2));
 	load_tile(glm::ivec2(3, 3));
-
+	load_tile(glm::ivec2(3, 4));
+	load_tile(glm::ivec2(3, 5));
+	load_tile(glm::ivec2(4, 0));
+	load_tile(glm::ivec2(4, 1));
+	load_tile(glm::ivec2(4, 2));
+	load_tile(glm::ivec2(4, 3));
+	load_tile(glm::ivec2(4, 4));
+	load_tile(glm::ivec2(4, 5));
+	load_tile(glm::ivec2(5, 0));
+	load_tile(glm::ivec2(5, 1));
+	load_tile(glm::ivec2(5, 2));
+	load_tile(glm::ivec2(5, 3));
+	load_tile(glm::ivec2(5, 4));
+	load_tile(glm::ivec2(5, 5));
 	//base::stats()._ntriangles = 25 * _tiles[0]._blocks_count * 10;
 
 	const uint32 indices_base[][3] = { { 0, 1, 4 }, { 1, 5, 4 }, { 1, 2, 5 }, { 2, 6, 5 }, { 2, 3, 6 }, { 3, 7, 6 }, { 3, 0, 7 }, { 0, 4, 7 }, { 4, 5, 6 }, { 6, 7, 4 } };
@@ -124,7 +144,7 @@ void scene_buildings::gpu_draw(base::frame_context * const ctx){
 	base::hptimer timer;
 	timer.start();
 
-	glEnable(GL_CULL_FACE);
+	glDisable(GL_CULL_FACE);
 	glUseProgram(_prg);
 
 	// this is only needed on AMD cards due to driver bug wich needs
@@ -147,9 +167,9 @@ void scene_buildings::gpu_draw(base::frame_context * const ctx){
 		int x = _tiles[i]._tile_pos.x;
 		int y = _tiles[i]._tile_pos.y;
 		glUniform2i(_prg_tile_offset, x,y);
-		glUniform1ui(_prg_total_count,_tiles[i]._blocks_count);
-		glBindTexture(GL_TEXTURE_BUFFER, _tiles[i]._blocks_tb);
-		glDrawElementsInstanced(GL_TRIANGLES, 10 * 3 * base::cfg().blocks_per_idc, GL_UNSIGNED_INT, 0, (_tiles[i]._blocks_count / base::cfg().blocks_per_idc) + 1);
+		glUniform1ui(_prg_total_count, _tiles[i & 1]._blocks_count);
+		glBindTexture(GL_TEXTURE_BUFFER, _tiles[i & 1]._blocks_tb);
+		glDrawElementsInstanced(GL_TRIANGLES, 10 * 3 * base::cfg().blocks_per_idc, GL_UNSIGNED_INT, 0, (_tiles[i & 1]._blocks_count / base::cfg().blocks_per_idc) + 1);
 	}
 
 	ctx->_cpu_render_time = timer.elapsed_time();
