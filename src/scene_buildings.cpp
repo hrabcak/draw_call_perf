@@ -63,7 +63,7 @@ void scene_buildings::init_gpu_stuff(const base::source_location &loc){
 		  SRC_LOCATION, "shaders/buildings_g.glsl", GL_GEOMETRY_SHADER),*/
 		  base::create_and_compile_shader(
 		  SRC_LOCATION,
-		  "",
+		  cfg,
 		  "shaders/buildings_f.glsl",
 		  GL_FRAGMENT_SHADER));
 	base::link_program(loc, _prg);
