@@ -41,23 +41,81 @@ Building unpack_ivec4_to_building(ivec4 packed_block){
 	return result;
 }
 
+vec2 unpack_ivec4_to_p1(ivec4 packed_block){
+	vec2 result;
+	const float scale16 = 2500.0f / 32767.0f;
+
+	result.x = (packed_block.x >> 16) * scale16;
+	result.y = ((packed_block.x << 16) >> 16) * scale16;
+
+	return result;
+}
+
+vec2 unpack_ivec4_to_p2(ivec4 packed_block){
+	vec2 result;
+	const float scale13 = 312.5f / 4095.0f;
+
+	result.x = (packed_block.y >> 19) * scale13;
+	result.y = ((packed_block.y << 13) >> 19) * scale13;
+
+	return result;
+}
+
+vec2 unpack_ivec4_to_p3(ivec4 packed_block){
+	vec2 result;
+	const float scale13 = 312.5f / 4095.0f;
+
+	result.x = (((packed_block.y << 26) >> 19) | ((packed_block.z >> 25) & 0x7f)) * scale13;
+	result.y = ((packed_block.z << 7) >> 19) * scale13;
+
+	return result;
+}
+
+vec2 unpack_ivec4_to_p4(ivec4 packed_block){
+	vec2 result;
+	const float scale13 = 312.5f / 4095.0f;
+
+	result.x = (((packed_block.z << 20) >> 19) | ((packed_block.w >> 31) & 0x1))* scale13;
+	result.y = ((packed_block.w << 1) >> 19)* scale13;
+
+	
+	return result;
+}
+
+uint unpack_ivec4_to_flags(ivec4 packed_block){
+	return uint(packed_block.w & 0xff);
+}
+
 void main()
 {
 	const float t_width = 2500.0f;
 	int vtxID = gl_VertexID & 7;
 	int index = gl_InstanceID * BLOCKS_PER_IDC + (gl_VertexID >> 3);
 
-	if (index >= total_count){
+	 /*(index >= total_count){
 		gl_Position = vec4(0.0, 0.0, 0.0, 0.0);
 		return;
-	}
+	}*/
 
 	ivec4 block = texelFetch(tb_blocks, index);
-	Building b = unpack_ivec4_to_building(block);
+	
+	vec2 xy;
+	uint flags = unpack_ivec4_to_flags(block);
 
-	vec2 xy = b.pnts[vtxID & 3] + vec2(tile_offset) * t_width;
+	if ((vtxID & 3) == 0){
+		xy = unpack_ivec4_to_p1(block) + vec2(tile_offset) * t_width;
+	}
+	else if((vtxID & 3) == 1){
+		xy = unpack_ivec4_to_p1(block) + unpack_ivec4_to_p2(block) + vec2(tile_offset) * t_width;
+	}
+	else if((vtxID & 3) == 2){
+		xy = unpack_ivec4_to_p1(block) + unpack_ivec4_to_p3(block) + vec2(tile_offset) * t_width;
+	}
+	else if((vtxID & 3) == 3){
+		xy = unpack_ivec4_to_p1(block) + unpack_ivec4_to_p4(block) + vec2(tile_offset) * t_width;
+	}
 
-	o.wpos = vec3(xy.x, (vtxID > 3) ? (float(b.flags) * 2.9) : 0u, -xy.y);
+	o.wpos = vec3(xy.x + float(total_count) * 0.0000000000001, (vtxID > 3) ? (float(flags) * 2.9) : 0u, -xy.y);
 	vec4 opos = mvp * vec4(o.wpos, 1);
 
 	opos.z = log2(max(1e-6, 1.0 + opos.w)) / log(1000000 + 1.0) - 1.0;

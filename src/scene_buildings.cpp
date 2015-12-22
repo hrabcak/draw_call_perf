@@ -167,9 +167,15 @@ void scene_buildings::gpu_draw(base::frame_context * const ctx){
 		int x = _tiles[i]._tile_pos.x;
 		int y = _tiles[i]._tile_pos.y;
 		glUniform2i(_prg_tile_offset, x,y);
-		glUniform1ui(_prg_total_count, _tiles[i & 1]._blocks_count);
-		glBindTexture(GL_TEXTURE_BUFFER, _tiles[i & 1]._blocks_tb);
-		glDrawElementsInstanced(GL_TRIANGLES, 10 * 3 * base::cfg().blocks_per_idc, GL_UNSIGNED_INT, 0, (_tiles[i & 1]._blocks_count / base::cfg().blocks_per_idc) + 1);
+		glUniform1ui(_prg_total_count, _tiles[i]._blocks_count);
+		glBindTexture(GL_TEXTURE_BUFFER, _tiles[i]._blocks_tb);
+		glDrawElementsInstanced(GL_TRIANGLES, 
+						10 * 3 * base::cfg().blocks_per_idc, 
+						GL_UNSIGNED_INT, 
+						0, 
+						(_tiles[i]._blocks_count % base::cfg().blocks_per_idc == 0) ?
+						(_tiles[i]._blocks_count / base::cfg().blocks_per_idc) : 
+						(_tiles[i]._blocks_count / base::cfg().blocks_per_idc) + 1);
 	}
 
 	ctx->_cpu_render_time = timer.elapsed_time();
@@ -208,8 +214,8 @@ void scene_buildings::load_tile(glm::ivec2 pos)
 
 	bif.read((char*)(&blockCount),sizeof(uint32));
 
-	base::stats()._ntriangles += blockCount * 10;
-	base::stats()._nvertices += blockCount * 8;
+	base::stats()._ntriangles += uint64(blockCount) * 10;
+	base::stats()._nvertices += uint64(blockCount) * 8;
 	base::stats()._ndrawcalls++;
 
 	std::vector<glm::ivec4> blocks;
