@@ -22,11 +22,13 @@ THE SOFTWARE.
 
 #include "base.h"
 #include "tga_utils.h"
+#include "pci_c.h"
 
 #include <sys/stat.h>
 #include <io.h>
 #include <stdlib.h>
 #include <fcntl.h>
+
 
 #include "gl/glew.h"
 
@@ -422,5 +424,20 @@ float base::rndNomalized(rnd_int & rnd)
 }
 
 base::config& base::cfg() { static config ___c; return ___c; }
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+const char * base::ven_dev_id_to_ati_card_name(unsigned short vendor_id, unsigned short device_id){
+	int t_len = sizeof(PciDevTable) / sizeof(PCI_DEVTABLE);
+
+	for (int i = 0; i < t_len; i++){
+		if (PciDevTable[i].VenId == vendor_id && PciDevTable[i].DevId == device_id){
+			return PciDevTable[i].ChipDesc;
+		}
+	}
+
+	return "";
+
+}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

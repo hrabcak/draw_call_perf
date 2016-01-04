@@ -64,6 +64,9 @@
     <ClInclude Include="..\..\src\scene_buildings.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\pci_c.h">
+      <Filter>src\base</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\base\base.cpp">

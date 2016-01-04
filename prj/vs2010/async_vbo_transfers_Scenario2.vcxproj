@@ -187,6 +187,7 @@
     <ClInclude Include="..\..\src\base\types.h" />
     <ClInclude Include="..\..\src\cube_gen.h" />
     <ClInclude Include="..\..\src\gen_tex.h" />
+    <ClInclude Include="..\..\src\pci_c.h" />
     <ClInclude Include="..\..\src\renderer.h" />
     <ClInclude Include="..\..\src\scene.h" />
     <ClInclude Include="..\..\src\scene_buildings.h" />
