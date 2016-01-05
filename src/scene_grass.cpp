@@ -1,4 +1,4 @@
-#include "scene_grass.h"
+﻿#include "scene_grass.h"
 
 #include "base/base.h"
 #include "base/frame_context.h"
@@ -650,23 +650,6 @@ void scene_grass::create_height_texs(){
 }
 
 bool scene_grass::send_test_data(){
-	WSADATA wsaData;
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-		return false;
-	}
-	SOCKET Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	struct hostent *host;
-	host = gethostbyname("crash.outerra.com");
-	SOCKADDR_IN SockAddr;
-	SockAddr.sin_port = htons(80);
-	SockAddr.sin_family = AF_INET;
-	SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
-	if (connect(Socket, (SOCKADDR*)(&SockAddr), sizeof(SockAddr)) != 0){
-		return false;
-	}
-
-	// sending part start
-
 	char header[1024];
 	std::ifstream ifs("grass_test.csv", std::ios::binary);
 	if (!ifs.is_open()){
@@ -715,7 +698,29 @@ bool scene_grass::send_test_data(){
 		if (best_score < score){
 			best_score = score;
 		}
+	}
 
+	sprintf(&header[0], " Your score is %f milion triangles per second!\n Do you want to help and send us gathered data?", best_score);
+
+	int res = MessageBox(0, header, "Perftest result", MB_YESNO);
+
+	if (res == IDNO){
+		return true;
+	}
+
+	WSADATA wsaData;
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+		return false;
+	}
+	SOCKET Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	struct hostent *host;
+	host = gethostbyname("crash.outerra.com");
+	SOCKADDR_IN SockAddr;
+	SockAddr.sin_port = htons(80);
+	SockAddr.sin_family = AF_INET;
+	SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
+	if (connect(Socket, (SOCKADDR*)(&SockAddr), sizeof(SockAddr)) != 0){
+		return false;
 	}
 
 	memset(&header[0], 0, 1024);
@@ -753,8 +758,6 @@ bool scene_grass::send_test_data(){
 			return false;
 		};
 	}
-
-	// sending part end
 
 	closesocket(Socket);
 	WSACleanup();
