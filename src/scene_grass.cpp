@@ -745,7 +745,7 @@ bool scene_grass::send_test_data(){
 		best_score);
 
 
-	if (send(Socket, &header[0], strlen(&header[0]), 0) != strlen(&header[0])){
+	if (send(Socket, &header[0], int(strlen(&header[0])), 0) != int(strlen(&header[0]))){
 		return false;
 	};
 
@@ -754,7 +754,7 @@ bool scene_grass::send_test_data(){
 	while (!ifs.eof()){
 		memset(&header[0], 0, 1024);
 		ifs.read(&header[0], 512);
-		if (send(Socket, &header[0], strlen(&header[0]), 0) != strlen(&header[0])){
+		if (send(Socket, &header[0], int(strlen(&header[0])), 0) != int(strlen(&header[0]))){
 			return false;
 		};
 	}
