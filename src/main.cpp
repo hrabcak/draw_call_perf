@@ -26,6 +26,8 @@ THE SOFTWARE.
 #include "Windows.h"
 #include "Shellapi.h"
 
+#include "scene_grass.h"
+
 LPSTR* CommandLineToArgvA(LPSTR lpCmdLine, INT *pNumArgs)
 {
     int retval;
@@ -144,14 +146,18 @@ int WINAPI WinMain(
                 || stricmp(argv[i], "--tex-size64") == 0
                 || stricmp(argv[i], "--tex-size128") == 0) {
                 base::cfg().tex_size = atoi(argv[i] + 10);
-            }
+			}
+			else if(stricmp(argv[i], "--mesh-size-opt") == 0){
+				base::cfg().mesh_size_opt = atoi(argv[i + 1]);
+				++i;
+			}
             else if (
                    stricmp(argv[i], "--mesh-size0") == 0
                 || stricmp(argv[i], "--mesh-size1") == 0
                 || stricmp(argv[i], "--mesh-size2") == 0
                 || stricmp(argv[i], "--mesh-size3") == 0
                 || stricmp(argv[i], "--mesh-size4") == 0) {
-                base::cfg().mesh_size = argv[i][11] - '0';
+				base::cfg().mesh_size_opt = argv[i][11] - '0';
             }
             else if (
                    stricmp(argv[i], "--tex-freq0") == 0
@@ -171,7 +177,84 @@ int WINAPI WinMain(
             }
             else if (stricmp(argv[i], "--use_nor_uv") == 0) {
                 base::cfg().dont_rnd_cubes = true;
-            }
+			}
+			else if (stricmp(argv[i], "--smoother_tri_count") == 0){
+				base::cfg().smoother_tri_count = true;
+			}
+			else if (stricmp(argv[i], "--procedural-scene") == 0) {
+				base::cfg().sceneType = base::config::stGrass;
+			}
+			else if (stricmp(argv[i], "--send-grass-data") == 0) {
+				scene_grass::send_test_data();
+				return 0; 
+			}
+			else if (stricmp(argv[i], "--buildings-scene") == 0){
+				base::cfg().sceneType = base::config::stBuildings;
+			}
+			else if (stricmp(argv[i], "--proc_use_inst") == 0){
+			}
+			else if (stricmp(argv[i], "--dc_per_tile") == 0){
+				base::cfg().dc_per_tile = atoi(argv[i + 1]);
+				++i;
+			}
+			else if (stricmp(argv[i], "--pure_color") == 0){
+				base::cfg().pure_color = true;
+			}
+			else if (stricmp(argv[i], "--use_grass_tex") == 0){
+				base::cfg().use_grass_blade_tex = true;
+			}
+			else if (stricmp(argv[i], "--gs_use_end_primitive") == 0){
+				base::cfg().use_end_primitive = true;
+			}
+			else if (stricmp(argv[i], "--gs_blades_per_run") == 0){
+				base::cfg().blades_per_geom_run = atoi(argv[i + 1]);
+				++i;
+			}
+			else if (stricmp(argv[i], "--use_idx_buf") == 0) {
+				base::cfg().use_idx_buf = true;
+			}
+			else if (stricmp(argv[i], "--use_triangles") == 0) {
+				base::cfg().use_triangles = true;
+			}
+			else if (stricmp(argv[i], "--ip1f") == 0) {
+				base::cfg().ip_count = 1;
+			}
+			else if (stricmp(argv[i], "--ip2f") == 0) {
+				base::cfg().ip_count = 2;
+			}
+			else if (stricmp(argv[i], "--ip3f") == 0) {
+				base::cfg().ip_count = 3;
+			}
+			else if (stricmp(argv[i], "--ip4f") == 0) {
+				base::cfg().ip_count = 4;
+			}
+			else if (stricmp(argv[i], "--vs_variable_blades_per_dc") == 0) {
+				base::cfg().vs_variable_blades_per_dc = true;
+			}
+			else if (stricmp(argv[i], "--blades_per_dc") == 0) {
+				base::cfg().blades_per_dc = atoi(argv[i + 1]);
+				++i;
+			}
+			else if (stricmp(argv[i], "--rnd_blade_id") == 0) {
+				base::cfg().rnd_blade_id = true;
+			}
+			else if (stricmp(argv[i], "--blocks_per_tile") == 0) {
+				base::cfg().blocks_per_idc = atoi(argv[i + 1]);
+				i++;
+			}
+			else if (stricmp(argv[i], "--proc_scene_mode") == 0) {
+				int opt = argv[i + 1][0] - '0';
+				if (opt == 0){
+					base::cfg().proc_scene_type = base::proc_scn_type::psVertexShader;
+				}
+				else if (opt == 1){
+					base::cfg().proc_scene_type = base::proc_scn_type::psGeometryShader;
+				}
+				else{
+					return -1;
+				}
+				++i;
+			}
             else {
 				MessageBoxA(
                     NULL,
@@ -192,8 +275,10 @@ int WINAPI WinMain(
                     "--tex-size64 - Texture 64x64 BGRA8 (default)\n"
                     "--tex-size128 - Texture 128x128 BGRA8\n\n"
 
-                    "--mesh-size0 - Meshes with 12 faces\n"
-                    "--mesh-size1 - Meshes with ~48 faces\n"
+					"--mesh-size-opt VALUE - Meshes with ??? faces\n\n"
+
+					"--mesh-size0 - Meshes with 12 faces\n"
+					"--mesh-size1 - Meshes with ~48 faces\n"
                     "--mesh-size2 - Meshes with ~108 faces (default)\n"
                     "--mesh-size3 - Meshes with ~192 faces\n"
                     "--mesh-size4 - Meshes with ~300 faces\n\n"
@@ -205,8 +290,26 @@ int WINAPI WinMain(
                     
                     "--one-mesh - Use one geometry for all meshes\n"
                     "--use-vbo - Use classic buffer for vertex data instead of texture buffer\n"
-                    "--dont-rnd-cubes - Turn off cube randomization (better utilization of post-transform cache)\n\n"
-                    "--use_nor_uv - Will use additional vertex data normal and uv compressed to 8 bytes (16bytes vertex data)",
+                    "--dont-rnd-cubes - Turn off cube randomization (better utilization of post-transform cache)\n"
+					"--use_nor_uv - Will use additional vertex data normal and uv compressed to 8 bytes (16bytes vertex data)\n\n"
+
+					"--procedural-scene - Use procedural scene instead of the meshes\n"
+					"--send-grass-data - Send grass test data to perf.outerra.com server.\n"
+					"--proc_scene_mode VALUE - Mode of grass generation. Values: 0 = Vertex Shader, 1 = Geometry Shader\n"
+					"--proc_use_inst - Use instanced drawcall\n"
+					"--dc_per_tile  VALUE - Drawcalls per grass tile. Values: 1,4,16,64,256,1024. In case of instanced GS use -1\n"
+					"--pure_color - Use only pure color without shading in FS.\n"
+					"--use_grass_tex - Use grass texture instead of default color.\n"
+					"--gs_use_end_primitive - Use end primitive in geometry shader.\n"
+					"--use_idx_buf - Use indnex buffer in mode 0.\n"
+					"--use_triangles - Use triagles instead of triangle strip. (in mode 0 and idx buf used)\n"
+					"--gs_blades_per_run VALUE - Number of grass blades generated per GS run. Values:1, 2, 4, 8\n\n"
+
+					"--buildings-scene - Use building scene.\n"
+					"--blocks_per_tile - Subdivide tile into n batches of buildings.\n\n"
+
+
+					,
                     "Command line options",
                     MB_APPLMODAL);
 				return -1;

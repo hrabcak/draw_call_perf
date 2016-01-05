@@ -51,7 +51,15 @@ base::app::app()
 	// init mouse stuff
 	base::set_mouse_pos(glm::ivec2(200));
 	_last_mouse_pos = base::get_mouse_pos();
-	_mouse_pos = glm::ivec2(0);
+	_mouse_pos = glm::ivec2(180, 0);
+
+	if (base::cfg().sceneType == base::config::stGrass){
+		_position = glm::vec3(0.0, 1.8, 0.0);
+	} 
+	else if (base::cfg().sceneType == base::config::stBuildings){
+		_mouse_pos = glm::ivec2(45.8000183, 23.6000042);
+		_position = glm::vec3(-1335.44604, 261.017517, 1306.41760);
+	}	
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -64,7 +72,7 @@ void base::app::start()
 {
 	_canvas.reset(new base::canvas());
 	_canvas->set_pos(10, 400);
-	_canvas->set_size(1280, 230);
+	_canvas->set_size(1280, 260);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -94,7 +102,7 @@ void base::app::create_perspective_matrix(frame_context * const fc)
 	fc->_mprj = glm::perspective(
 		_fovy,
 		_aspect,
-		0.1f,
+		0.01f,
 		500.0f);
 }
 
@@ -105,14 +113,15 @@ void base::app::update_camera(frame_context * const fc)
 	fc->_view = glm::rotate(
 		glm::rotate(
 			glm::mat4(1),
-			glm::radians(-_mouse_pos.x)+glm::pi<float>(),
+			glm::radians(-_mouse_pos.x),
 			glm::vec3(0,1,0)),
 			glm::radians (- _mouse_pos.y), glm::vec3(1, 0, 0));
 
-	_position += glm::mat3(fc->_view) * _velocity * (_velocity_boost ? 3.0f : 1.0f);
+	_position += glm::mat3(fc->_view) * _velocity * (_velocity_boost ? 50.0f : 1.0f);
 
 	fc->_view[3] = glm::vec4(_position, 1);
 	fc->_mvp = fc->_mprj * glm::inverse(fc->_view);
+	fc->_imvp = glm::inverse(fc->_mvp);
 
     fc->_fovy = _fovy;
     fc->_aspect = _aspect;

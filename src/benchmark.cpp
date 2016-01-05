@@ -26,20 +26,30 @@ THE SOFTWARE.
 #include "base/frame_context.h"
 #include "base/canvas.h"
 #include "scene.h"
+#include "scene_grass.h"
+#include "scene_buildings.h"
 #include "renderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
-
-#include <sstream>
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 benchmark::benchmark()
     : app()
-    , _scene(new scene(this))
 {
     _stats_str.resize(4096);
     memset(&_stats_str[0], 0, _stats_str.size());
+
+	if (base::cfg().sceneType == base::config::stGrass){
+		_scene = std::auto_ptr<scene_i>(new scene_grass(this));
+	}
+	else if (base::cfg().sceneType == base::config::stCubes){
+		_scene = std::auto_ptr<scene_i>(new scene(this));
+	}
+	else if (base::cfg().sceneType == base::config::stBuildings){
+		_scene = std::auto_ptr<scene_i>(new scene_buildings(this));
+	}
+	
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -142,50 +152,117 @@ void benchmark::draw_frame()
             const float r_nframes = 1.0f / float(nframes);
 
 			get_mesh_size_str(mesh_size_str,
-				scene::get_vtx_tbl()[base::cfg().mesh_size],
-				scene::get_ele_tbl()[base::cfg().mesh_size]);
+				scene::get_vtx_tbl()[base::cfg().mesh_size_opt],
+				scene::get_ele_tbl()[base::cfg().mesh_size_opt]);
 
-            sprintf(
-                &_stats_str[0],
-                "tex:      %.0f MB\n"
-                "buf:      %.0f MB\n"
-                "MVtx/s:   %.0f\n"
-                "MVtx:     %.3f\n"
-                "MTris/s:  %.0f\n"
-                "MTris:    %.3f\n"
-                "KDraw/s:  %.0f\n"
-                "KDraw:    %.3f\n"
-                "gpu:      %.3f ms\n"
-                "cpu:      %.3f ms\n"
-                "fps:      %.0f\n\n"
-                "one mesh: %s\n"
-                "vertex data: %s\n"
-                "average mesh size: %s\n"
-                "textures: %ux%u BGRA8\n"
-                "tex freq: %u\n"
-				"tex mode: %s\n"
-				"GPU: %s\n\n"
-                "%s",
+			if (base::cfg().sceneType == base::config::stGrass)
+			{
+				sprintf(
+					&_stats_str[0],
+					"MVtx/s:   %.0f\n"
+					"MVtx:     %.3f\n"
+					"MTris/s:  %.0f\n"
+					"MTris:    %.3f\n"
+					"KDraw/s:  %.0f\n"
+					"KDraw:    %.3f\n"
+					"gpu:      %.3f ms\n"
+					"cpu:      %.3f ms\n"
+					"fps:      %.0f\n\n"
+					"GPU driver: %s\n"
+					"GPU: %s\n\n"
+					"%s",
 
-                float(stats._texture_mem) / float(1024 * 1024),
-                float(stats._buffer_mem) / float(1024 * 1024),
-                float(stats._nvertices) * 0.000001 / dtf,
-                float(stats._nvertices) * 0.000001 / float(nframes),
-                float(stats._ntriangles) * 0.000001 / dtf,
-                float(stats._ntriangles) * 0.000001 / float(nframes),
-                float(stats._ndrawcalls) * 0.001 / dtf,
-                float(stats._ndrawcalls) * 0.001 / nframes,
-                stats._gpu_time * r_nframes,
-                stats._cpu_time * r_nframes,
-                fps,
-                base::cfg().one_mesh ? "true" : "false",
-                base::cfg().use_vbo ? "VERTEX BUFFER" : "TEXTURE BUFFER",
-				mesh_size_str,
-                base::cfg().tex_size, base::cfg().tex_size,
-                base::cfg().tex_freq,
-				get_texturing_mode_str(base::cfg().tex_mode),
-                _renderer->get_gpu_str(),
-                get_test_name());
+					float(stats._nvertices) * 0.000001 / dtf,
+					float(stats._nvertices) * 0.000001 / float(nframes),
+					float(stats._ntriangles) * 0.000001 / dtf,
+					float(stats._ntriangles) * 0.000001 / float(nframes),
+					float(stats._ndrawcalls) * 0.001 / dtf,
+					float(stats._ndrawcalls) * 0.001 / nframes,
+					stats._gpu_time * r_nframes,
+					stats._cpu_time * r_nframes,
+					fps,
+					_renderer->get_gpu_driver_str(),
+					_renderer->get_gpu_str(),
+					get_test_name());
+			}
+			else if (base::cfg().sceneType == base::config::stCubes)
+			{
+				sprintf(
+					&_stats_str[0],
+					"tex:      %.0f MB\n"
+					"buf:      %.0f MB\n"
+					"MVtx/s:   %.0f\n"
+					"MVtx:     %.3f\n"
+					"MTris/s:  %.0f\n"
+					"MTris:    %.3f\n"
+					"KDraw/s:  %.0f\n"
+					"KDraw:    %.3f\n"
+					"gpu:      %.3f ms\n"
+					"cpu:      %.3f ms\n"
+					"fps:      %.0f\n\n"
+					"one mesh: %s\n"
+					"vertex data: %s\n"
+					"average mesh size: %s\n"
+					"textures: %ux%u BGRA8\n"
+					"tex freq: %u\n"
+					"tex mode: %s\n"
+					"GPU driver: %s\n"
+					"GPU: %s\n\n"
+					"%s",
+
+					float(stats._texture_mem) / float(1024 * 1024),
+					float(stats._buffer_mem) / float(1024 * 1024),
+					float(stats._nvertices) * 0.000001 / dtf,
+					float(stats._nvertices) * 0.000001 / float(nframes),
+					float(stats._ntriangles) * 0.000001 / dtf,
+					float(stats._ntriangles) * 0.000001 / float(nframes),
+					float(stats._ndrawcalls) * 0.001 / dtf,
+					float(stats._ndrawcalls) * 0.001 / nframes,
+					stats._gpu_time * r_nframes,
+					stats._cpu_time * r_nframes,
+					fps,
+					base::cfg().one_mesh ? "true" : "false",
+					base::cfg().use_vbo ? "VERTEX BUFFER" : "TEXTURE BUFFER",
+					mesh_size_str,
+					base::cfg().tex_size, base::cfg().tex_size,
+					base::cfg().tex_freq,
+					get_texturing_mode_str(base::cfg().tex_mode),
+					_renderer->get_gpu_driver_str(),
+					_renderer->get_gpu_str(),
+					get_test_name());
+			}else if (base::cfg().sceneType == base::config::stBuildings)
+			{
+				sprintf(
+					&_stats_str[0],
+					"NBuildings:%u\n"
+					"Block size:%d\n"
+					"MVtx/s:   %.0f\n"
+					"MVtx:     %.3f\n"
+					"MTris/s:  %.0f\n"
+					"MTris:    %.3f\n"
+					"KDraw/s:  %.0f\n"
+					"KDraw:    %.3f\n"
+					"gpu:      %.3f ms\n"
+					"cpu:      %.3f ms\n"
+					"fps:      %.0f\n\n"
+					"GPU driver: %s\n"
+					"GPU: %s\n\n"
+					"%s",
+					base::cfg().buildings_count,
+					base::cfg().blocks_per_idc,
+					float(stats._nvertices) * 0.000001 / dtf,
+					float(stats._nvertices) * 0.000001 / float(nframes),
+					float(stats._ntriangles) * 0.000001 / dtf,
+					float(stats._ntriangles) * 0.000001 / float(nframes),
+					float(stats._ndrawcalls) * 0.001 / dtf,
+					float(stats._ndrawcalls) * 0.001 / nframes,
+					stats._gpu_time * r_nframes,
+					stats._cpu_time * r_nframes,
+					fps,
+					_renderer->get_gpu_driver_str(),
+					_renderer->get_gpu_str(),
+					get_test_name());
+			}
 
 			if (test_cycles >= 1){
 				_test_stats += stats;
@@ -195,8 +272,16 @@ void benchmark::draw_frame()
 				dtime_total += dtf;
 			}
 
-			if (base::cfg().test != -1 &&  test_cycles == 3){
-				write_test_data_csv("test.csv", _test_stats, dtime_total, nframes_total);
+			if (base::cfg().test != -1 && test_cycles == 3){
+				if (base::cfg().sceneType == base::config::stGrass) {
+					grass_write_test_data_csv("grass_test.csv", _test_stats, dtime_total, nframes_total);
+				}
+				else if (base::cfg().sceneType == base::config::stCubes){
+					write_test_data_csv("test.csv", _test_stats, dtime_total, nframes_total);
+				}
+				else if (base::cfg().sceneType == base::config::stBuildings){
+					buildings_write_test_data_csv("test.csv", _test_stats, dtime_total, nframes_total);
+				}
 				_shutdown = true;
 			}
 
@@ -303,7 +388,7 @@ bool benchmark::write_test_data_csv(
 		base::cfg().use_vbo ? "true" : "false",
 		base::cfg().tex_freq,
 		base::cfg().tex_mode,
-		base::cfg().mesh_size,
+		base::cfg().mesh_size_opt,
 		base::cfg().one_mesh ? "true" : "false",
 		nframes,
 		time,
@@ -314,6 +399,126 @@ bool benchmark::write_test_data_csv(
 		stats._nvertices,
 		stats._buffer_mem >> 20,
 		stats._texture_mem >> 20);
+
+	fclose(pFile);
+
+	return true;
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+bool benchmark::grass_write_test_data_csv(
+	const char * file_name,
+	const base::stats_data & stats,
+	const float time,
+	const int nframes)
+{
+	FILE * pFile;
+	pFile = fopen(file_name, "r+");
+
+	if (pFile == NULL){
+		pFile = fopen(file_name, "w");
+		if (pFile == NULL){
+			return false;
+		}
+
+		fputs(
+			"grass_method,"
+			"gpu_gl_name,"
+			"frames,"
+			"render_time,"
+			"cpu_render_time (ms),"
+			"gpu_render_time (ms),"
+			"dc,"
+			"ntri,"
+			"use_texture,"
+			"pure_color,"
+			"use_idx_buf,"
+			"tris_per_frame,"
+			"geom_blade_out,"
+			"in_vtx_per_dc,"
+			"use_triangles,"
+			"gpu_vendor,"
+			"gpu_drv_ver"
+			,pFile);
+	}
+	else{
+		fseek(pFile, 0, SEEK_END);
+	}
+
+	fprintf(
+		pFile
+		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%s,%s,%s,%u,%u,%u,%s,%s,%s"
+		, this->get_test_name()
+		, _renderer->get_gpu_str()
+		, nframes
+		, time
+		, stats._cpu_time
+		, stats._gpu_time
+		, stats._ndrawcalls
+		, stats._ntriangles
+		, base::cfg().use_grass_blade_tex ? "true" : "false"
+		, base::cfg().pure_color ? "true" : "false"
+		, base::cfg().use_idx_buf ? "true" : "false"
+		, base::cfg().ngrass_tiles*base::cfg().blades_per_tuft*base::cfg().tufts_per_tile * 5
+		, (base::cfg().proc_scene_type == base::proc_scn_type::psGeometryShader) ? base::cfg().blades_per_geom_run : 0
+		, base::cfg().in_vtx_per_dc
+		, base::cfg().use_triangles ? "true" : "false"
+		, _renderer->get_gpu_vendor_str()
+		, _renderer->get_gpu_driver_str()
+		);
+
+	fclose(pFile);
+
+	return true;
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+bool benchmark::buildings_write_test_data_csv(
+	const char * file_name,
+	const base::stats_data & stats,
+	const float time,
+	const int nframes)
+{
+	FILE * pFile;
+	pFile = fopen(file_name, "r+");
+
+	if (pFile == NULL){
+		pFile = fopen(file_name, "w");
+		if (pFile == NULL){
+			return false;
+		}
+
+		fputs(
+			"gpu_gl_name,"
+			"gpu_driver,"
+			"frames,"
+			"render_time,"
+			"cpu_render_time (ms),"
+			"gpu_render_time (ms),"
+			"dc,"
+			"ntri,"
+			"blocks_per_tile"
+			, pFile);
+	}
+	else{
+		fseek(pFile, 0, SEEK_END);
+	}
+
+	fprintf(
+		pFile
+		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%d"
+		, _renderer->get_gpu_str()
+		, _renderer->get_gpu_driver_str()
+		, nframes
+		, time
+		, stats._cpu_time
+		, stats._gpu_time
+		, stats._ndrawcalls
+		, stats._ntriangles
+		, base::cfg().blocks_per_idc
+		);
 
 	fclose(pFile);
 

@@ -66,7 +66,21 @@ void renderer::run()
         base::init_opengl_win();
         base::init_opengl_dbg_win();
 
-        _graphic_card_name = (char*)glGetString(GL_RENDERER);
+		unsigned short vendor_id = 0;
+		unsigned short device_id = 0;
+
+		base::get_display_ven_dev_id(vendor_id, device_id);
+
+		if (vendor_id == 0x1002 || vendor_id == 0x1022){
+			_graphic_card_name = base::ven_dev_id_to_ati_card_name(vendor_id,device_id);
+		}
+		else{
+			_graphic_card_name = (char*)glGetString(GL_RENDERER);
+		}
+
+		_graphic_card_vendor = (char*)glGetString(GL_VENDOR);
+
+		_graphic_card_driver = (char*)glGetString(GL_VERSION);
 
         // create frame_context pool
         {
@@ -147,7 +161,8 @@ void renderer::draw_frame(base::frame_context * const ctx)
     glEnable(GL_FRAMEBUFFER_SRGB);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
-    glClearColor(1.0f, 1.f, 1.f, 1.0f);
+	glClearColor(0.3f, 0.2f, 0.4f, 1.0f);
+	//glClearColor(1.0f, 1.f, 1.f, 1.0f);
     //glClearColor(0.0f, 0.f, 0.f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

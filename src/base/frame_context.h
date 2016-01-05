@@ -59,7 +59,7 @@ struct ctx_data
     glm::mat4 _mvp;
     int _mesh_size;
     int _tex_freq;
-    char _res[256 - 64 - 4 - 4];
+	char _res[256 - 64 - 4 - 4];
 };
 
 struct block_data
@@ -119,6 +119,7 @@ struct frame_context
 	glm::mat4 _mprj;
 	glm::mat4 _view;
 	glm::mat4 _mvp;
+	glm::mat4 _imvp;
 
 	unsigned _canvas_vbo;
 	unsigned _canvas_tb;

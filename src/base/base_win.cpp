@@ -366,3 +366,51 @@ void base::set_win_title(const char* const str)
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void base::get_display_ven_dev_id(unsigned short & vendor_id,unsigned short & device_id){
+	DISPLAY_DEVICE dd, ddd;
+	dd.cb = ddd.cb = sizeof(DISPLAY_DEVICE);
+
+	auto hex_char_to_val = [](char c){
+		if (c >= '0' && c <= '9'){
+			return c - '0';
+		}
+
+		if (c >= 'a' && c <= 'f'){
+			return 10 + (c - 'a');
+		}
+
+		if (c >= 'A' && c <= 'F'){
+			return 10 + (c - 'A');
+		}
+
+		return -1;
+	};
+
+	int i = 0;
+	bool found = false, set = false;
+
+	while (EnumDisplayDevices(0, i++, &dd, 0))
+	{
+		bool primary = (dd.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0;
+
+		if (!primary){
+			continue;
+		}
+ 
+		vendor_id = (0x1000 * (hex_char_to_val(dd.DeviceID[8]))) +
+					(0x100 * (hex_char_to_val(dd.DeviceID[9]))) +
+					(0x10 * (hex_char_to_val(dd.DeviceID[10]))) +
+					(0x1 * (hex_char_to_val(dd.DeviceID[11])));
+		
+		device_id = (0x1000 * (hex_char_to_val(dd.DeviceID[17]))) +
+					(0x100 * (hex_char_to_val(dd.DeviceID[18]))) +
+					(0x10 * (hex_char_to_val(dd.DeviceID[19]))) +
+					(0x1 * (hex_char_to_val(dd.DeviceID[20])));
+
+
+		break;
+	}
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

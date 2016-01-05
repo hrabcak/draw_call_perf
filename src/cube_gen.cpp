@@ -34,6 +34,10 @@ short COORD_TO_IDX(short  X, short Y, short Z, short MAX_COORD) {
 	return(X >= 0 && Y >= 0 && Z >= 0 && X < MAX_COORD && Y < MAX_COORD && Z < MAX_COORD) ? (Z*MAX_COORD*MAX_COORD + Y*MAX_COORD + X) : (-1);
 }
 
+short COORD_TO_IDX(short  X, short Y, short Z, short MAX_COORD_X, short MAX_COORD_Y, short MAX_COORD_Z) {
+	return(X >= 0 && Y >= 0 && Z >= 0 && X < MAX_COORD_X && Y < MAX_COORD_Y && Z < MAX_COORD_Z) ? (Z*MAX_COORD_X*MAX_COORD_Y + Y*MAX_COORD_X + X) : (-1);
+}
+
 typedef std::vector < glm::u8vec3 >		VertMaskVec;
 typedef std::map< uint32, uint32 >		VertIdxHashMap;
 typedef std::multimap<uint32, uint32>	VertTriangleHashMap;
@@ -133,7 +137,12 @@ inline void uvw_by_mask(const glm::vec3 & uvw, glm::vec2 & uv, unsigned char mas
 	}
 }
 
-void generate_voxel_map(short * voxel_map, const ushort & voxels_per_edge, const ushort & vert_per_edge,bool deform){
+////////////////////////////////////////////////////////
+//		code for variable x,y,z tesselation level	  //	
+////////////////////////////////////////////////////////
+
+
+void generate_voxel_map(short * voxel_map, const ushort & voxels_per_edge_x, const ushort & voxels_per_edge_y, const ushort & voxels_per_edge_z, bool deform){
 	short idx_left = -1;
 	short idx_right = -1;
 	short idx_bottom = -1;
@@ -149,10 +158,10 @@ void generate_voxel_map(short * voxel_map, const ushort & voxels_per_edge, const
 	const float miss_half_bound = miss_prob_whole + miss_prob_half;
 	const float miss_one_bound = miss_half_bound + miss_prob_one;
 
-	for (ushort z = 0; z < voxels_per_edge; ++z){
-		for (ushort y = 0; y < voxels_per_edge; ++y){
-			for (ushort x = 0; x < voxels_per_edge; ++x){
-				idx = COORD_TO_IDX(x, y, z, voxels_per_edge);
+	for (ushort z = 0; z < voxels_per_edge_z; ++z){
+		for (ushort y = 0; y < voxels_per_edge_y; ++y){
+			for (ushort x = 0; x < voxels_per_edge_x; ++x){
+				idx = COORD_TO_IDX(x, y, z, voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
 
 				voxel_map[idx] = idx;
 			}
@@ -160,26 +169,26 @@ void generate_voxel_map(short * voxel_map, const ushort & voxels_per_edge, const
 	}
 
 	if (deform){
-		for (ushort z = 0; z < voxels_per_edge; ++z){
-			for (ushort x = 0; x < voxels_per_edge; ++x){
+		for (ushort z = 0; z < voxels_per_edge_z; ++z){
+			for (ushort x = 0; x < voxels_per_edge_x; ++x){
 				float miss = base::rndNomalized(gen::_rnd);
 
 				short idx;
 
 				if (miss >= 0.0f && miss < miss_prob_whole){
-					for (short y = 0; y < voxels_per_edge; ++y){
-						idx = COORD_TO_IDX(x, y, z, voxels_per_edge);
+					for (short y = 0; y < voxels_per_edge_y; ++y){
+						idx = COORD_TO_IDX(x, y, z, voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
 						voxel_map[idx] = -1;
 					}
 				}
 				else if (miss >= miss_prob_whole && miss < miss_half_bound){
-					for (short y = voxels_per_edge - 1; y >= (voxels_per_edge >> 1); --y){
-						idx = COORD_TO_IDX(x, y, z, voxels_per_edge);
+					for (short y = voxels_per_edge_y - 1; y >= (voxels_per_edge_y >> 1); --y){
+						idx = COORD_TO_IDX(x, y, z, voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
 						voxel_map[idx] = -1;
 					}
 				}
 				else if (miss >= miss_half_bound && miss < miss_one_bound){
-					idx = COORD_TO_IDX(x, voxels_per_edge - 1, z, voxels_per_edge);
+					idx = COORD_TO_IDX(x, voxels_per_edge_y - 1, z, voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
 					voxel_map[idx] = -1;
 				}
 			}
@@ -193,8 +202,9 @@ void triangulate_voxel_face(const glm::uvec3 & voxel_pos,
 	const voxel_info * bottom_voxel,
 	unsigned char face_mask,
 	const glm::vec3 & normal,
-	const ushort & voxels_per_edge,
-	const ushort & vert_per_edge,
+	const ushort & voxels_per_edge_x,
+	const ushort & voxels_per_edge_y,
+	const ushort & voxels_per_edge_z,
 	float * pos_data,
 	float * norm_uv_data,
 	ushort * index_array,
@@ -232,7 +242,7 @@ void triangulate_voxel_face(const glm::uvec3 & voxel_pos,
 		v4_idx = out_cur_vert_count;
 		out_cur_vert_count++;
 
-		vert_uwv = glm::vec3(voxel_pos + vert4_displace) / float(voxels_per_edge);
+		vert_uwv = glm::vec3(voxel_pos + vert4_displace) / glm::vec3(voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
 
 		vert4.pos = (gen::origin + (gen::diag*vert_uwv));
 
@@ -263,7 +273,7 @@ void triangulate_voxel_face(const glm::uvec3 & voxel_pos,
 			v1_idx = out_cur_vert_count;
 			out_cur_vert_count++;
 
-			vert_uwv = glm::vec3(voxel_pos) / float(voxels_per_edge);
+			vert_uwv = glm::vec3(voxel_pos) / glm::vec3(voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
 
 			vert1.pos = (gen::origin + (gen::diag*vert_uwv));
 
@@ -287,7 +297,7 @@ void triangulate_voxel_face(const glm::uvec3 & voxel_pos,
 		v2_idx = out_cur_vert_count;
 		out_cur_vert_count++;
 
-		vert_uwv = glm::vec3(voxel_pos + vert2_displace) / float(voxels_per_edge);
+		vert_uwv = glm::vec3(voxel_pos + vert2_displace) / glm::vec3(voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
 
 		vert2.pos = (gen::origin + (gen::diag*vert_uwv));
 
@@ -319,7 +329,7 @@ void triangulate_voxel_face(const glm::uvec3 & voxel_pos,
 	v3_idx = out_cur_vert_count;
 	out_cur_vert_count++;
 
-	vert_uwv = glm::vec3(voxel_pos + vert3_displace) / float(voxels_per_edge);
+	vert_uwv = glm::vec3(voxel_pos + vert3_displace) / glm::vec3(voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
 
 	vert3.pos = (gen::origin + (gen::diag*vert_uwv));
 
@@ -370,8 +380,9 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 	short * voxel_map,
 	voxel_info * voxel_inf_arr,
 	short * voxel_vert_idx_arr,
-	const ushort & voxels_per_edge,
-	const ushort & vert_per_edge,
+	const ushort & voxels_per_edge_x,
+	const ushort & voxels_per_edge_y,
+	const ushort & voxels_per_edge_z,
 	float * pos_data,
 	float * norm_uv_data,
 	ushort * index_array,
@@ -404,14 +415,14 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 
 	ushort cur_idx_offset = 0;
 
-	ushort this_idx = COORD_TO_IDX(voxel_pos.x, voxel_pos.y, voxel_pos.z, voxels_per_edge);
+	ushort this_idx = COORD_TO_IDX(voxel_pos.x, voxel_pos.y, voxel_pos.z, voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
 
-	short idx_left = COORD_TO_IDX(voxel_pos.x - 1, voxel_pos.y, voxel_pos.z, voxels_per_edge); // need for face visibility determination
-	short idx_right = COORD_TO_IDX(voxel_pos.x + 1, voxel_pos.y, voxel_pos.z, voxels_per_edge);
-	short idx_bottom = COORD_TO_IDX(voxel_pos.x, voxel_pos.y - 1, voxel_pos.z, voxels_per_edge);
-	short idx_top = COORD_TO_IDX(voxel_pos.x, voxel_pos.y + 1, voxel_pos.z, voxels_per_edge);
-	short idx_near = COORD_TO_IDX(voxel_pos.x, voxel_pos.y, voxel_pos.z - 1, voxels_per_edge);
-	short idx_far = COORD_TO_IDX(voxel_pos.x, voxel_pos.y, voxel_pos.z + 1, voxels_per_edge);
+	short idx_left = COORD_TO_IDX(voxel_pos.x - 1, voxel_pos.y, voxel_pos.z, voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z); // need for face visibility determination
+	short idx_right = COORD_TO_IDX(voxel_pos.x + 1, voxel_pos.y, voxel_pos.z, voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
+	short idx_bottom = COORD_TO_IDX(voxel_pos.x, voxel_pos.y - 1, voxel_pos.z, voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
+	short idx_top = COORD_TO_IDX(voxel_pos.x, voxel_pos.y + 1, voxel_pos.z, voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
+	short idx_near = COORD_TO_IDX(voxel_pos.x, voxel_pos.y, voxel_pos.z - 1, voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
+	short idx_far = COORD_TO_IDX(voxel_pos.x, voxel_pos.y, voxel_pos.z + 1, voxels_per_edge_x, voxels_per_edge_y, voxels_per_edge_z);
 
 	voxel_info * this_vox_info = &voxel_inf_arr[this_idx];
 	voxel_info * left_vox_info;
@@ -442,8 +453,9 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 			bottom_vox_info,
 			MASK_BIT_0,
 			norm_near,
-			voxels_per_edge,
-			vert_per_edge,
+			voxels_per_edge_x,
+			voxels_per_edge_y,
+			voxels_per_edge_z,
 			cur_pos_data,
 			cur_norm_uv_data,
 			cur_index_array,
@@ -496,8 +508,9 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 			bottom_vox_info,
 			MASK_BIT_1,
 			norm_right,
-			voxels_per_edge,
-			vert_per_edge,
+			voxels_per_edge_x,
+			voxels_per_edge_y,
+			voxels_per_edge_z,
 			cur_pos_data,
 			cur_norm_uv_data,
 			cur_index_array,
@@ -552,8 +565,9 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 			bottom_vox_info,
 			MASK_BIT_2,
 			norm_far,
-			voxels_per_edge,
-			vert_per_edge,
+			voxels_per_edge_x,
+			voxels_per_edge_y,
+			voxels_per_edge_z,
 			cur_pos_data,
 			cur_norm_uv_data,
 			cur_index_array,
@@ -606,8 +620,9 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 			bottom_vox_info,
 			MASK_BIT_3,
 			norm_left,
-			voxels_per_edge,
-			vert_per_edge,
+			voxels_per_edge_x,
+			voxels_per_edge_y,
+			voxels_per_edge_z,
 			cur_pos_data,
 			cur_norm_uv_data,
 			cur_index_array,
@@ -658,8 +673,9 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 			bottom_vox_info,
 			MASK_BIT_4,
 			norm_bottom,
-			voxels_per_edge,
-			vert_per_edge,
+			voxels_per_edge_x,
+			voxels_per_edge_y,
+			voxels_per_edge_z,
 			cur_pos_data,
 			cur_norm_uv_data,
 			cur_index_array,
@@ -712,8 +728,9 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 			bottom_vox_info,
 			MASK_BIT_5,
 			norm_top,
-			voxels_per_edge,
-			vert_per_edge,
+			voxels_per_edge_x,
+			voxels_per_edge_y,
+			voxels_per_edge_z,
 			cur_pos_data,
 			cur_norm_uv_data,
 			cur_index_array,
@@ -737,9 +754,10 @@ void triangulate_voxel(glm::uvec3 & voxel_pos,
 	out_added_voxel_idx += cur_idx_offset;
 }
 
-
 void gen_cube_imp(
-	ushort tess_level,
+	ushort tess_level_x,
+	ushort tess_level_y,
+	ushort tess_level_z,
 	float * pos_data,
 	float * norm_uv_data,
 	ushort * index_array,
@@ -763,8 +781,14 @@ void gen_cube_imp(
 	memset(&voxel_i[0], 0, 32768);
 	memset(&voxel_vert_idx[0], 0, 24576);
 
-	const ushort vox_per_edge_count = (ushort)(2 + tess_level) - 1;
-	const ushort vert_per_edge_count = vox_per_edge_count + 1;
+	const ushort vox_per_edge_count_x = (ushort)(2 + tess_level_x) - 1;
+	const ushort vert_per_edge_count_x = vox_per_edge_count_x + 1;
+
+	const ushort vox_per_edge_count_y = (ushort)(2 + tess_level_y) - 1;
+	const ushort vert_per_edge_count_y = vox_per_edge_count_y + 1;
+
+	const ushort vox_per_edge_count_z = (ushort)(2 + tess_level_z) - 1;
+	const ushort vert_per_edge_count_z = vox_per_edge_count_z + 1;
 
 	ushort idx = -1;
 
@@ -776,7 +800,7 @@ void gen_cube_imp(
 	char * cur_norm_uv_data_pos = (char*)norm_uv_data;
 	ushort * cur_index_array_pos = index_array;
 	short * cur_voxel_vert_idx_pos = voxel_vert_idx;
-	generate_voxel_map(voxel_m, vox_per_edge_count, vert_per_edge_count,deform);
+	generate_voxel_map(voxel_m, vox_per_edge_count_x, vox_per_edge_count_y, vox_per_edge_count_z,deform);
 
 	if (multipass){
 		for (ushort pass = ushort(vpNear); pass < ushort(vpPassCount); pass++){
@@ -784,13 +808,13 @@ void gen_cube_imp(
 				memset(&voxel_i[0], 0, 32768);
 				memset(&voxel_vert_idx[0], 0, 24576);
 			}
-			for (ushort z = 0; z < vox_per_edge_count; ++z){
-				for (ushort y = 0; y < vox_per_edge_count; ++y){
-					for (ushort x = 0; x < vox_per_edge_count; ++x){
+			for (ushort z = 0; z < vox_per_edge_count_z; ++z){
+				for (ushort y = 0; y < vox_per_edge_count_y; ++y){
+					for (ushort x = 0; x < vox_per_edge_count_x; ++x){
 						ushort added_vertices = 0;
 						ushort added_elements = 0;
 						ushort added_vox_idx = 0;
-						idx = COORD_TO_IDX(x, y, z, vox_per_edge_count);
+						idx = COORD_TO_IDX(x, y, z, vox_per_edge_count_x, vox_per_edge_count_y, vox_per_edge_count_z);
 
 						if (voxel_m[idx] == -1){
 							continue;
@@ -802,8 +826,9 @@ void gen_cube_imp(
 							voxel_m,
 							voxel_i,
 							voxel_vert_idx,
-							vox_per_edge_count,
-							vert_per_edge_count,
+							vox_per_edge_count_x,
+							vox_per_edge_count_y,
+							vox_per_edge_count_z,
 							(float*)cur_pos_data_pos,
 							(float*)cur_norm_uv_data_pos,
 							cur_index_array_pos,
@@ -835,13 +860,13 @@ void gen_cube_imp(
 		}
 	}
 	else{
-		for (ushort z = 0; z < vox_per_edge_count; ++z){
-			for (ushort y = 0; y < vox_per_edge_count; ++y){
-				for (ushort x = 0; x < vox_per_edge_count; ++x){
+		for (ushort z = 0; z < vox_per_edge_count_z; ++z){
+			for (ushort y = 0; y < vox_per_edge_count_y; ++y){
+				for (ushort x = 0; x < vox_per_edge_count_x; ++x){
 					ushort added_vertices = 0;
 					ushort added_elements = 0;
 					ushort added_vox_idx = 0;
-					idx = COORD_TO_IDX(x, y, z, vox_per_edge_count);
+					idx = COORD_TO_IDX(x, y, z, vox_per_edge_count_x, vox_per_edge_count_y, vox_per_edge_count_z);
 
 					if (voxel_m[idx] == -1){
 						continue;
@@ -853,8 +878,9 @@ void gen_cube_imp(
 						voxel_m,
 						voxel_i,
 						voxel_vert_idx,
-						vox_per_edge_count,
-						vert_per_edge_count,
+						vox_per_edge_count_x,
+						vox_per_edge_count_y,
+						vox_per_edge_count_z,
 						(float*)cur_pos_data_pos,
 						(float*)cur_norm_uv_data_pos,
 						cur_index_array_pos,

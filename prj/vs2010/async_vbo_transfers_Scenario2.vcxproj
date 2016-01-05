@@ -185,11 +185,13 @@
     <ClInclude Include="..\..\src\base\tga_utils.h" />
     <ClInclude Include="..\..\src\base\thread.h" />
     <ClInclude Include="..\..\src\base\types.h" />
-    <ClInclude Include="..\..\src\base\utils.h" />
     <ClInclude Include="..\..\src\cube_gen.h" />
     <ClInclude Include="..\..\src\gen_tex.h" />
+    <ClInclude Include="..\..\src\pci_c.h" />
     <ClInclude Include="..\..\src\renderer.h" />
     <ClInclude Include="..\..\src\scene.h" />
+    <ClInclude Include="..\..\src\scene_buildings.h" />
+    <ClInclude Include="..\..\src\scene_grass.h" />
     <ClInclude Include="..\..\src\scene_i.h" />
   </ItemGroup>
   <ItemGroup>
@@ -235,14 +237,30 @@
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\renderer.cpp" />
     <ClCompile Include="..\..\src\scene.cpp" />
+    <ClCompile Include="..\..\src\scene_buildings.cpp" />
+    <ClCompile Include="..\..\src\scene_grass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\bin\shaders\block_f.glsl" />
     <None Include="..\..\bin\shaders\block_v.glsl" />
+    <None Include="..\..\bin\shaders\buildings_f.glsl" />
+    <None Include="..\..\bin\shaders\buildings_g.glsl" />
+    <None Include="..\..\bin\shaders\buildings_v.glsl" />
+    <None Include="..\..\bin\shaders\buildings_v_n.glsl" />
     <None Include="..\..\bin\shaders\canvas_f.glsl" />
     <None Include="..\..\bin\shaders\canvas_v.glsl" />
+    <None Include="..\..\bin\shaders\heightgen_c.glsl" />
     <None Include="..\..\bin\shaders\mipgen_c.glsl" />
+    <None Include="..\..\bin\shaders\proc_f.glsl" />
+    <None Include="..\..\bin\shaders\proc_g.glsl" />
+    <None Include="..\..\bin\shaders\proc_inst_v.glsl" />
+    <None Include="..\..\bin\shaders\proc_tess_tcs.glsl" />
+    <None Include="..\..\bin\shaders\proc_tess_tes.glsl" />
+    <None Include="..\..\bin\shaders\proc_tess_v.glsl" />
+    <None Include="..\..\bin\shaders\proc_v.glsl" />
     <None Include="..\..\bin\shaders\texgen_c.glsl" />
+    <None Include="..\..\bin\shaders\tile_f.glsl" />
+    <None Include="..\..\bin\shaders\tile_v.glsl" />
     <None Include="..\..\readme.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

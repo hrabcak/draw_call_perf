@@ -41,6 +41,13 @@ namespace base {
 
 class app;
 
+enum proc_scn_type{
+	psGeometryShader = 0,
+	psVertexShader = 1,
+	psTessShader = 2,
+	psCount
+};
+
 struct stats_data
 {
     uint64 _buffer_mem;
@@ -205,6 +212,17 @@ GLuint create_program(
     const GLuint cs = 0);
 
 ///
+
+GLuint create_program(
+	const GLuint vs,
+	const GLuint gs,
+	const GLuint fs,
+	const GLuint cs,
+	const GLuint tcs,
+	const GLuint tes);
+
+///
+
 void link_program(
 	const base::source_location &loc,
 	const GLuint prg);
@@ -274,6 +292,12 @@ void swap_buffers();
 void sleep_ms(const int time);
 
 struct config {
+	enum SceneType{
+		stCubes = 0,
+		stGrass = 1,
+		stBuildings = 2
+	};
+
 	config()
 		: use_debug_context(false)
 		, use_debug_sync(false)
@@ -281,14 +305,34 @@ struct config {
 		, use_nvidia_fast_download(false)
 		, use_async_readback(false)
 
-        , test(-1)
-        , mesh_size(2)
-        , tex_mode(2)
-        , tex_freq(1)
-        , use_vbo(false)
-        , one_mesh(false)
-        , tex_size(64)
-        , dont_rnd_cubes(false)
+		, test(-1)
+		, mesh_size_opt(0)
+		, tex_mode(2)
+		, tex_freq(1)
+		, use_vbo(false)
+		, one_mesh(false)
+		, tex_size(64)
+		, dont_rnd_cubes(false)
+		, smoother_tri_count(false)
+		, sceneType(stCubes)
+		, blades_per_tuft(16)
+		, tufts_per_tile(4096)
+		, ngrass_tiles(16)
+		, proc_scene_type(proc_scn_type(0))
+		, dc_per_tile(1)
+		, use_grass_blade_tex(false)
+		, use_end_primitive(false)
+		, blades_per_geom_run(1)
+		, in_vtx_per_dc(-1)
+		, pure_color(false)
+		, use_idx_buf(false)
+		, use_triangles(false)
+		, vs_variable_blades_per_dc(false)
+		, ip_count(0)
+		, blades_per_dc(16)
+		, rnd_blade_id(false)
+		, blocks_per_idc(1)
+		, buildings_count(0)
         //, use_nor_uv(false)
     {}
 
@@ -300,14 +344,42 @@ struct config {
     bool use_vbo : 1;
     bool one_mesh : 1;
     bool dont_rnd_cubes : 1;
+	bool smoother_tri_count : 1;
     //bool use_nor_uv : 1;
+
+	SceneType sceneType;
 
     // tests
     int test;
-    int mesh_size;
+	int mesh_size_opt;
     int tex_mode;
     int tex_freq;
     int tex_size;
+
+	// grass params
+
+	int blades_per_tuft;
+	int tufts_per_tile;
+	int ngrass_tiles;
+	proc_scn_type proc_scene_type;
+	bool use_grass_blade_tex;
+	int dc_per_tile;
+	bool use_end_primitive;
+	bool pure_color;
+	int blades_per_geom_run;
+	int in_vtx_per_dc;
+	bool use_idx_buf;
+	bool use_triangles;
+	bool vs_variable_blades_per_dc;
+	bool rnd_blade_id;
+
+	ushort ip_count;
+	int blades_per_dc;
+
+	// building test params
+	
+	int blocks_per_idc;
+	uint32 buildings_count;
 };
 
 config& cfg();
@@ -413,6 +485,8 @@ public:
 
 int rndFromInterval(rnd_int & rnd,int min, int max);
 float rndNomalized(rnd_int & rnd);
+void get_display_ven_dev_id(unsigned short & vendor_id, unsigned short & device_id);
+const char * ven_dev_id_to_ati_card_name(unsigned short vendor_id, unsigned short device_id);
 
 } // end of namespace base
 

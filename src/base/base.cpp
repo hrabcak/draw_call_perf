@@ -22,11 +22,13 @@ THE SOFTWARE.
 
 #include "base.h"
 #include "tga_utils.h"
+#include "pci_c.h"
 
 #include <sys/stat.h>
 #include <io.h>
 #include <stdlib.h>
 #include <fcntl.h>
+
 
 #include "gl/glew.h"
 
@@ -138,6 +140,24 @@ GLuint base::create_program(
     if (cs) glAttachShader(prg, cs);
 
     return prg;
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+GLuint base::create_program(
+	const GLuint vs,
+	const GLuint gs,
+	const GLuint fs,
+	const GLuint cs,
+	const GLuint tcs,
+	const GLuint tes)
+{
+	GLuint prg = base::create_program(vs, gs, fs, cs);
+
+	if (tcs) glAttachShader(prg, tcs);
+	if (tes) glAttachShader(prg, tes);
+
+	return prg;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -399,9 +419,25 @@ int base::rndFromInterval(rnd_int & rnd, int min, int max){
 
 float base::rndNomalized(rnd_int & rnd)
 {
-	return ((rnd.rand() & 0x0000ffff) / 65535.0f);
+	uint32 rand = rnd.rand();
+	return (((rand & 0x0000ffff) ^ ((rand & 0xffff0000)>>16) ) / 65535.0f);
 }
 
 base::config& base::cfg() { static config ___c; return ___c; }
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+const char * base::ven_dev_id_to_ati_card_name(unsigned short vendor_id, unsigned short device_id){
+	int t_len = sizeof(PciDevTable) / sizeof(PCI_DEVTABLE);
+
+	for (int i = 0; i < t_len; i++){
+		if (PciDevTable[i].VenId == vendor_id && PciDevTable[i].DevId == device_id){
+			return PciDevTable[i].ChipDesc;
+		}
+	}
+
+	return "";
+
+}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
