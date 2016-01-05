@@ -163,7 +163,7 @@ void scene_buildings::gpu_draw(base::frame_context * const ctx){
 
 	
 
-	for (int i = 0; i < _tiles.size(); i++){
+	for (uint32 i = 0; i < _tiles.size(); i++){
 		int x = _tiles[i]._tile_pos.x;
 		int y = _tiles[i]._tile_pos.y;
 		glUniform2i(_prg_tile_offset, x,y);

@@ -96,7 +96,7 @@ scene_grass::scene_grass(base::app * app)
 					}
 				}
 				else{
-					int subtile_w = _grs_data._blocks_per_row / glm::sqrt<int>(base::cfg().dc_per_tile);
+					int subtile_w = int(_grs_data._blocks_per_row / glm::sqrt<int>(base::cfg().dc_per_tile));
 					int max_idx = (base::cfg().tufts_per_tile * base::cfg().blades_per_tuft * NIDX_PER_BLADE_T) / base::cfg().dc_per_tile;
 
 					_idx_buf_i = new int[max_idx];
@@ -661,7 +661,7 @@ bool scene_grass::send_test_data(){
 	std::string gpu_driver("");
 
 	ifs.seekg(0, ifs.end);
-	int len = ifs.tellg();
+	int len = int(ifs.tellg());
 	ifs.seekg(0, ifs.beg);
 
 	memset(&header[0], 0, 1024);
@@ -671,7 +671,7 @@ bool scene_grass::send_test_data(){
 	
 	float rend_time;
 	float tris;
-	float best_score = -1.0f;
+	int best_score = -1;
 
 	while (!ifs.eof()){
 		memset(&header[0], 0, 1024);
@@ -684,9 +684,9 @@ bool scene_grass::send_test_data(){
 			if (i == 1 && (gpu_name.compare("") == 0)){
 				gpu_name = token;
 			}else if (i == 3){
-				rend_time = atof(token.c_str());
+				rend_time = float(atof(token.c_str()));
 			}else if (i == 7){
-				tris = atof(token.c_str());
+				tris = float(atof(token.c_str()));
 			}else if (i == 15 && (gpu_vendor.compare("") == 0)){
 				gpu_vendor = token;
 			}else if (i == 16 && (gpu_driver.compare("") == 0)){
@@ -694,13 +694,13 @@ bool scene_grass::send_test_data(){
 			}
 		}
 
-		float score = (tris / rend_time) * 0.000001;
+		int score = int(glm::round((tris / rend_time) * 0.000001f));
 		if (best_score < score){
 			best_score = score;
 		}
 	}
 
-	sprintf(&header[0], " Your score is %f milion triangles per second!\n Do you want to help and send us gathered data?", best_score);
+	sprintf(&header[0], " Your score is %d milion triangles per second!\n Do you want to help and send us gathered data?", best_score);
 
 	int res = MessageBox(0, header, "Perftest result", MB_YESNO);
 
@@ -736,7 +736,7 @@ bool scene_grass::send_test_data(){
 		"ot-vendor: %s\r\n"
 		"ot-gpu: %s\r\n"
 		"ot-driver-version: %s\r\n"
-		"ot-score: %f\r\n"
+		"ot-score: %d\r\n"
 		"\r\n",
 		len,
 		gpu_vendor.c_str(),
