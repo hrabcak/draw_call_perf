@@ -173,9 +173,7 @@ void scene_buildings::gpu_draw(base::frame_context * const ctx){
 						10 * 3 * base::cfg().blocks_per_idc, 
 						GL_UNSIGNED_INT, 
 						0, 
-						(_tiles[i]._blocks_count % base::cfg().blocks_per_idc == 0) ?
-						(_tiles[i]._blocks_count / base::cfg().blocks_per_idc) : 
-						(_tiles[i]._blocks_count / base::cfg().blocks_per_idc) + 1);
+						(_tiles[i]._blocks_count + base::cfg().blocks_per_idc - 1) / base::cfg().blocks_per_idc);
 	}
 
 	ctx->_cpu_render_time = timer.elapsed_time();

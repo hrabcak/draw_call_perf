@@ -115,7 +115,7 @@ void main()
 		xy = unpack_ivec4_to_p1(block) + unpack_ivec4_to_p4(block) + vec2(tile_offset) * t_width;
 	}
 
-	o.wpos = vec3(xy.x + float(total_count) * 0.0000000000001, (vtxID > 3) ? (float(flags) * 2.9) : 0u, -xy.y);
+	o.wpos = vec3(xy.x + float(total_count) * 0.0000000000001, (vtxID > 3) ? (float(flags) * 2.9) : 0.0, -xy.y);
 	vec4 opos = mvp * vec4(o.wpos, 1);
 
 	opos.z = log2(max(1e-6, 1.0 + opos.w)) / log(1000000 + 1.0) - 1.0;
