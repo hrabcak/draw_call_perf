@@ -437,7 +437,9 @@ bool benchmark::grass_write_test_data_csv(
 			"tris_per_frame,"
 			"geom_blade_out,"
 			"in_vtx_per_dc,"
-			"use_triangles"
+			"use_triangles,"
+			"gpu_vendor,"
+			"gpu_drv_ver"
 			,pFile);
 	}
 	else{
@@ -446,7 +448,7 @@ bool benchmark::grass_write_test_data_csv(
 
 	fprintf(
 		pFile
-		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%s,%s,%s,%u,%u,%u,%s"
+		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%s,%s,%s,%u,%u,%u,%s,%s,%s"
 		, this->get_test_name()
 		, _renderer->get_gpu_str()
 		, nframes
@@ -462,6 +464,8 @@ bool benchmark::grass_write_test_data_csv(
 		, (base::cfg().proc_scene_type == base::proc_scn_type::psGeometryShader) ? base::cfg().blades_per_geom_run : 0
 		, base::cfg().in_vtx_per_dc
 		, base::cfg().use_triangles ? "true" : "false"
+		, _renderer->get_gpu_vendor_str()
+		, _renderer->get_gpu_driver_str()
 		);
 
 	fclose(pFile);

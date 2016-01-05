@@ -33,6 +33,7 @@ dctest64.exe --test1 --procedural-scene --proc_scene_mode 0 --vs_variable_blades
 dctest64.exe --test1 --procedural-scene --proc_scene_mode 0 --vs_variable_blades_per_dc --blades_per_dc 4 --pure_color --use_idx_buf --use_triangles
 dctest64.exe --test1 --procedural-scene --proc_scene_mode 0 --vs_variable_blades_per_dc --blades_per_dc 1 --pure_color --use_idx_buf --use_triangles
 
+dctest64.exe --send-grass-data 
 
 
 

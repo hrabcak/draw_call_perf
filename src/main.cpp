@@ -26,6 +26,8 @@ THE SOFTWARE.
 #include "Windows.h"
 #include "Shellapi.h"
 
+#include "scene_grass.h"
+
 LPSTR* CommandLineToArgvA(LPSTR lpCmdLine, INT *pNumArgs)
 {
     int retval;
@@ -182,6 +184,10 @@ int WINAPI WinMain(
 			else if (stricmp(argv[i], "--procedural-scene") == 0) {
 				base::cfg().sceneType = base::config::stGrass;
 			}
+			else if (stricmp(argv[i], "--send-grass-data") == 0) {
+				scene_grass::send_test_data();
+				return 0; 
+			}
 			else if (stricmp(argv[i], "--buildings-scene") == 0){
 				base::cfg().sceneType = base::config::stBuildings;
 			}
@@ -288,6 +294,7 @@ int WINAPI WinMain(
 					"--use_nor_uv - Will use additional vertex data normal and uv compressed to 8 bytes (16bytes vertex data)\n\n"
 
 					"--procedural-scene - Use procedural scene instead of the meshes\n"
+					"--send-grass-data - Send grass test data to perf.outerra.com server.\n"
 					"--proc_scene_mode VALUE - Mode of grass generation. Values: 0 = Vertex Shader, 1 = Geometry Shader\n"
 					"--proc_use_inst - Use instanced drawcall\n"
 					"--dc_per_tile  VALUE - Drawcalls per grass tile. Values: 1,4,16,64,256,1024. In case of instanced GS use -1\n"

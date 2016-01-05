@@ -47,7 +47,7 @@ protected:
 	base::app *_app;
 	std::string _graphic_card_name;
 	std::string _graphic_card_driver;
-
+	std::string _graphic_card_vendor;
 public:
 
     renderer(base::app * const a, const base::source_location &loc);
@@ -69,6 +69,7 @@ public:
 
     const char* get_gpu_str() const { return _graphic_card_name.c_str(); }
 	const char* get_gpu_driver_str() const { return _graphic_card_driver.c_str(); }
+	const char* get_gpu_vendor_str() const { return _graphic_card_vendor.c_str(); }
 
     bool is_alive() { return !_shutdown; };
 };

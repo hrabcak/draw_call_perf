@@ -3,6 +3,16 @@
 #include "base/base.h"
 #include "base/frame_context.h"
 
+#include <windows.h>
+#include <WinSock2.h>
+
+#include <fstream>
+#include <string>
+#include <sstream>
+
+#pragma comment(lib,"ws2_32.lib")
+
+
 #define NIDX_PER_BLADE_TSTRIP 8
 #define NIDX_PER_BLADE_T 15
 
@@ -637,4 +647,116 @@ void scene_grass::create_height_texs(){
 
 	glUseProgram(0);
 
+}
+
+bool scene_grass::send_test_data(){
+	WSADATA wsaData;
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+		return false;
+	}
+	SOCKET Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	struct hostent *host;
+	host = gethostbyname("crash.outerra.com");
+	SOCKADDR_IN SockAddr;
+	SockAddr.sin_port = htons(80);
+	SockAddr.sin_family = AF_INET;
+	SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
+	if (connect(Socket, (SOCKADDR*)(&SockAddr), sizeof(SockAddr)) != 0){
+		return false;
+	}
+
+	// sending part start
+
+	char header[1024];
+	std::ifstream ifs("grass_test.csv", std::ios::binary);
+	if (!ifs.is_open()){
+		return false;
+	}
+
+	std::string gpu_vendor("");
+	std::string gpu_name("");
+	std::string gpu_driver("");
+
+	ifs.seekg(0, ifs.end);
+	int len = ifs.tellg();
+	ifs.seekg(0, ifs.beg);
+
+	memset(&header[0], 0, 1024);
+	ifs.getline(&header[0], 1024); // line with props names
+
+	std::istringstream iss;
+	
+	float rend_time;
+	float tris;
+	float best_score = -1.0f;
+
+	while (!ifs.eof()){
+		memset(&header[0], 0, 1024);
+		ifs.getline(&header[0], 1024);
+		iss.clear();
+		iss.str(header);
+		for (int i = 0; i < 17; i++){
+			std::string token;
+			std::getline(iss,token, ',');
+			if (i == 1 && (gpu_name.compare("") == 0)){
+				gpu_name = token;
+			}else if (i == 3){
+				rend_time = atof(token.c_str());
+			}else if (i == 7){
+				tris = atof(token.c_str());
+			}else if (i == 15 && (gpu_vendor.compare("") == 0)){
+				gpu_vendor = token;
+			}else if (i == 16 && (gpu_driver.compare("") == 0)){
+				gpu_driver = token;
+			}
+		}
+
+		float score = (tris / rend_time) * 0.000001;
+		if (best_score < score){
+			best_score = score;
+		}
+
+	}
+
+	memset(&header[0], 0, 1024);
+
+	sprintf(&header[0], "POST /report.php HTTP/1.1\r\n"
+		"Host: perf.outerra.com\r\n"
+		"Content-Type: application/octet-stream\r\n"
+		"Content-Length: %d\r\n"
+		"Content-Disposition: form-data; name=\"perf_test\"; filename=\"perf_test.csv\"\r\n"
+		"Connection: close\r\n"
+
+		"ot-test: Grass_test\r\n"
+		"ot-vendor: %s\r\n"
+		"ot-gpu: %s\r\n"
+		"ot-driver-version: %s\r\n"
+		"ot-score: %f\r\n"
+		"\r\n",
+		len,
+		gpu_vendor.c_str(),
+		gpu_name.c_str(),
+		gpu_driver.c_str(),
+		best_score);
+
+
+	if (send(Socket, &header[0], strlen(&header[0]), 0) != strlen(&header[0])){
+		return false;
+	};
+
+	ifs.seekg(0, ifs.beg);
+
+	while (!ifs.eof()){
+		memset(&header[0], 0, 1024);
+		ifs.read(&header[0], 512);
+		if (send(Socket, &header[0], strlen(&header[0]), 0) != strlen(&header[0])){
+			return false;
+		};
+	}
+
+	// sending part end
+
+	closesocket(Socket);
+	WSACleanup();
+	return true;
 }

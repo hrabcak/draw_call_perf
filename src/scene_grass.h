@@ -63,6 +63,7 @@ public:
 	virtual void gpu_draw(base::frame_context * const ctx) override;
 	virtual const char* get_test_name(const int i) const override;
 
+	static bool send_test_data();
 protected:
 	void calculate_visible_tiles(int ntiles, float tile_size);
 	void create_height_texs();
