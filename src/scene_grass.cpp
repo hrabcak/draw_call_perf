@@ -608,7 +608,8 @@ void scene_grass::calculate_visible_tiles(int ntiles, float tile_size)
 	}
 }
 
-void scene_grass::create_height_texs(){
+void scene_grass::create_height_texs()
+{
 	const int width = _grs_data._blocks_per_row;
 	const int tex_size = width * width;
 	const int ntex = MAX_GRASS_TILES;
@@ -649,7 +650,8 @@ void scene_grass::create_height_texs(){
 
 }
 
-bool scene_grass::send_test_data(){
+bool scene_grass::send_test_data()
+{
 	char header[1024];
 	std::ifstream ifs("grass_test.csv", std::ios::binary);
 	if (!ifs.is_open()){
@@ -709,7 +711,12 @@ bool scene_grass::send_test_data(){
 		}
 	}
 
-	sprintf(&header[0], " Your score is %d milion triangles per second!\n Do you want to help and send us gathered data?", best_score);
+	sprintf(&header[0],
+        "Test: Grass_test\n"
+        "GPU: %s\n"
+        "Drivers: %s\n"
+        "\nScore: %d Mtris/s\n"
+        "\nDo you want to upload the test results?", gpu_name.c_str(), gpu_driver.c_str(), best_score);
 
 	int res = MessageBox(0, header, "Perftest result", MB_YESNO);
 

@@ -261,7 +261,7 @@
     <None Include="..\..\bin\shaders\texgen_c.glsl" />
     <None Include="..\..\bin\shaders\tile_f.glsl" />
     <None Include="..\..\bin\shaders\tile_v.glsl" />
-    <None Include="..\..\readme.txt" />
+    <None Include="..\..\readme.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

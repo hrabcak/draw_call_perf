@@ -145,7 +145,6 @@
     <None Include="..\..\bin\shaders\canvas_v.glsl">
       <Filter>src\shaders</Filter>
     </None>
-    <None Include="..\..\readme.txt" />
     <None Include="..\..\bin\shaders\block_f.glsl">
       <Filter>src\shaders</Filter>
     </None>
@@ -199,6 +198,9 @@
     </None>
     <None Include="..\..\bin\shaders\buildings_v_n.glsl">
       <Filter>src\shaders</Filter>
+    </None>
+    <None Include="..\..\readme.md">
+      <Filter>src</Filter>
     </None>
   </ItemGroup>
 </Project>
