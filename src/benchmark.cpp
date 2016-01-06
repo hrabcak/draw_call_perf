@@ -526,7 +526,6 @@ bool benchmark::buildings_write_test_data_csv(
 			"ntri,"
 			"blocks_per_tile,"
 			"gpu_vendor,"
-			"gpu_drv_ver,"
 			"gpu_vendor_id,"
 			"gpu_device_id,"
 			"gpu_rev_id"
@@ -555,7 +554,7 @@ bool benchmark::buildings_write_test_data_csv(
 
 	fprintf(
 		pFile
-		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%d,%s,%s,%s,%s,%s"
+		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%d,%s,%s,%s,%s"
 		, _renderer->get_gpu_str()
 		, _renderer->get_gpu_driver_str()
 		, nframes
@@ -566,7 +565,6 @@ bool benchmark::buildings_write_test_data_csv(
 		, stats._ntriangles
 		, base::cfg().blocks_per_idc
 		, _renderer->get_gpu_vendor_str()
-		, _renderer->get_gpu_driver_str()
 		, vendor_id.c_str()
 		, device_id.c_str()
 		, rev_id.c_str()
