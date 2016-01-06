@@ -279,10 +279,10 @@ void benchmark::draw_frame()
 					grass_write_test_data_csv("grass_test.csv", _test_stats, dtime_total, nframes_total);
 				}
 				else if (base::cfg().sceneType == base::config::stCubes){
-					write_test_data_csv("test.csv", _test_stats, dtime_total, nframes_total);
+					write_test_data_csv("cubes_test.csv", _test_stats, dtime_total, nframes_total);
 				}
 				else if (base::cfg().sceneType == base::config::stBuildings){
-					buildings_write_test_data_csv("test.csv", _test_stats, dtime_total, nframes_total);
+					buildings_write_test_data_csv("buildings_test.csv", _test_stats, dtime_total, nframes_total);
 				}
 				_shutdown = true;
 			}
@@ -444,7 +444,7 @@ bool benchmark::grass_write_test_data_csv(
 			"gpu_drv_ver,"
 			"gpu_vendor_id,"
 			"gpu_device_id,"
-			"gpu_rev_id,"
+			"gpu_rev_id"
 			,pFile);
 	}
 	else{
@@ -524,16 +524,38 @@ bool benchmark::buildings_write_test_data_csv(
 			"gpu_render_time (ms),"
 			"dc,"
 			"ntri,"
-			"blocks_per_tile"
+			"blocks_per_tile,"
+			"gpu_vendor,"
+			"gpu_drv_ver,"
+			"gpu_vendor_id,"
+			"gpu_device_id,"
+			"gpu_rev_id"
 			, pFile);
 	}
 	else{
 		fseek(pFile, 0, SEEK_END);
 	}
 
+	std::ostringstream oss;
+	std::string vendor_id("");
+	std::string device_id("");
+	std::string rev_id("");
+
+	oss << std::hex << _renderer->get_vendor_id();
+	vendor_id = oss.str();
+	oss.str("");
+
+	oss << std::hex << _renderer->get_device_id();
+	device_id = oss.str();
+	oss.str("");
+
+	oss << std::hex << _renderer->get_rev_id();
+	rev_id = oss.str();
+	oss.str("");
+
 	fprintf(
 		pFile
-		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%d"
+		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%d,%s,%s,%s,%s,%s"
 		, _renderer->get_gpu_str()
 		, _renderer->get_gpu_driver_str()
 		, nframes
@@ -543,6 +565,11 @@ bool benchmark::buildings_write_test_data_csv(
 		, stats._ndrawcalls
 		, stats._ntriangles
 		, base::cfg().blocks_per_idc
+		, _renderer->get_gpu_vendor_str()
+		, _renderer->get_gpu_driver_str()
+		, vendor_id.c_str()
+		, device_id.c_str()
+		, rev_id.c_str()
 		);
 
 	fclose(pFile);
