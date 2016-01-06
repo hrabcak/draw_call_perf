@@ -48,6 +48,9 @@ protected:
 	std::string _graphic_card_name;
 	std::string _graphic_card_driver;
 	std::string _graphic_card_vendor;
+	ushort _vendor_id;
+	ushort _device_id;
+	ushort _rev_id;
 public:
 
     renderer(base::app * const a, const base::source_location &loc);
@@ -70,6 +73,9 @@ public:
     const char* get_gpu_str() const { return _graphic_card_name.c_str(); }
 	const char* get_gpu_driver_str() const { return _graphic_card_driver.c_str(); }
 	const char* get_gpu_vendor_str() const { return _graphic_card_vendor.c_str(); }
+	ushort get_vendor_id(){ return _vendor_id; }
+	ushort get_device_id(){ return _device_id; }
+	ushort get_rev_id(){ return _rev_id; }
 
     bool is_alive() { return !_shutdown; };
 };

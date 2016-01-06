@@ -367,7 +367,7 @@ void base::set_win_title(const char* const str)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void base::get_display_ven_dev_id(unsigned short & vendor_id,unsigned short & device_id){
+void base::get_display_ven_dev_id(unsigned short & vendor_id, unsigned short & device_id, unsigned short & rev_id){
 	DISPLAY_DEVICE dd, ddd;
 	dd.cb = ddd.cb = sizeof(DISPLAY_DEVICE);
 
@@ -407,6 +407,9 @@ void base::get_display_ven_dev_id(unsigned short & vendor_id,unsigned short & de
 					(0x100 * (hex_char_to_val(dd.DeviceID[18]))) +
 					(0x10 * (hex_char_to_val(dd.DeviceID[19]))) +
 					(0x1 * (hex_char_to_val(dd.DeviceID[20])));
+
+		rev_id = (0x10 * (hex_char_to_val(dd.DeviceID[42]))) +
+			(0x1 * (hex_char_to_val(dd.DeviceID[43])));;
 
 
 		break;

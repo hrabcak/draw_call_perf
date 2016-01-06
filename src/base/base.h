@@ -485,7 +485,7 @@ public:
 
 int rndFromInterval(rnd_int & rnd,int min, int max);
 float rndNomalized(rnd_int & rnd);
-void get_display_ven_dev_id(unsigned short & vendor_id, unsigned short & device_id);
+void get_display_ven_dev_id(unsigned short & vendor_id, unsigned short & device_id, unsigned short & rev_id);
 const char * ven_dev_id_to_ati_card_name(unsigned short vendor_id, unsigned short device_id);
 
 } // end of namespace base

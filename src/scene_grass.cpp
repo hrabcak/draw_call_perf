@@ -659,6 +659,9 @@ bool scene_grass::send_test_data(){
 	std::string gpu_vendor("");
 	std::string gpu_name("");
 	std::string gpu_driver("");
+	std::string gpu_vendor_id("");
+	std::string gpu_device_id("");
+	std::string gpu_rev_id("");
 
 	ifs.seekg(0, ifs.end);
 	int len = int(ifs.tellg());
@@ -678,7 +681,7 @@ bool scene_grass::send_test_data(){
 		ifs.getline(&header[0], 1024);
 		iss.clear();
 		iss.str(header);
-		for (int i = 0; i < 17; i++){
+		for (int i = 0; i < 20; i++){
 			std::string token;
 			std::getline(iss,token, ',');
 			if (i == 1 && (gpu_name.compare("") == 0)){
@@ -691,6 +694,12 @@ bool scene_grass::send_test_data(){
 				gpu_vendor = token;
 			}else if (i == 16 && (gpu_driver.compare("") == 0)){
 				gpu_driver = token;
+			}else if (i == 17 && (gpu_vendor_id.compare("") == 0)){
+				gpu_vendor_id = token;
+			}else if (i == 18 && (gpu_device_id.compare("") == 0)){
+				gpu_device_id = token;
+			}else if (i == 19 && (gpu_rev_id.compare("") == 0)){
+				gpu_rev_id = token.substr(0,2);
 			}
 		}
 
@@ -737,12 +746,18 @@ bool scene_grass::send_test_data(){
 		"ot-gpu: %s\r\n"
 		"ot-driver-version: %s\r\n"
 		"ot-score: %d\r\n"
+		"ot-venid: %s\r\n"
+		"ot-devid: %s\r\n"
+		"ot-revid: %s\r\n"
 		"\r\n",
 		len,
 		gpu_vendor.c_str(),
 		gpu_name.c_str(),
 		gpu_driver.c_str(),
-		best_score);
+		best_score,
+		gpu_vendor_id.c_str(),
+		gpu_device_id.c_str(),
+		gpu_rev_id.c_str());
 
 
 	if (send(Socket, &header[0], int(strlen(&header[0])), 0) != int(strlen(&header[0]))){

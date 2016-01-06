@@ -46,6 +46,9 @@ renderer::renderer(base::app * const a, const base::source_location &loc)
 	, _mx_queue()
 	, _shutdown(false)
 	, _app(a)
+	, _vendor_id(0)
+	, _device_id(0)
+	, _rev_id(0)
 {
     thread::start(loc);
 
@@ -66,13 +69,10 @@ void renderer::run()
         base::init_opengl_win();
         base::init_opengl_dbg_win();
 
-		unsigned short vendor_id = 0;
-		unsigned short device_id = 0;
+		base::get_display_ven_dev_id(_vendor_id, _device_id, _rev_id);
 
-		base::get_display_ven_dev_id(vendor_id, device_id);
-
-		if (vendor_id == 0x1002 || vendor_id == 0x1022){
-			_graphic_card_name = base::ven_dev_id_to_ati_card_name(vendor_id,device_id);
+		if (_vendor_id == 0x1002 || _vendor_id == 0x1022){
+			_graphic_card_name = base::ven_dev_id_to_ati_card_name(_vendor_id,_device_id);
 		}
 		else{
 			_graphic_card_name = (char*)glGetString(GL_RENDERER);
