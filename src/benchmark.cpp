@@ -444,7 +444,7 @@ bool benchmark::grass_write_test_data_csv(
 			"gpu_drv_ver,"
 			"gpu_vendor_id,"
 			"gpu_device_id,"
-			"gpu_rev_id,"
+			"gpu_rev_id"
 			,pFile);
 	}
 	else{
