@@ -57,8 +57,8 @@ base::app::app()
 		_position = glm::vec3(0.0, 1.8, 0.0);
 	} 
 	else if (base::cfg().sceneType == base::config::stBuildings){
-		_mouse_pos = glm::ivec2(45.8000183, 23.6000042);
-		_position = glm::vec3(-1335.44604, 261.017517, 1306.41760);
+		_mouse_pos = glm::vec2(45.4f, 0.4f);
+		_position = glm::vec3(-987.37, 26.44, 981.66);
 	}	
 }
 

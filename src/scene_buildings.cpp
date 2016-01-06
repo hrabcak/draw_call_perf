@@ -74,7 +74,7 @@ void scene_buildings::init_gpu_stuff(const base::source_location &loc){
 	_prg_total_count = get_uniform_location(loc, _prg, "total_count");
 
 	load_tile(glm::ivec2(0, 0));
-	load_tile(glm::ivec2(0, 1));
+	/*load_tile(glm::ivec2(0, 1));
 	load_tile(glm::ivec2(0, 2));
 	load_tile(glm::ivec2(0, 3));
 	load_tile(glm::ivec2(0, 4));
@@ -108,7 +108,7 @@ void scene_buildings::init_gpu_stuff(const base::source_location &loc){
 	load_tile(glm::ivec2(5, 2));
 	load_tile(glm::ivec2(5, 3));
 	load_tile(glm::ivec2(5, 4));
-	load_tile(glm::ivec2(5, 5));
+	load_tile(glm::ivec2(5, 5));*/
 	//base::stats()._ntriangles = 25 * _tiles[0]._blocks_count * 10;
 
 	const uint32 indices_base[][3] = { { 0, 1, 4 }, { 1, 5, 4 }, { 1, 2, 5 }, { 2, 6, 5 }, { 2, 3, 6 }, { 3, 7, 6 }, { 3, 0, 7 }, { 0, 4, 7 }, { 4, 5, 6 }, { 6, 7, 4 } };
@@ -194,7 +194,7 @@ void scene_buildings::load_tile(glm::ivec2 pos)
 	BuildingTileDCData building;
 	building._tile_pos = pos;
 
-	std::string file_name = "buildingTile";
+	std::string file_name = "bld_tiles/buildingTile";
 	file_name += '0' + pos.x;
 	file_name += '0' + pos.y;
 	file_name += ".osm.bin";
@@ -204,6 +204,7 @@ void scene_buildings::load_tile(glm::ivec2 pos)
 
 	if (!bif.is_open()){
 		_app->shutdown();
+		return;
 	}
 
 	std::vector<Building> blds;
