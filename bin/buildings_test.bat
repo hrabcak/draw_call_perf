@@ -1,5 +1,5 @@
 @echo off
-del test.csv
+del buildings_test.csv
 
 dctest64.exe --test0 --buildings-scene --blocks_per_tile 1
 dctest64.exe --test0 --buildings-scene --blocks_per_tile 2
