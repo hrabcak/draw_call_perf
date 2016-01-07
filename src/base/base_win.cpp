@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "gl/wglew.h"
 
 #include <Windows.h>
+#include <WinSock2.h>
 #include <Windowsx.h>
 #include <stdio.h>
 
@@ -414,6 +415,12 @@ void base::get_display_ven_dev_id(unsigned short & vendor_id, unsigned short & d
 
 		break;
 	}
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+bool base::send_test_data(const char * file_name, const char * request_header){
+
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
