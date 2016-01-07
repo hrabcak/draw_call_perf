@@ -143,8 +143,10 @@ void scene_buildings::update(base::frame_context * const ctx){
 void scene_buildings::gpu_draw(base::frame_context * const ctx){
 	base::hptimer timer;
 	timer.start();
-
-	glDisable(GL_CULL_FACE);
+	if (base::cfg().no_cull){
+		glDisable(GL_CULL_FACE);
+	}
+	
 	glUseProgram(_prg);
 
 	// this is only needed on AMD cards due to driver bug wich needs

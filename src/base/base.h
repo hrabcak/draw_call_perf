@@ -333,6 +333,7 @@ struct config {
 		, rnd_blade_id(false)
 		, blocks_per_idc(1)
 		, buildings_count(0)
+		, no_cull(false)
         //, use_nor_uv(false)
     {}
 
@@ -380,6 +381,7 @@ struct config {
 	
 	int blocks_per_idc;
 	uint32 buildings_count;
+	bool no_cull;
 };
 
 config& cfg();

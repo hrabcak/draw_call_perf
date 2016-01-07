@@ -257,6 +257,10 @@ int WINAPI WinMain(
 				base::cfg().blocks_per_idc = atoi(argv[i + 1]);
 				i++;
 			}
+			else if (stricmp(argv[i], "--buildings-nocull") == 0) {
+				base::cfg().no_cull = true;
+			}
+
 			else if (stricmp(argv[i], "--proc_scene_mode") == 0) {
 				int opt = argv[i + 1][0] - '0';
 				if (opt == 0){
@@ -321,7 +325,9 @@ int WINAPI WinMain(
 					"--gs_blades_per_run VALUE - Number of grass blades generated per GS run. Values:1, 2, 4, 8\n\n"
 
 					"--buildings-scene - Use building scene.\n"
+					"--buildings-nocull - Disable backface culling.\n"
 					"--blocks_per_tile - Subdivide tile into n batches of buildings.\n\n"
+					
 
 
 					,

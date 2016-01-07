@@ -15,3 +15,18 @@ dctest64.exe --test0 --buildings-scene --blocks_per_tile 1024
 dctest64.exe --test0 --buildings-scene --blocks_per_tile 2048
 dctest64.exe --test0 --buildings-scene --blocks_per_tile 4096
 dctest64.exe --test0 --buildings-scene --blocks_per_tile 8192
+
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 1 --buildings-nocull
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 2 --buildings-nocull
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 4 --buildings-nocull
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 8 --buildings-nocull
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 16 --buildings-nocull
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 32 --buildings-nocull
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 64 --buildings-nocull
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 128 --buildings-nocull
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 256 --buildings-nocull
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 512 --buildings-nocull
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 1024 --buildings-nocull
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 2048 --buildings-nocull
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 4096 --buildings-nocull
+dctest64.exe --test0 --buildings-scene --blocks_per_tile 8192 --buildings-nocull
