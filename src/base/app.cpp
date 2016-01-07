@@ -117,7 +117,7 @@ void base::app::update_camera(frame_context * const fc)
 			glm::vec3(0,1,0)),
 			glm::radians (- _mouse_pos.y), glm::vec3(1, 0, 0));
 
-	_position += glm::mat3(fc->_view) * _velocity * (_velocity_boost ? 50.0f : 1.0f);
+	_position += glm::mat3(fc->_view) * _velocity * (_velocity_boost ? 5.0f : 1.0f);
 
 	fc->_view[3] = glm::vec4(_position, 1);
 	fc->_mvp = fc->_mprj * glm::inverse(fc->_view);
