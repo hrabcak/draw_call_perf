@@ -59,7 +59,7 @@ base::app::app()
 	else if (base::cfg().sceneType == base::config::stBuildings){
 		_mouse_pos = glm::vec2(45.4f, 0.4f);
 		_position = glm::vec3(-987.37, 26.44, 981.66);
-	}	
+	}
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
