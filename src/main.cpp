@@ -157,7 +157,22 @@ int WINAPI WinMain(
                 || stricmp(argv[i], "--mesh-size2") == 0
                 || stricmp(argv[i], "--mesh-size3") == 0
                 || stricmp(argv[i], "--mesh-size4") == 0) {
-				base::cfg().mesh_size_opt = argv[i][11] - '0';
+				int mesh_size = argv[i][11] - '0';
+				if (mesh_size == 0){
+					base::cfg().mesh_size_opt = 0;
+				}
+				else if (mesh_size == 1){
+					base::cfg().mesh_size_opt = 6;
+				}
+				else if (mesh_size == 2){
+					base::cfg().mesh_size_opt = 17;
+				}
+				else if (mesh_size == 3){
+					base::cfg().mesh_size_opt = 34;
+				}
+				else if (mesh_size == 4){
+					base::cfg().mesh_size_opt = 51;
+				}
             }
             else if (
                    stricmp(argv[i], "--tex-freq0") == 0

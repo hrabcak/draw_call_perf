@@ -82,9 +82,9 @@ scene::scene(benchmark * const app)
 	, _one_mesh(false)
 
 	, _mesh_size_opt(0)
-	, _mesh_size_x(2)
-	, _mesh_size_y(2)
-	, _mesh_size_z(2)
+	, _mesh_size_x(0)
+	, _mesh_size_y(0)
+	, _mesh_size_z(0)
 	, _tex_freq(1)
 {
 	_tms.reserve(MAX_BLOCK_COUNT);

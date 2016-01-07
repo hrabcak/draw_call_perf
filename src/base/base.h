@@ -306,7 +306,7 @@ struct config {
 		, use_async_readback(false)
 
 		, test(-1)
-		, mesh_size_opt(0)
+		, mesh_size_opt(17)
 		, tex_mode(2)
 		, tex_freq(1)
 		, use_vbo(false)
