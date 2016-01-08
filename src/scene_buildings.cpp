@@ -4,6 +4,7 @@
 #include "base/app.h"
 
 #include <fstream>
+#include <sstream>
 #include <vector>
 #include <string>
 
@@ -239,6 +240,107 @@ void scene_buildings::load_tile(glm::ivec2 pos)
 	_tiles.push_back(building);
 
 	base::cfg().buildings_count += blockCount;
+}
+
+
+bool scene_buildings::send_test_data()
+{
+	char header[1024];
+	std::ifstream ifs("buildings_test.csv", std::ios::binary);
+	if (!ifs.is_open()){
+		return false;
+	}
+
+	std::string gpu_vendor("");
+	std::string gpu_name("");
+	std::string gpu_driver("");
+	std::string gpu_vendor_id("");
+	std::string gpu_device_id("");
+	std::string gpu_rev_id("");
+
+	ifs.seekg(0, ifs.end);
+	int len = int(ifs.tellg());
+	ifs.seekg(0, ifs.beg);
+
+	memset(&header[0], 0, 1024);
+	ifs.getline(&header[0], 1024); // line with props names
+
+	std::istringstream iss;
+
+	float rend_time;
+	float tris;
+	int best_score = -1;
+
+	while (!ifs.eof()){
+		memset(&header[0], 0, 1024);
+		ifs.getline(&header[0], 1024);
+		iss.clear();
+		iss.str(header);
+		for (int i = 0; i < 20; i++){
+			std::string token;
+			std::getline(iss, token, ',');
+			if (i == 0 && (gpu_name.compare("") == 0)){
+				gpu_name = token;
+			}
+			else if (i == 3){
+				rend_time = float(atof(token.c_str()));
+			}
+			else if (i == 7){
+				tris = float(atof(token.c_str()));
+			}
+			else if (i == 9 && (gpu_vendor.compare("") == 0)){
+				gpu_vendor = token;
+			}
+			else if (i == 1 && (gpu_driver.compare("") == 0)){
+				gpu_driver = token;
+			}
+			else if (i == 10 && (gpu_vendor_id.compare("") == 0)){
+				gpu_vendor_id = token;
+			}
+			else if (i == 11 && (gpu_device_id.compare("") == 0)){
+				gpu_device_id = token;
+			}
+			else if (i == 12 && (gpu_rev_id.compare("") == 0)){
+				gpu_rev_id = token.substr(0, 2);
+			}
+		}
+
+		int score = int(glm::round((tris / rend_time) * 0.000001f));
+		if (best_score < score){
+			best_score = score;
+		}
+	}
+
+	memset(&header[0], 0, 1024);
+
+	sprintf(&header[0], "POST /report.php HTTP/1.1\r\n"
+		"Host: perf.outerra.com\r\n"
+		"Content-Type: application/octet-stream\r\n"
+		"Content-Length: %d\r\n"
+		"Content-Disposition: form-data; name=\"perf_test\"; filename=\"perf_test.csv\"\r\n"
+		"Connection: close\r\n"
+
+		"ot-test: Buildings_test\r\n"
+		"ot-vendor: %s\r\n"
+		"ot-gpu: %s\r\n"
+		"ot-driver-version: %s\r\n"
+		"ot-score: %d\r\n"
+		"ot-venid: %s\r\n"
+		"ot-devid: %s\r\n"
+		"ot-revid: %s\r\n"
+		"\r\n",
+		len,
+		gpu_vendor.c_str(),
+		gpu_name.c_str(),
+		gpu_driver.c_str(),
+		best_score,
+		gpu_vendor_id.c_str(),
+		gpu_device_id.c_str(),
+		gpu_rev_id.c_str());
+
+	bool op = base::send_test_data(header, strlen(header), "Buildings test", gpu_name, gpu_driver, best_score, ifs);
+
+	return op;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

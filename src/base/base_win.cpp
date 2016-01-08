@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include <Windowsx.h>
 #include <stdio.h>
 
+#pragma comment(lib,"ws2_32.lib")
+
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 LRESULT WINAPI MsgProc(HWND hwnd,UINT msg,WPARAM wParam,LPARAM lParam)
@@ -419,8 +421,82 @@ void base::get_display_ven_dev_id(unsigned short & vendor_id, unsigned short & d
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-bool base::send_test_data(const char * file_name, const char * request_header){
+bool send_data(const char* header, size_t size, std::ifstream& ifs)
+{
+	WSADATA wsaData;
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+		return false;
 
+	SOCKET Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	struct hostent *host;
+	host = gethostbyname("perf.outerra.com");
+	SOCKADDR_IN SockAddr;
+	SockAddr.sin_port = htons(80);
+	SockAddr.sin_family = AF_INET;
+	SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
+
+	char data[1024];
+	bool succ = false;
+
+	do {
+		if (connect(Socket, (SOCKADDR*)(&SockAddr), sizeof(SockAddr)) != 0)
+			break;
+
+		if (send(Socket, &header[0], int(strlen(&header[0])), 0) != int(strlen(&header[0])))
+			break;
+
+		ifs.seekg(0, ifs.beg);
+
+		succ = true;
+
+		while (!ifs.eof()) {
+			memset(data, 0, 1024);
+			ifs.read(data, 512);
+			int len = (int)strlen(data);
+			if (send(Socket, data, len, 0) != len) {
+				succ = false;
+				break;
+			}
+		}
+	} while (0);
+
+	closesocket(Socket);
+	WSACleanup();
+	return succ;
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+bool base::send_test_data(const char * request_header, 
+	int header_len, 
+	const std::string & test_name,
+	const std::string & gpu_name,
+	const std::string & gpu_driver,
+	int best_score,
+	std::ifstream & ifs)
+{
+	char str_buf[1024];
+	memset(&str_buf[0], 0, 1024);
+	sprintf(&str_buf[0],
+		"Test: %s\n"
+		"GPU: %s\n"
+		"Drivers: %s\n"
+		"\nScore: %d Mtris/s\n"
+		"\nDo you want to upload the test results?", test_name.c_str(),gpu_name.c_str(), gpu_driver.c_str(), best_score);
+
+	int res = MessageBox(0, str_buf, "Perf test results", MB_YESNO);
+
+	if (res == IDNO)
+		return true;
+
+	bool op = send_data(request_header, header_len, ifs);
+
+	if (op)
+		MessageBox(0, "Test results uploaded successfully", "Thank you!", MB_OK | MB_ICONINFORMATION);
+	else
+		MessageBox(0, "Failed to upload test results", "Error", MB_OK | MB_ICONWARNING);
+
+	return op;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

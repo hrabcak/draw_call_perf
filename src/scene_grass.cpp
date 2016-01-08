@@ -3,15 +3,9 @@
 #include "base/base.h"
 #include "base/frame_context.h"
 
-#include <windows.h>
-#include <WinSock2.h>
-
 #include <fstream>
 #include <string>
 #include <sstream>
-
-#pragma comment(lib,"ws2_32.lib")
-
 
 #define NIDX_PER_BLADE_TSTRIP 8
 #define NIDX_PER_BLADE_T 15
@@ -650,51 +644,6 @@ void scene_grass::create_height_texs()
 
 }
 
-static bool send_data( const char* header, size_t size, std::ifstream& ifs )
-{
-	WSADATA wsaData;
-	if(WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
-		return false;
-
-	SOCKET Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	struct hostent *host;
-	host = gethostbyname("perf.outerra.com");
-	SOCKADDR_IN SockAddr;
-	SockAddr.sin_port = htons(80);
-	SockAddr.sin_family = AF_INET;
-	SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
-
-    char data[1024];
-    bool succ = false;
-
-    do {
-    	if(connect(Socket, (SOCKADDR*)(&SockAddr), sizeof(SockAddr)) != 0)
-            break;
-
-	    if(send(Socket, &header[0], int(strlen(&header[0])), 0) != int(strlen(&header[0])))
-		    break;
-
-	    ifs.seekg(0, ifs.beg);
-
-        succ = true;
-
-	    while(!ifs.eof()) {
-		    memset(data, 0, 1024);
-		    ifs.read(data, 512);
-            int len = (int)strlen(data);
-		    if(send(Socket, data, len, 0) != len) {
-                succ = false;
-			    break;
-            }
-	    }
-    }
-    while(0);
-
-	closesocket(Socket);
-	WSACleanup();
-	return succ;
-}
-
 bool scene_grass::send_test_data()
 {
 	char header[1024];
@@ -756,18 +705,6 @@ bool scene_grass::send_test_data()
 		}
 	}
 
-	sprintf(&header[0],
-        "Test: Grass_test\n"
-        "GPU: %s\n"
-        "Drivers: %s\n"
-        "\nScore: %d Mtris/s\n"
-        "\nDo you want to upload the test results?", gpu_name.c_str(), gpu_driver.c_str(), best_score);
-
-	int res = MessageBox(0, header, "Perf test results", MB_YESNO);
-
-	if(res == IDNO)
-		return true;
-
 	memset(&header[0], 0, 1024);
 
 	sprintf(&header[0], "POST /report.php HTTP/1.1\r\n"
@@ -795,12 +732,7 @@ bool scene_grass::send_test_data()
 		gpu_device_id.c_str(),
 		gpu_rev_id.c_str());
 
-    bool op = send_data(header, strlen(header), ifs);
+    bool op = base::send_test_data(header, strlen(header), "Grass test" ,gpu_name,gpu_driver,best_score ,ifs);
     
-    if(op)
-        MessageBox(0, "Test results uploaded successfully", "Thank you!", MB_OK|MB_ICONINFORMATION);
-    else
-        MessageBox(0, "Failed to upload test results", "Error", MB_OK|MB_ICONWARNING);
-
-    return op;
+	return op;
 }

@@ -36,6 +36,7 @@ public:
 
 	void load_tile(glm::ivec2 pos);
 
+	static bool send_test_data();
 private:
 	std::vector<BuildingTileDCData> _tiles;
 	unsigned _indices_vbo;

@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "Shellapi.h"
 
 #include "scene_grass.h"
+#include "scene_buildings.h"
 
 LPSTR* CommandLineToArgvA(LPSTR lpCmdLine, INT *pNumArgs)
 {
@@ -203,6 +204,10 @@ int WINAPI WinMain(
 				scene_grass::send_test_data();
 				return 0; 
 			}
+			else if (stricmp(argv[i], "--send-buildings-data") == 0) {
+				scene_buildings::send_test_data();
+				return 0;
+			}
 			else if (stricmp(argv[i], "--buildings-scene") == 0){
 				base::cfg().sceneType = base::config::stBuildings;
 			}
@@ -260,7 +265,6 @@ int WINAPI WinMain(
 			else if (stricmp(argv[i], "--buildings-nocull") == 0) {
 				base::cfg().no_cull = true;
 			}
-
 			else if (stricmp(argv[i], "--proc_scene_mode") == 0) {
 				int opt = argv[i + 1][0] - '0';
 				if (opt == 0){
@@ -325,6 +329,7 @@ int WINAPI WinMain(
 					"--gs_blades_per_run VALUE - Number of grass blades generated per GS run. Values:1, 2, 4, 8\n\n"
 
 					"--buildings-scene - Use building scene.\n"
+					"--send-buildings-data - Send buildings test data to perf.outerra.com server.\n"
 					"--buildings-nocull - Disable backface culling.\n"
 					"--blocks_per_tile - Subdivide tile into n batches of buildings.\n\n"
 					
