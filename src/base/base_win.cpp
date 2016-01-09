@@ -219,8 +219,6 @@ void base::init_opengl_win()
 	if(0 == (__hrc = wglCreateContextAttribsARB(hdc, 0, attribs)))
         throw base::exception(SRC_LOCATION_STR) << "wglCreateContext failed!";
 
-    wglSwapIntervalEXT(0);
-
 	set_main_rc();
 }
 
@@ -230,6 +228,15 @@ void base::set_main_rc()
 {
     if(!wglMakeCurrent(__hdc, __hrc))
 		throw base::exception(SRC_LOCATION_STR) << "wglMakeCurrent main context failed!";
+
+    int sw = wglGetSwapIntervalEXT();
+    if(sw != 0) {
+        wglSwapIntervalEXT(0);
+
+        sw = wglGetSwapIntervalEXT();
+        if(sw != 0)
+            throw base::exception(SRC_LOCATION_STR) << "Can't disable VSYNC";
+    }
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
