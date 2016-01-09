@@ -119,7 +119,7 @@ GLuint base::create_and_compile_shader(
         glDeleteShader(shader);
         shader = 0;
 
-		throw base::exception(loc.to_str()) << str;
+		throw base::exception(loc.to_str()) << ", " << filename << ": " << str;
     }
 	return shader;
 }

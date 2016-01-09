@@ -2,6 +2,7 @@
 del buildings_test.csv
 
 dctest64.exe --test0 --buildings-scene --blocks_per_tile 1
+if %errorlevel% neq 0 exit /b %errorlevel%
 dctest64.exe --test0 --buildings-scene --blocks_per_tile 2
 dctest64.exe --test0 --buildings-scene --blocks_per_tile 4
 dctest64.exe --test0 --buildings-scene --blocks_per_tile 8
@@ -30,5 +31,7 @@ dctest64.exe --test0 --buildings-scene --blocks_per_tile 1024 --buildings-nocull
 dctest64.exe --test0 --buildings-scene --blocks_per_tile 2048 --buildings-nocull
 dctest64.exe --test0 --buildings-scene --blocks_per_tile 4096 --buildings-nocull
 dctest64.exe --test0 --buildings-scene --blocks_per_tile 8192 --buildings-nocull
+
+if %errorlevel% neq 0 exit /b %errorlevel%
 
 dctest64.exe --send-buildings-data

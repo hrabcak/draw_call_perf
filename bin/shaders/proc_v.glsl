@@ -87,8 +87,8 @@ void main()
 #else
 	const float block_width = TILEWIDTH / float(BLOCKSPERROW);
 	const float half_block_width = 0.5*block_width;
-	const int inst_part = gl_VertexID % BLADESPERTUFT;
-	const int block_part = (gl_VertexID - inst_part) / BLADESPERTUFT;
+	int inst_part = gl_VertexID % BLADESPERTUFT;
+	int block_part = (gl_VertexID - inst_part) / BLADESPERTUFT;
 
 #ifdef ONE_BATCH
 	const int bpr_log2 = int(log2(BLOCKSPERROW));
@@ -133,7 +133,7 @@ void main()
 	#elif defined(IP_4F)
 		color_out.color = rnd;
 	#else
-			color_out.color = vec3(0.0, 0.29215, 0.0);
+        color_out.color = vec3(0.0, 0.29215, 0.0);
 	#endif
 #endif
 }

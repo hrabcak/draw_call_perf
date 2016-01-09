@@ -209,8 +209,8 @@ void base::init_opengl_win()
 	wglDeleteContext(__hrc);
 
 	int attribs[]={
-		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+		WGL_CONTEXT_MINOR_VERSION_ARB, 3, 
 		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
         WGL_CONTEXT_FLAGS_ARB, cfg().use_debug_context ? WGL_CONTEXT_DEBUG_BIT_ARB : 0,
 		0
@@ -235,7 +235,7 @@ void base::set_main_rc()
 
         sw = wglGetSwapIntervalEXT();
         if(sw != 0)
-            throw base::exception(SRC_LOCATION_STR) << "Can't disable VSYNC";
+            throw base::exception(SRC_LOCATION_STR) << "Unable to disable monitor V-SYNC";
     }
 }
 

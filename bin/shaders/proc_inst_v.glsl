@@ -123,8 +123,8 @@ void main(){
 	const int verts_per_block = (VERT_PER_BLADE + 2)*BLADESPERTUFT;
 #endif
 	
-	const int block_part = gl_VertexID % verts_per_block;
-	const int instance_part = (gl_VertexID - block_part) / verts_per_block;
+	int block_part = gl_VertexID % verts_per_block;
+	int instance_part = (gl_VertexID - block_part) / verts_per_block;
 
 
 #ifdef VARIABLE_BLADES_PER_INSTANCE 
@@ -181,14 +181,14 @@ void main(){
 #endif
 	uvec4 height = texelFetch(height_map, block_pos_r,0);
 
-	const float grass_h = float(height.x) / float(0xffff);
+	float grass_h = float(height.x) / float(0xffff);
 
 	vec2 block_pos = tile_pos*TILEWIDTH + vec2(block_pos_r.x * block_width, block_pos_r.y * block_width) + half_block_width;
 	vec4 rnd = random_2d_perm(ivec2(block_pos * instance_id * BLOCKSPERROW));
 
 	vec4 blade_pos = vec4(block_pos.x + rnd.x*half_block_width, 0.0, block_pos.y + rnd.y*half_block_width, 1.0);
 
-	const float tan_angle = (TWO_PI / float(BLADESPERTUFT)) * instance_id - PI_HALF;
+	float tan_angle = (TWO_PI / float(BLADESPERTUFT)) * instance_id - PI_HALF;
 
 	vec3 blade_tangent = vec3(cos(tan_angle), 0.0, sin(tan_angle));
 
@@ -201,7 +201,7 @@ void main(){
 #ifdef WITHOUT_BENDING
 	vec3 bend = cross(up, blade_tangent);
 
-	vec3 bend_displace = bend*(1 - exp2(-1))*k*k*BLADE_HEIGHT;
+	vec3 bend_displace = 0.5*bend*k*k*BLADE_HEIGHT;
 
 	norm = normalize(cross(blade_up_displace.xyz + bend_displace, bx_dis));
 
@@ -209,7 +209,7 @@ void main(){
 #else
 	vec3 bend = cross(up, blade_tangent);
 
-	vec3 bend_displace = bend*(1 - exp2(-1))*k*k*grass_h;
+	vec3 bend_displace = 0.5*bend*k*k*grass_h;
 
 	norm = normalize(cross(blade_up_displace.xyz * hcf + bend_displace, bx_dis));
 
