@@ -1,5 +1,5 @@
 @echo off
-del buildings_test.csv
+del /Q buildings_test.csv
 
 dctest64.exe --test0 --buildings-scene --blocks_per_tile 1
 if %errorlevel% neq 0 exit /b %errorlevel%

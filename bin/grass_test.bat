@@ -1,5 +1,5 @@
 @echo OFF
-del grass_test.csv
+del /Q grass_test.csv
 
 dctest64.exe --test1 --procedural-scene --proc_scene_mode 0 --vs_variable_blades_per_dc --blades_per_dc 65536 --pure_color
 if %errorlevel% neq 0 exit /b %errorlevel%

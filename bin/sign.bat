@@ -1,0 +1,1 @@
+signtool.exe sign /t http://timestamp.comodoca.com/authenticode /v dctest64.exe

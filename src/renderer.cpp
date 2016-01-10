@@ -71,7 +71,7 @@ void renderer::run()
 
 		base::get_display_ven_dev_id(_vendor_id, _device_id, _rev_id);
 
-		if (_vendor_id == 0x1002 || _vendor_id == 0x1022){
+		if (_vendor_id == 0x1002/* || _vendor_id == 0x1022*/){
 			_graphic_card_name = base::ven_dev_id_to_ati_card_name(_vendor_id,_device_id);
 		}
 		else{

@@ -431,16 +431,24 @@ void base::get_display_ven_dev_id(unsigned short & vendor_id, unsigned short & d
 bool send_data(const char* header, size_t size, std::ifstream& ifs)
 {
 	WSADATA wsaData;
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	if(WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 		return false;
 
 	SOCKET Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	struct hostent *host;
+	/*struct hostent *host;
 	host = gethostbyname("perf.outerra.com");
+    if(!host)
+        return false;*/
+
 	SOCKADDR_IN SockAddr;
 	SockAddr.sin_port = htons(80);
 	SockAddr.sin_family = AF_INET;
-	SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
+	//SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
+
+    SockAddr.sin_addr.S_un.S_un_b.s_b1 = 95;
+    SockAddr.sin_addr.S_un.S_un_b.s_b2 = 85;
+    SockAddr.sin_addr.S_un.S_un_b.s_b3 = 63;
+    SockAddr.sin_addr.S_un.S_un_b.s_b4 = 201;
 
 	char data[1024];
 	bool succ = false;
