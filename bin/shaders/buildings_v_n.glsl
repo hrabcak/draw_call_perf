@@ -20,7 +20,7 @@ out OUT{
 	ivec4{
 			upper bits -> lower bits
 		x - base_point.x(16 bits), base_point.y(16 bits)
-		y - p1.x(13 bits), p1.y(13 bits),p2.x(6 bits)
+		y - p1.x(13 bits), p1.y(13 bits),p2.x(6 bit)sa
 		z - p2.x(7 bits), p2.y(13 bits), p3.x(12 bits)
 		w - p3.x(1 bit),p3.y(13 bits), falgs (18 bits)
 	}

@@ -711,7 +711,10 @@ void scene::gpu_draw(base::frame_context * const ctx)
 	//glColorMask(false, false, false, false);
 	//glPolygonMode(GL_FRONT, GL_LINE);
 
-	glDisable(GL_CULL_FACE);
+	if (base::cfg().no_cull){
+		glDisable(GL_CULL_FACE);
+	}
+	
 
 	base::hptimer timer;
 
