@@ -294,7 +294,7 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 	// new method
 	uint nvertices = 0;
 	uint nelements = 0;
-	get_face_and_vert_count(10, nelements, nvertices);
+	get_face_and_vert_count(base::cfg().mesh_size, nelements, nvertices);
 	///////////////
 
 	std::vector<ushort> elements;
@@ -330,7 +330,7 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 			*/
 
 			// new method
-			gen_cube_simple<int2>(10, vertices_ptr, norm_uv_ptr, elements_ptr);
+			gen_cube_simple<int2>(base::cfg().mesh_size, vertices_ptr, norm_uv_ptr, elements_ptr);
 			//////////////////////////
 			_dc_data.push_back(dc_data(
 				nelements,
@@ -720,7 +720,7 @@ void scene::bind_texture(int counter)
 void scene::gpu_draw(base::frame_context * const ctx)
 {
 	//glColorMask(false, false, false, false);
-	glPolygonMode(GL_FRONT, GL_LINE);
+	//glPolygonMode(GL_FRONT, GL_LINE);
 
 	if (base::cfg().no_cull){
 		glDisable(GL_CULL_FACE);
