@@ -155,8 +155,8 @@ static void get_face_and_vert_count(
 	uint32 & element_count,
 	uint32 & vert_count)
 {
-	vert_count = 16 * faces_per_side + 10 ; // temporary
-	element_count = 48 * faces_per_side; // temporary
+	vert_count = 8 * (faces_per_side + 1 )+  8 * faces_per_side + 2; 
+	element_count = 48 * faces_per_side; 
 }
 
 

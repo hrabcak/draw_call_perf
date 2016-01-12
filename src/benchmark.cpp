@@ -395,7 +395,7 @@ bool benchmark::write_test_data_csv(
 		base::cfg().use_vbo ? "true" : "false",
 		base::cfg().tex_freq,
 		base::cfg().tex_mode,
-		base::cfg().mesh_size_opt,
+		base::cfg().mesh_size*16,
 		base::cfg().one_mesh ? "true" : "false",
 		nframes,
 		time,
