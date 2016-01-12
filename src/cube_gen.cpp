@@ -6,6 +6,7 @@
 #include <set>
 #include <algorithm>
 
+
 #define CUBE_FACE_COUNT			6
 
 #define MASK_BIT_0 0x1
@@ -914,5 +915,173 @@ void gen_cube_imp(
 	element_count = cur_element_count;
 	vert_count = cur_vert_count;
 }
+
+void gen_cube_simple_imp(
+	int faces_per_side,
+	char * const pos_data,
+	char * const norm_uv_data,
+	ushort * index_array,
+	bool use_int){
+
+	float step = 2.0f / faces_per_side;
+	char * cur_pos_data = pos_data;;
+	char * cur_norm_uv_data = norm_uv_data;
+
+
+	ushort curr_idx = 0;
+
+	const glm::vec3 up_vector(0.0f, 2.0f, 0.0f);
+	glm::vec3 origin;
+	glm::vec3 dir;
+
+	gen::vert vert;
+
+	// i == 0 - near
+	// i == 1 - right
+	// i == 2 - far
+	// i == 3 - left 
+	for (ushort i = 0; i < 4; i++){
+		if (i == 0){
+			origin = glm::vec3(-1.0f, -1.0f, 1.0f);
+			dir = glm::vec3(step, 0.0f, 0.0f);
+			vert.norm = glm::vec3(0.0f,0.0f,1.0f);
+		}
+		else if (i == 1){
+			origin = glm::vec3(1.0f, -1.0f, 1.0f);
+			dir = glm::vec3(0.0f, 0.0f, -step);
+			vert.norm = glm::vec3(1.0f, 0.0f, 0.0f);
+		}
+		else if (i == 2){
+			origin = glm::vec3(1.0f, -1.0f, -1.0f);
+			dir = glm::vec3(-step, 0.0f, 0.0f);
+			vert.norm = glm::vec3(0.0f, 0.0f, -1.0f);
+		}
+		else if (i == 3){
+			origin = glm::vec3(-1.0f, -1.0f, -1.0f);
+			dir = glm::vec3(0.0f, 0.0f, step);
+			vert.norm = glm::vec3(-1.0f, 0.0f, 0.0f);
+		}
+
+		for (ushort u = 0; u <= faces_per_side; u++){
+			for (ushort v = 0; v <= 1; v++){
+				vert.pos = origin + u*dir + v*up_vector;
+				vert.uv = glm::vec2(u / float(faces_per_side),v);
+				if (use_int){
+					cpy_packed(cur_pos_data, cur_norm_uv_data, vert);
+					cur_pos_data += sizeof(glm::int2);
+					cur_norm_uv_data += sizeof(glm::int2);
+				}
+				else{
+					cpy_unpacked(cur_pos_data, cur_norm_uv_data, vert);
+					cur_pos_data += sizeof(glm::vec3);
+					cur_norm_uv_data += sizeof(glm::vec3) + sizeof(glm::vec2);
+				}
+
+			}
+		}
+
+		for (ushort f = 0; f < faces_per_side; f++){
+			ushort offset = 2 * f + i * (2 * faces_per_side + 2);
+			index_array[curr_idx++] = offset;
+			index_array[curr_idx++] = offset + 3;
+			index_array[curr_idx++] = offset + 1;
+			index_array[curr_idx++] = offset;
+			index_array[curr_idx++] = offset + 2;
+			index_array[curr_idx++] = offset + 3;			
+		}
+	}
+	// i == 0 - bottom
+	// i == 1 - top
+	float uv_step = 1.0f / faces_per_side;
+
+	for (ushort i = 0; i <= 1; i++){
+		ushort offset = 8 * faces_per_side + 8 + i * (1 + 4 * faces_per_side);
+		vert.uv = glm::vec2(0.5f,0.5f);
+		if (i == 0){
+			vert.norm = glm::vec3(0.0f, -1.0f, 0.0f);
+			vert.pos = vert.norm;
+
+			if (use_int){
+				cpy_packed(cur_pos_data, cur_norm_uv_data, vert);
+				cur_pos_data += sizeof(glm::int2);
+				cur_norm_uv_data += sizeof(glm::int2);
+			}
+			else{
+				cpy_unpacked(cur_pos_data, cur_norm_uv_data, vert);
+				cur_pos_data += sizeof(glm::vec3);
+				cur_norm_uv_data += sizeof(glm::vec3) + sizeof(glm::vec2);
+			}
+
+			vert.pos = glm::vec3(-1.0f, -1.0f, -1.0f);
+			
+		}
+		else{
+			vert.norm = glm::vec3(0.0f, 1.0f, 0.0f);
+
+			vert.pos = vert.norm;
+
+			if (use_int){
+				cpy_packed(cur_pos_data, cur_norm_uv_data, vert);
+				cur_pos_data += sizeof(glm::int2);
+				cur_norm_uv_data += sizeof(glm::int2);
+			}
+			else{
+				cpy_unpacked(cur_pos_data, cur_norm_uv_data, vert);
+				cur_pos_data += sizeof(glm::vec3);
+				cur_norm_uv_data += sizeof(glm::vec3) + sizeof(glm::vec2);
+			}
+
+			vert.pos = glm::vec3(-1.0f, 1.0f, -1.0f);
+		}
+
+		vert.uv = glm::vec2(0.0f, 0.0f);
+		
+		for (int j = 0; j < 4 * faces_per_side; j++){
+			if (j / faces_per_side == 0){
+				vert.pos.x += step;
+				vert.uv.x += uv_step;
+			}
+			else if (j / faces_per_side == 1){
+				vert.pos.z += step;
+				vert.uv.y += uv_step;
+			}
+			else if (j / faces_per_side == 2){
+				vert.pos.x -= step;
+				vert.uv.x -= uv_step;
+			}
+			else if (j / faces_per_side == 3){
+				vert.pos.z -= step;
+				vert.uv.y -= uv_step;
+			}
+
+			if (use_int){
+				cpy_packed(cur_pos_data, cur_norm_uv_data, vert);
+				cur_pos_data += sizeof(glm::int2);
+				cur_norm_uv_data += sizeof(glm::int2);
+			}
+			else{
+				cpy_unpacked(cur_pos_data, cur_norm_uv_data, vert);
+				cur_pos_data += sizeof(glm::vec3);
+				cur_norm_uv_data += sizeof(glm::vec3) + sizeof(glm::vec2);
+			}
+		}
+
+		for (int j = 0; j < 4 * faces_per_side; j++){
+			index_array[curr_idx++] = offset;
+
+			if (i == 0){
+				index_array[curr_idx++] = (offset + 1) + j;
+				index_array[curr_idx++] = (offset + 1) + (j + 1) % (4 * faces_per_side);
+			}
+			else{
+				index_array[curr_idx++] = (offset + 1) + (j + 1) % (4 * faces_per_side);
+				index_array[curr_idx++] = (offset + 1) + j;
+			}
+		}
+	}
+
+
+}
+
 
 

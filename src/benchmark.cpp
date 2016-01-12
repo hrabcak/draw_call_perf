@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include "scene_grass.h"
 #include "scene_buildings.h"
 #include "renderer.h"
+#include "cube_gen.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -153,9 +154,13 @@ void benchmark::draw_frame()
             const float fps = float(nframes) / dtf;
             const float r_nframes = 1.0f / float(nframes);
 
+			
+			static uint32 nvert ;
+			static uint32 nelem;
+			get_face_and_vert_count(base::cfg().mesh_size, nelem, nvert);
 			get_mesh_size_str(mesh_size_str,
-				scene::get_vtx_tbl()[base::cfg().mesh_size_opt],
-				scene::get_ele_tbl()[base::cfg().mesh_size_opt]);
+				nvert,
+				nelem);
 
 			if (base::cfg().sceneType == base::config::stGrass)
 			{

@@ -308,6 +308,7 @@ struct config {
 
 		, test(-1)
 		, mesh_size_opt(17)
+		, mesh_size(1)
 		, tex_mode(2)
 		, tex_freq(1)
 		, use_vbo(false)
@@ -354,6 +355,7 @@ struct config {
     // tests
     int test;
 	int mesh_size_opt;
+	int mesh_size;
     int tex_mode;
     int tex_freq;
     int tex_size;

@@ -287,9 +287,15 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 
 	const int * vtx_tbl = scene::get_vtx_tbl();
 	const int * ele_tbl = scene::get_ele_tbl();
-
+	/* old voxel method
 	uint nvertices = vtx_tbl[_mesh_size_opt];
 	uint nelements = ele_tbl[_mesh_size_opt];
+	*/
+	// new method
+	uint nvertices = 0;
+	uint nelements = 0;
+	get_face_and_vert_count(10, nelements, nvertices);
+	///////////////
 
 	std::vector<ushort> elements;
 	std::vector<int2> vertices;
@@ -307,6 +313,7 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 	int e = MAX_BLOCK_COUNT;
 	do {
 		if (_bench_mode != BenchInstancing || i == 0) {
+			/* old voxel method
 			gen_cube<int2>(
 				_mesh_size_x,
 				_mesh_size_y,
@@ -320,7 +327,11 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 				nvertices,
 				!base::cfg().dont_rnd_cubes,  // argument true if deform cube
 				true); // argument true if multipass	
+			*/
 
+			// new method
+			gen_cube_simple<int2>(10, vertices_ptr, norm_uv_ptr, elements_ptr);
+			//////////////////////////
 			_dc_data.push_back(dc_data(
 				nelements,
 				uint(elements_ptr - elements.begin()._Ptr),

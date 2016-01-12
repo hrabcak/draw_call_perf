@@ -152,6 +152,10 @@ int WINAPI WinMain(
 				base::cfg().mesh_size_opt = atoi(argv[i + 1]);
 				++i;
 			}
+			else if (stricmp(argv[i], "--mesh-size") == 0){
+				base::cfg().mesh_size = atoi(argv[i + 1]);
+				++i;
+			}
             else if (
                    stricmp(argv[i], "--mesh-size0") == 0
                 || stricmp(argv[i], "--mesh-size1") == 0
@@ -160,19 +164,19 @@ int WINAPI WinMain(
                 || stricmp(argv[i], "--mesh-size4") == 0) {
 				int mesh_size = argv[i][11] - '0';
 				if (mesh_size == 0){
-					base::cfg().mesh_size_opt = 0;
+					base::cfg().mesh_size = 1;
 				}
 				else if (mesh_size == 1){
-					base::cfg().mesh_size_opt = 6;
+					base::cfg().mesh_size = 3;
 				}
 				else if (mesh_size == 2){
-					base::cfg().mesh_size_opt = 17;
+					base::cfg().mesh_size = 7;
 				}
 				else if (mesh_size == 3){
-					base::cfg().mesh_size_opt = 34;
+					base::cfg().mesh_size = 12;
 				}
 				else if (mesh_size == 4){
-					base::cfg().mesh_size_opt = 51;
+					base::cfg().mesh_size = 19;
 				}
             }
             else if (
@@ -303,13 +307,16 @@ int WINAPI WinMain(
 
 					"--nocull - Disable backface culling.\n\n"
 
+					"--mesh-size VALUE - Meshes with 16*VALUE faces"
 					"--mesh-size-opt VALUE - Meshes with ??? faces\n\n"
+					
 
-					"--mesh-size0 - Meshes with 12 faces\n"
-					"--mesh-size1 - Meshes with ~48 faces\n"
-                    "--mesh-size2 - Meshes with ~108 faces (default)\n"
-                    "--mesh-size3 - Meshes with ~192 faces\n"
-                    "--mesh-size4 - Meshes with ~300 faces\n\n"
+
+					"--mesh-size0 - Meshes with 16 faces\n"
+					"--mesh-size1 - Meshes with 48 faces\n"
+                    "--mesh-size2 - Meshes with 108 faces (default)\n"
+                    "--mesh-size3 - Meshes with 192 faces\n"
+                    "--mesh-size4 - Meshes with 304 faces\n\n"
                     
                     "--tex-freq0 - One texture for all meshes\n"
                     "--tex-freq1 - One unique texture for each mesh (default)\n"

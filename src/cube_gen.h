@@ -106,6 +106,59 @@ static void gen_cube<glm::int2>(
 		multipass);
 }
 
+void gen_cube_simple_imp(
+	int faces_per_side,
+	char * const vert_data,
+	char * const norm_uv_data,
+	ushort * index_array,
+	bool use_int);
+
+template <class V> 
+void gen_cube_simple(
+	int faces_per_side,
+	V * const pos_data,
+	V * const norm_uv_data,
+	ushort * index_array);
+
+template <>
+static void gen_cube_simple<float>(
+	int faces_per_side,
+	float * const vert_data,
+	float * const norm_uv_data,
+	ushort * index_array)
+{
+	gen_cube_simple_imp(
+		faces_per_side,
+		(char * const)vert_data,
+		(char * const)norm_uv_data,
+		index_array,
+		false);
+}
+
+template <>
+static void gen_cube_simple<glm::int2>(
+	int faces_per_side,
+	glm::int2 * const vert_data,
+	glm::int2 * const norm_uv_data,
+	ushort * index_array)
+{
+	gen_cube_simple_imp(
+		faces_per_side,
+		(char * const)vert_data,
+		(char * const)norm_uv_data,
+		index_array,
+		true);
+}
+
+static void get_face_and_vert_count(
+	ushort faces_per_side, 
+	uint32 & element_count,
+	uint32 & vert_count)
+{
+	vert_count = 16 * faces_per_side + 10 ; // temporary
+	element_count = 48 * faces_per_side; // temporary
+}
+
 
 class voxel_gen
 {
