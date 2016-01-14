@@ -1,6 +1,8 @@
 #include "cube_gen.h"
 #include "base/base.h"
 
+#include "obj_writer.h"
+
 #include <map>
 #include <vector>
 #include <set>
@@ -923,6 +925,17 @@ void gen_cube_simple_imp(
 	ushort * index_array,
 	bool use_int){
 
+	char buf[64];
+
+	itoa(faces_per_side, &buf[0], 10);
+
+	std::string file_name = "cube";
+	file_name += buf;
+	file_name += ".obj";
+
+	obj_writer ow;
+	//ow.open(file_name);
+
 	float step = 2.0f / faces_per_side;
 	char * cur_pos_data = pos_data;;
 	char * cur_norm_uv_data = norm_uv_data;
@@ -977,6 +990,9 @@ void gen_cube_simple_imp(
 					cur_norm_uv_data += sizeof(glm::vec3) + sizeof(glm::vec2);
 				}
 
+				ow.write_vertex(vert.pos);
+				ow.write_normal(vert.norm);
+				ow.write_tex_coords(vert.uv);
 			}
 		}
 
@@ -1012,6 +1028,10 @@ void gen_cube_simple_imp(
 				cur_norm_uv_data += sizeof(glm::vec3) + sizeof(glm::vec2);
 			}
 
+			ow.write_vertex(vert.pos);
+			ow.write_normal(vert.norm);
+			ow.write_tex_coords(vert.uv);
+
 			vert.pos = glm::vec3(-1.0f, -1.0f, -1.0f);
 			
 		}
@@ -1030,6 +1050,10 @@ void gen_cube_simple_imp(
 				cur_pos_data += sizeof(glm::vec3);
 				cur_norm_uv_data += sizeof(glm::vec3) + sizeof(glm::vec2);
 			}
+
+			ow.write_vertex(vert.pos);
+			ow.write_normal(vert.norm);
+			ow.write_tex_coords(vert.uv);
 
 			vert.pos = glm::vec3(-1.0f, 1.0f, -1.0f);
 		}
@@ -1064,6 +1088,10 @@ void gen_cube_simple_imp(
 				cur_pos_data += sizeof(glm::vec3);
 				cur_norm_uv_data += sizeof(glm::vec3) + sizeof(glm::vec2);
 			}
+
+			ow.write_vertex(vert.pos);
+			ow.write_normal(vert.norm);
+			ow.write_tex_coords(vert.uv);
 		}
 
 		for (int j = 0; j < 4 * faces_per_side; j++){
@@ -1078,6 +1106,12 @@ void gen_cube_simple_imp(
 				index_array[curr_idx++] = (offset + 1) + j;
 			}
 		}
+	}
+
+	for (int i = 0; i < curr_idx; i += 3){
+		ow.write_face_idx_from_zero(index_array[i], index_array[i], index_array[i],
+			index_array[i+1], index_array[i+1], index_array[i+1], 
+			index_array[i+2], index_array[i+2], index_array[i+2]);
 	}
 
 

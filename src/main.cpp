@@ -272,6 +272,9 @@ int WINAPI WinMain(
 			else if (stricmp(argv[i], "--nocull") == 0) {
 				base::cfg().no_cull = true;
 			}
+			else if (stricmp(argv[i], "--wire") == 0) {
+				base::cfg().wire = true;
+			}
 			else if (stricmp(argv[i], "--proc_scene_mode") == 0) {
 				int opt = argv[i + 1][0] - '0';
 				if (opt == 0){

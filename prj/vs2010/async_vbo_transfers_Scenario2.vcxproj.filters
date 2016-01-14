@@ -67,6 +67,9 @@
     <ClInclude Include="..\..\src\pci_c.h">
       <Filter>src\base</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\obj_writer.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\base\base.cpp">
@@ -124,6 +127,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\scene_buildings.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\obj_writer.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

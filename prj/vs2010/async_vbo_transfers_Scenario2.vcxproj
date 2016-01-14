@@ -187,6 +187,7 @@
     <ClInclude Include="..\..\src\base\types.h" />
     <ClInclude Include="..\..\src\cube_gen.h" />
     <ClInclude Include="..\..\src\gen_tex.h" />
+    <ClInclude Include="..\..\src\obj_writer.h" />
     <ClInclude Include="..\..\src\pci_c.h" />
     <ClInclude Include="..\..\src\renderer.h" />
     <ClInclude Include="..\..\src\scene.h" />
@@ -235,6 +236,7 @@
     <ClCompile Include="..\..\src\cube_gen.cpp" />
     <ClCompile Include="..\..\src\gen_tex.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
+    <ClCompile Include="..\..\src\obj_writer.cpp" />
     <ClCompile Include="..\..\src\renderer.cpp" />
     <ClCompile Include="..\..\src\scene.cpp" />
     <ClCompile Include="..\..\src\scene_buildings.cpp" />
