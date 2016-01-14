@@ -35,6 +35,8 @@ THE SOFTWARE.
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include <algorithm>
+
 using namespace glm;
 
 #define SIMPLEX_BIAS_X		4382
@@ -110,6 +112,13 @@ scene::scene(benchmark * const app)
 	_tex_freq = base::cfg().tex_freq;
 	_use_vbo = base::cfg().use_vbo;
 	_one_mesh = base::cfg().one_mesh;
+
+	if (base::cfg().var_cube_size){
+		memset(&_var_cube_sizes_order[0], base::cfg().mesh_size, MAX_BLOCK_COUNT);
+		memset(&_var_cube_sizes_order[0], base::cfg().mesh_size - 1, MAX_BLOCK_COUNT / 3);
+		memset(&_var_cube_sizes_order[MAX_BLOCK_COUNT / 3], base::cfg().mesh_size + 1, MAX_BLOCK_COUNT / 3);
+		std::random_shuffle(&_var_cube_sizes_order[0], &_var_cube_sizes_order[MAX_BLOCK_COUNT - 1]);
+	}
 }
 
 //X 3056
@@ -329,9 +338,16 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 				true); // argument true if multipass	
 			*/
 
+			
 			// new method
-			gen_cube_simple<int2>(base::cfg().mesh_size, vertices_ptr, norm_uv_ptr, elements_ptr);
+			if (base::cfg().var_cube_size){
+				get_face_and_vert_count(_var_cube_sizes_order[i], nelements, nvertices);
+				gen_cube_simple<int2>(_var_cube_sizes_order[i], vertices_ptr, norm_uv_ptr, elements_ptr);
+			} else{		
+				gen_cube_simple<int2>(base::cfg().mesh_size, vertices_ptr, norm_uv_ptr, elements_ptr);
+			}
 			//////////////////////////
+
 			_dc_data.push_back(dc_data(
 				nelements,
 				uint(elements_ptr - elements.begin()._Ptr),

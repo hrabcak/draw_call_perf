@@ -337,6 +337,7 @@ struct config {
 		, buildings_count(0)
 		, no_cull(false)
 		, wire(false)
+		, var_cube_size(false)
         //, use_nor_uv(false)
     {}
 
@@ -387,6 +388,7 @@ struct config {
 	uint32 buildings_count;
 	bool no_cull;
 	bool wire;
+	bool var_cube_size;
 };
 
 config& cfg();

@@ -127,6 +127,7 @@ protected:
     void bind_texture(int counter);
 
 protected:
+	uint8 _var_cube_sizes_order[MAX_BLOCK_COUNT];
 	glm::ivec2 _cur_next_block;
 	uint32 _cur_block;
 	
