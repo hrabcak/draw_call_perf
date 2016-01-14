@@ -31,4 +31,6 @@ dctest64.exe --test2 --mesh-size 11 --tex-size64
 dctest64.exe --test2 --mesh-size 12 --tex-size64 
 dctest64.exe --test2 --mesh-size 13 --tex-size64 
 dctest64.exe --test2 --mesh-size 14 --tex-size64 
-dctest64.exe --test2 --mesh-size 15 --tex-size64 
+dctest64.exe --test2 --mesh-size 15 --tex-size64
+
+ 
