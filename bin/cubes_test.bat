@@ -85,4 +85,4 @@ dctest64.exe --tex-freq2 --test4 --tex-size32 --mesh-size 7 --var_cube_size
 dctest64.exe --tex-freq3 --test2 --tex-size32 --mesh-size 7 --var_cube_size
 dctest64.exe --tex-freq3 --test4 --tex-size32 --mesh-size 7 --var_cube_size
 
-dctest64.exe --send-cubes-test
+dctest64.exe --send-cubes-data
