@@ -105,6 +105,7 @@ public:
 
 	void add_test_block(bool add_peaks);
 
+	static bool send_test_data();
 protected:
 
     // heading is in degrees

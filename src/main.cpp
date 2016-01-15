@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "Shellapi.h"
 
 #include "scene_grass.h"
+#include "scene.h"
 #include "scene_buildings.h"
 
 LPSTR* CommandLineToArgvA(LPSTR lpCmdLine, INT *pNumArgs)
@@ -212,6 +213,10 @@ int WINAPI WinMain(
 				scene_buildings::send_test_data();
 				return 0;
 			}
+			else if (stricmp(argv[i], "--send-cube-data") == 0) {
+				scene::send_test_data();
+				return 0;
+			}
 			else if (stricmp(argv[i], "--buildings-scene") == 0){
 				base::cfg().sceneType = base::config::stBuildings;
 			}
@@ -300,7 +305,8 @@ int WINAPI WinMain(
                     "--test0 - glVertexAttribI3i + glDrawElements\n"
                     "--test1 - glDrawElementsBaseInstance\n"
                     "--test2 - glMultiDrawIndirect (default)\n"
-                    "--test3 - glMultiDrawElementsIndirect\n\n"
+                    "--test3 - glMultiDrawElementsIndirect\n"
+					//"--test4 - glDrawElementsBaseVertex base vertex hack\n\n"
                     
                     "--tex-mode0 - No textures\n"
                     "--tex-mode1 - Classis texture binding with glBindMultiTextureEXT\n"
@@ -315,8 +321,6 @@ int WINAPI WinMain(
 
 					"--mesh-size VALUE - Meshes with 16*VALUE faces"
 					"--mesh-size-opt VALUE - Meshes with ??? faces\n\n"
-					
-
 
 					"--mesh-size0 - Meshes with 16 faces\n"
 					"--mesh-size1 - Meshes with 48 faces\n"
@@ -330,6 +334,7 @@ int WINAPI WinMain(
                     "--tex-freq3 - One unique texture for four meshes\n\n"
                     
                     "--one-mesh - Use one geometry for all meshes\n"
+					"--send-cube-data - Send cube test data to perf.outerra.com server.\n"
                     "--use-vbo - Use classic buffer for vertex data instead of texture buffer\n"
                     "--use_nor_uv - Will use additional vertex data normal and uv compressed to 8 bytes (16bytes vertex data)\n\n"
 
