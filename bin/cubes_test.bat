@@ -53,36 +53,36 @@ dctest64.exe --test3 --mesh-size 11 --tex-size32
 dctest64.exe --test3 --mesh-size 12 --tex-size32
 dctest64.exe --test3 --mesh-size 13 --tex-size32
 
-dctest64.exe --tex-mode0 --test0 --tex-size32 --mesh-size 7
-dctest64.exe --tex-mode0 --test1 --tex-size32 --mesh-size 7
-dctest64.exe --tex-mode0 --test2 --tex-size32 --mesh-size 7
+dctest64.exe --tex-mode0 --test0 --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-mode0 --test1 --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-mode0 --test2 --tex-size32 --mesh-size 7 --var_cube_size
 
-dctest64.exe --tex-mode1 --test0  --tex-size32 --mesh-size 7
-dctest64.exe --tex-mode1 --test1 --tex-size32 --mesh-size 7
-dctest64.exe --tex-mode1 --test4 --tex-size32 --mesh-size 7
+dctest64.exe --tex-mode1 --test0  --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-mode1 --test1 --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-mode1 --test4 --tex-size32 --mesh-size 7 --var_cube_size
 
-dctest64.exe --tex-mode2 --test0 --tex-size32 --mesh-size 7
-dctest64.exe --tex-mode2 --test1 --tex-size32 --mesh-size 7
-dctest64.exe --tex-mode2 --test2 --tex-size32 --mesh-size 7
+dctest64.exe --tex-mode2 --test0 --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-mode2 --test1 --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-mode2 --test2 --tex-size32 --mesh-size 7 --var_cube_size
 
-dctest64.exe --tex-mode3 --test0 --tex-size32 --mesh-size 7
-dctest64.exe --tex-mode3 --test1 --tex-size32 --mesh-size 7
-dctest64.exe --tex-mode3 --test2 --tex-size32 --mesh-size 7
+dctest64.exe --tex-mode3 --test0 --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-mode3 --test1 --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-mode3 --test2 --tex-size32 --mesh-size 7 --var_cube_size
 
-dctest64.exe --tex-mode4 --test0 --tex-size32 --mesh-size 7
-dctest64.exe --tex-mode4 --test1 --tex-size32 --mesh-size 7
-dctest64.exe --tex-mode4 --test4 --tex-size32 --mesh-size 7
+dctest64.exe --tex-mode4 --test0 --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-mode4 --test1 --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-mode4 --test4 --tex-size32 --mesh-size 7 --var_cube_size
 
-dctest64.exe --tex-freq0 --test2 --tex-size32 --mesh-size 7  
-dctest64.exe --tex-freq0 --test4 --tex-size32 --mesh-size 7 
+dctest64.exe --tex-freq0 --test2 --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-freq0 --test4 --tex-size32 --mesh-size 7 --var_cube_size 
 
-dctest64.exe --tex-freq1 --test2 --tex-size32 --mesh-size 7
-dctest64.exe --tex-freq1 --test4 --tex-size32 --mesh-size 7
+dctest64.exe --tex-freq1 --test2 --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-freq1 --test4 --tex-size32 --mesh-size 7 --var_cube_size
 
-dctest64.exe --tex-freq2 --test2 --tex-size32 --mesh-size 7
-dctest64.exe --tex-freq2 --test4 --tex-size32 --mesh-size 7
+dctest64.exe --tex-freq2 --test2 --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-freq2 --test4 --tex-size32 --mesh-size 7 --var_cube_size
 
-dctest64.exe --tex-freq3 --test2 --tex-size32 --mesh-size 7
-dctest64.exe --tex-freq3 --test4 --tex-size32 --mesh-size 7
+dctest64.exe --tex-freq3 --test2 --tex-size32 --mesh-size 7 --var_cube_size
+dctest64.exe --tex-freq3 --test4 --tex-size32 --mesh-size 7 --var_cube_size
 
 dctest64.exe --send-cubes-test

@@ -322,6 +322,7 @@ int WINAPI WinMain(
 					"--nocull - Disable backface culling.\n\n"
 
 					"--mesh-size VALUE - Meshes with 16*VALUE faces"
+					"--var_cube_size - Cubes with variable sizes"
 					"--mesh-size-opt VALUE - Meshes with ??? faces\n\n"
 
 					"--mesh-size0 - Meshes with 16 faces\n"
