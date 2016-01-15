@@ -129,6 +129,7 @@ struct frame_context
 	unsigned _scene_tb;
     unsigned _ctx_id;
     unsigned _drawid_vbo;
+    unsigned _drawid_tb;
     unsigned _cmd_vbo;
 
     base::cmd* _cmd_data_ptr;

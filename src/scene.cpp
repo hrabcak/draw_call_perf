@@ -101,7 +101,7 @@ scene::scene(benchmark * const app)
 	_test_names.push_back("Test 1: Base instance");
 	_test_names.push_back("Test 2: Indirect");
 	_test_names.push_back("Test 3: Instancing");
-	_test_names.push_back("Test 4: Base vertex hack");
+    _test_names.push_back("Test 4: BaseVertex hack");
 
 	// set modes from cfg
 	if (base::cfg().test != -1) {
@@ -271,7 +271,8 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 	case BenchNaive:
 		break;
 	case BenchBaseVertex:
-		break;
+        _prg_tb_dc_data = get_uniform_location(loc, _prg, "tb_draw_data");
+        break;
 	case BenchInstancing:
 		break;
 	case BenchIndirect:
@@ -408,7 +409,7 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 		GL_TEXTURE_BUFFER,
 		base::get_pfd(base::PF_RG32I)->_internal,
 		_buffer_nor_uv);
-	glBindTexture(GL_TEXTURE_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_BUFFER, 0);
 
 	if (_tex_mode != BenchTexNone) {
 		create_textures(loc);
@@ -779,6 +780,12 @@ void scene::gpu_draw(base::frame_context * const ctx)
 	glUniform1i(_prg_tb_pos, 1);
 	glBindMultiTextureEXT(GL_TEXTURE1, GL_TEXTURE_BUFFER, _tb_pos);
 
+    // bind texture buffer with draw call data
+    if (_bench_mode == BenchBaseVertex) {
+        glUniform1i(_prg_tb_dc_data, 4);
+        glBindMultiTextureEXT(GL_TEXTURE4, GL_TEXTURE_BUFFER, ctx->_drawid_tb);
+    }
+
 	if (_tex_mode != BenchTexNone) {
 		glUniform1i(_prg_tb_nor_uv, 2);
 		glBindMultiTextureEXT(GL_TEXTURE2, GL_TEXTURE_BUFFER, _tb_nor_uv);
@@ -793,7 +800,7 @@ void scene::gpu_draw(base::frame_context * const ctx)
 	case BenchBaseVertex:
 		fast_drawcall = true;
 		fast_draw_call_gl33 = true;
-		glVertexAttribI1i(13, ctx->_scene_data_offset);
+		//glVertexAttribI1i(13, ctx->_scene_data_offset);
 		break;
 	case BenchInstancing:
 		use_instancing = true;
