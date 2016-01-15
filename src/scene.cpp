@@ -36,6 +36,9 @@ THE SOFTWARE.
 #include <glm/gtx/quaternion.hpp>
 
 #include <algorithm>
+#include <string>
+#include <sstream>
+#include <fstream>
 
 using namespace glm;
 
@@ -1088,9 +1091,112 @@ void scene::add_test_block(bool add_peaks)
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-int scene::get_perspective_block_bound(int row, float world_row_len){
+int scene::get_perspective_block_bound(int row, float world_row_len)
+{
 	float fovx = glm::atan(glm::tan(_app->get_fovy() / 2.0f)*(_app->get_aspect()));
 	return int(glm::ceil((glm::tan(fovx)*row*world_row_len) / int(world_row_len)));
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+bool scene::send_test_data()
+{
+	char header[1024];
+	std::ifstream ifs("cubes_test.csv", std::ios::binary);
+	if (!ifs.is_open()){
+		return false;
+	}
+
+	std::string gpu_vendor("");
+	std::string gpu_name("");
+	std::string gpu_driver("");
+	std::string gpu_vendor_id("");
+	std::string gpu_device_id("");
+	std::string gpu_rev_id("");
+
+	ifs.seekg(0, ifs.end);
+	int len = int(ifs.tellg());
+	ifs.seekg(0, ifs.beg);
+
+	memset(&header[0], 0, 1024);
+	ifs.getline(&header[0], 1024); // line with props names
+
+	std::istringstream iss;
+
+	float rend_time;
+	float tris;
+	int best_score = -1;
+
+	while (!ifs.eof()){
+		memset(&header[0], 0, 1024);
+		ifs.getline(&header[0], 1024);
+		iss.clear();
+		iss.str(header);
+		for (int i = 0; i < 21; i++){
+			std::string token;
+			std::getline(iss, token, ',');
+			if (i == 1 && (gpu_name.compare("") == 0)){
+				gpu_name = token;
+			}
+			else if (i == 8){
+				rend_time = float(atof(token.c_str()));
+			}
+			else if (i == 12){
+				tris = float(atof(token.c_str()));
+			}
+			else if (i == 16 && (gpu_vendor.compare("") == 0)){
+				gpu_vendor = token;
+			}
+			else if (i == 17 && (gpu_driver.compare("") == 0)){
+				gpu_driver = token;
+			}
+			else if (i == 18 && (gpu_vendor_id.compare("") == 0)){
+				gpu_vendor_id = token;
+			}
+			else if (i == 19 && (gpu_device_id.compare("") == 0)){
+				gpu_device_id = token;
+			}
+			else if (i == 20 && (gpu_rev_id.compare("") == 0)){
+				gpu_rev_id = token.substr(0, 2);
+			}
+		}
+
+		int score = int(glm::round((tris / rend_time) * 0.000001f));
+		if (best_score < score){
+			best_score = score;
+		}
+	}
+
+	memset(&header[0], 0, 1024);
+
+	sprintf(&header[0], "POST /report.php HTTP/1.1\r\n"
+		"Host: perf.outerra.com\r\n"
+		"Content-Type: application/octet-stream\r\n"
+		"Content-Length: %d\r\n"
+		"Content-Disposition: form-data; name=\"perf_test\"; filename=\"perf_test.csv\"\r\n"
+		"Connection: close\r\n"
+
+		"ot-test: Cube_test\r\n"
+		"ot-vendor: %s\r\n"
+		"ot-gpu: %s\r\n"
+		"ot-driver-version: %s\r\n"
+		"ot-score: %d\r\n"
+		"ot-venid: %s\r\n"
+		"ot-devid: %s\r\n"
+		"ot-revid: %s\r\n"
+		"\r\n",
+		len,
+		gpu_vendor.c_str(),
+		gpu_name.c_str(),
+		gpu_driver.c_str(),
+		best_score,
+		gpu_vendor_id.c_str(),
+		gpu_device_id.c_str(),
+		gpu_rev_id.c_str());
+
+	bool op = base::send_test_data(header, strlen(header), "Cube test", gpu_name, gpu_driver, best_score, ifs);
+
+	return op;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
