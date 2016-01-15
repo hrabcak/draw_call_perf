@@ -133,14 +133,16 @@ int WINAPI WinMain(
                    stricmp(argv[i], "--test0") == 0
                 || stricmp(argv[i], "--test1") == 0
                 || stricmp(argv[i], "--test2") == 0
-                || stricmp(argv[i], "--test3") == 0) {
+                || stricmp(argv[i], "--test3") == 0
+                || stricmp(argv[i], "--test4") == 0) {
                 base::cfg().test = argv[i][6] - '0';
             }
             else if (
                    stricmp(argv[i], "--tex-mode0") == 0
                 || stricmp(argv[i], "--tex-mode1") == 0
                 || stricmp(argv[i], "--tex-mode2") == 0
-                || stricmp(argv[i], "--tex-mode3") == 0) {
+                || stricmp(argv[i], "--tex-mode3") == 0
+                || stricmp(argv[i], "--tex-mode4") == 0) {
                 base::cfg().tex_mode = argv[i][10] - '0';
             }
             else if (
