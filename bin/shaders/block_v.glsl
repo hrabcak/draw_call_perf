@@ -42,7 +42,12 @@ layout(std140) uniform context
 	context_data _ctx;
 };
 
-layout(location = 13) in ivec4 index_start;
+#ifdef USE_BASE_VERTEX_DRAW 
+    uniform isamplerBuffer tb_draw_data;
+#else
+    layout(location = 13) in ivec4 index_start;
+#endif
+
 uniform samplerBuffer tb_blocks;
 
 #ifdef USE_TB_FOR_VERTEX_DATA
@@ -105,8 +110,13 @@ vec2 unpack_uv(ivec2 pack_uv,float coef){
 
 void main()
 {
-	int vertex_id = gl_VertexID;
+    int vertex_id = gl_VertexID;
     int index = vertex_id >> 12;
+
+#ifdef USE_BASE_VERTEX_DRAW 
+    ivec4 index_start = texelFetch(tb_draw_data, index);
+#endif
+
     vertex_id &= 0xfff;
     int idx = index_start.x * 4;
 	mat4 tm = mat4(

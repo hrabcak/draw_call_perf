@@ -41,6 +41,7 @@ GLuint __elem_buffer = 0;
 GLuint __vert_buffer = 0;
 GLuint __ctx_buffer = 0;
 GLuint __drawid_buffer = 0;
+GLuint __drawid_tb = 0;
 GLuint __cmd_buffer = 0;
 base::cmd * __cmd_data_ptr = 0;
 base::dc_gpu_data * __drawid_data_ptr = 0;
@@ -89,12 +90,22 @@ void base::frame_context::create_buffers()
             &__drawid_data_ptr);
         _drawid_data_ptr = __drawid_data_ptr;
         _drawid_data_offset = 0;
-        
+
         // bind drawid buffer to 13
         glBindBuffer(GL_ARRAY_BUFFER, _drawid_vbo);
         glVertexAttribIPointer(13, 4, GL_INT, 0, (GLvoid*)0);
         glVertexAttribDivisor(13, 1);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        //create texture buffer for DC data (BaseVertex hack)
+        glGenTextures(1, &__drawid_tb);
+        glBindTexture(GL_TEXTURE_BUFFER, __drawid_tb);
+        glTexBuffer(
+            GL_TEXTURE_BUFFER,
+            base::get_pfd(base::PF_RGBA32I)->_internal,
+            _drawid_vbo);
+        glBindTexture(GL_TEXTURE_BUFFER, 0);
+        _drawid_tb = __drawid_tb;
 
         // create COMMAND buffer for multi draw indirect
         {
@@ -124,6 +135,7 @@ void base::frame_context::create_buffers()
 		_scene_vbo = __scene_buffer;
         _scene_tb = __scene_tb;
         _drawid_vbo = __drawid_buffer;
+        _drawid_tb = __drawid_tb;
         _cmd_vbo = __cmd_buffer;
 
         _scene_data_offset = scene::MAX_BLOCK_COUNT * _ctx_id;
