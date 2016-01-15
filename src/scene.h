@@ -211,6 +211,7 @@ protected:
         BenchTexNaive,     // glBindTexture
         BenchTexArray,
         BenchTexBindless,
+        BenchTexBindlessHandle,
     };
 
     bool _use_vbo;

@@ -197,6 +197,7 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 
 	switch (_tex_mode) {
 	case BenchTexNaive:
+    case BenchTexBindlessHandle:
 		cfg += "#define USE_NAIVE_TEX 1\n";
 		break;
 	case BenchTexArray:
@@ -278,6 +279,7 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 	switch (_tex_mode) {
 	case BenchTexNaive:
 	case BenchTexArray:
+    case BenchTexBindlessHandle:
 		_prg_tex = get_uniform_location(loc, _prg, "mat_tex");
 		break;
 	case BenchTexBindless:
@@ -496,23 +498,25 @@ void scene::create_textures(const base::source_location &)
 	} while (++i != e);
 	glUseProgram(0);
 
-	if (_tex_mode == BenchTexBindless) {
+	if (_tex_mode == BenchTexBindless || _tex_mode == BenchTexBindlessHandle) {
 		for (int i = 0; i < ntex; ++i) {
 			const GLuint64 handle = glGetTextureHandleARB(_texs[i]);
 			glMakeTextureHandleResidentARB(handle);
 			_tex_handles.push_back(handle);
 		}
 
-		_buffer_tex_handles = base::create_buffer<GLuint64>(ntex, 0, &_tex_handles[0]);
+        if (_tex_mode == BenchTexBindless) {
+            _buffer_tex_handles = base::create_buffer<GLuint64>(ntex, 0, &_tex_handles[0]);
 
-		// create texture buffer for texture handles
-		glGenTextures(1, &_tb_tex_handles);
-		glBindTexture(GL_TEXTURE_BUFFER, _tb_tex_handles);
-		glTexBuffer(
-			GL_TEXTURE_BUFFER,
-			base::get_pfd(base::PF_RG32I)->_internal,
-			_buffer_tex_handles);
-		glBindTexture(GL_TEXTURE_BUFFER, 0);
+            // create texture buffer for texture handles
+            glGenTextures(1, &_tb_tex_handles);
+            glBindTexture(GL_TEXTURE_BUFFER, _tb_tex_handles);
+            glTexBuffer(
+                GL_TEXTURE_BUFFER,
+                base::get_pfd(base::PF_RG32I)->_internal,
+                _buffer_tex_handles);
+            glBindTexture(GL_TEXTURE_BUFFER, 0);
+        }
 	}
 }
 
@@ -711,24 +715,19 @@ void scene::upload_blocks_to_gpu(
 
 void scene::bind_texture(int counter)
 {
-	//if ((counter & 0x7) != 0)
-	//    return;
-
-	//glUniformHandleui64ARB(_prg_tex, _tex_handles[counter]);
-
-	if (_tex_mode == BenchTexNaive) {
+    if (_tex_mode == BenchTexNaive || _tex_mode == BenchTexBindlessHandle) {
 		if ((_tex_freq != -1 && (counter & ((1 << _tex_freq) - 1)) == 0)
 			|| (_tex_freq == -1 && counter == 0))
-			glBindMultiTextureEXT(GL_TEXTURE3, GL_TEXTURE_2D, _texs[counter]);
-	}
+        if (_tex_mode != BenchTexBindlessHandle) {
+            glBindMultiTextureEXT(GL_TEXTURE3, GL_TEXTURE_2D, _texs[counter]);
+        }
+        else {
+            glUniformHandleui64ARB(_prg_tex, _tex_handles[counter]);
+        }
+    }
 	else if (_tex_mode == BenchTexArray && (counter & 0x7ff) == 0) {
 		glBindMultiTextureEXT(GL_TEXTURE3, GL_TEXTURE_2D_ARRAY, _texs[counter >> 11]);
 	}
-
-	//const int cm = counter % 190;
-	//if (cm == 0)
-	//    glBindTextures(2, 190, &_texs[counter]);
-	//glUniform1i(_prg_tex, cm + 2);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -812,6 +811,7 @@ void scene::gpu_draw(base::frame_context * const ctx)
 
 	switch (_tex_mode) {
 	case BenchTexNaive:
+    case BenchTexBindlessHandle:
 		glUniform1i(_prg_tex, 3);
 		use_tex = true;
 		break;
