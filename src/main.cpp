@@ -308,7 +308,7 @@ int WINAPI WinMain(
                     "--test1 - glDrawElementsBaseInstance\n"
                     "--test2 - glMultiDrawIndirect (default)\n"
                     "--test3 - glMultiDrawElementsIndirect\n"
-					//"--test4 - glDrawElementsBaseVertex base vertex hack\n\n"
+					"--test4 - glDrawElementsBaseVertex base vertex hack\n\n"
                     
                     "--tex-mode0 - No textures\n"
                     "--tex-mode1 - Classis texture binding with glBindMultiTextureEXT\n"

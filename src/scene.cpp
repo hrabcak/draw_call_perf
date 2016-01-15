@@ -101,6 +101,7 @@ scene::scene(benchmark * const app)
 	_test_names.push_back("Test 1: Base instance");
 	_test_names.push_back("Test 2: Indirect");
 	_test_names.push_back("Test 3: Instancing");
+	_test_names.push_back("Test 4: Base vertex hack");
 
 	// set modes from cfg
 	if (base::cfg().test != -1) {
