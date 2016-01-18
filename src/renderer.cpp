@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #include "renderer.h"
 #include "scene.h"
+#include "benchmark.h"
 
 #include "base/base.h"
 #include "base/canvas.h"
@@ -128,6 +129,20 @@ void renderer::run()
     }
     catch (const base::exception &e) {
         MessageBoxA(0, e.text().c_str(), "Error...", MB_APPLMODAL);
+		
+		benchmark * app = dynamic_cast<benchmark*>(_app);
+		if (app){
+			if (base::cfg().sceneType == base::config::SceneType::stCubes){
+				app->write_test_data_csv(CUBES_TEST_FILE_NAME, base::stats(), 0, 0, true);
+			}
+			else if (base::cfg().sceneType == base::config::SceneType::stBuildings){
+				app->write_test_data_csv(BUILDINGS_TEST_FILE_NAME, base::stats(), 0, 0, true);
+			}
+			else if (base::cfg().sceneType == base::config::SceneType::stGrass){
+				app->write_test_data_csv(GRASS_TEST_FILE_NAME, base::stats(), 0, 0, true);
+			}
+		}
+
         _shutdown = true;
         _event.signal();
     }
