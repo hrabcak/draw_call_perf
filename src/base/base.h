@@ -313,7 +313,7 @@ struct config {
 		, tex_freq(1)
 		, use_vbo(false)
 		, one_mesh(false)
-		, tex_size(64)
+		, tex_size(32)
 		, dont_rnd_cubes(true)
 		, smoother_tri_count(false)
 		, sceneType(stCubes)
