@@ -255,7 +255,7 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 		cfg + "#define GROUP_SIZE 1\n#define GROUP_DEPTH 1\n",
 		"shaders/mipgen_c.glsl",
 		GL_COMPUTE_SHADER));
-	base::link_program(loc, _prg_mip);
+	base::link_program(loc, _prg_mip2);
 
 	// GET UNIFORM STUFF
 
@@ -414,6 +414,10 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 	if (_tex_mode != BenchTexNone) {
 		create_textures(loc);
 	}
+
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -769,6 +773,8 @@ void scene::gpu_draw(base::frame_context * const ctx)
 		ctx->_ctx_id * sizeof(base::ctx_data),
 		sizeof(base::ctx_data));
 
+	glUseProgram(_prg);
+
 	// bind element buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffer_elem);
 
@@ -853,8 +859,6 @@ void scene::gpu_draw(base::frame_context * const ctx)
 	//glUniform1f(_prg_tg_counter, counter);
 	//glBindImageTexture(0, _texs[0], 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
 	//glDispatchCompute(32>>4, 32>>4, _max_array_layers);
-
-	glUseProgram(_prg);
 
 	const uint nblocks = ctx->_num_visible_blocks[0];
 
