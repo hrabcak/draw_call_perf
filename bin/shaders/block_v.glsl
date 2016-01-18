@@ -44,6 +44,7 @@ layout(std140) uniform context
 
 #ifdef USE_BASE_VERTEX_DRAW 
     uniform isamplerBuffer tb_draw_data;
+    uniform int basevert;
 #else
     layout(location = 13) in ivec4 index_start;
 #endif
@@ -113,7 +114,10 @@ void main()
     int vertex_id = gl_VertexID;
     int index = vertex_id >> 12;
 
-#ifdef USE_BASE_VERTEX_DRAW 
+#ifdef USE_BASE_VERTEX_DRAW
+#ifdef USE_BASE_VERTEX_DRAW_WA
+    index = basevert;
+#endif
     ivec4 index_start = texelFetch(tb_draw_data, index);
 #endif
 

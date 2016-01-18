@@ -150,7 +150,7 @@ protected:
     GLint _prg_tb_pos;
 	GLint _prg_tb_nor_uv;
     GLint _prg_tex;
-    GLint _prg_tb_dc_data;
+    GLint _prg_tb_dc_data, _prg_basevert;
 
     GLuint _prg_tg;
     GLint _prg_tg_tex;

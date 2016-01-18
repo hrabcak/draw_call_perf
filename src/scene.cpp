@@ -45,6 +45,8 @@ using namespace glm;
 #define SIMPLEX_BIAS_X		4382
 #define SIMPLEX_BIAS_Y		14837
 
+//#define BASEVERTEX_WA
+
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 scene::scene(benchmark * const app)
@@ -187,6 +189,9 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 		break;
 	case BenchBaseVertex:
 		cfg += "#define USE_BASE_VERTEX_DRAW 1\n";
+#ifdef BASEVERTEX_WA
+        cfg += "#define USE_BASE_VERTEX_DRAW_WA 1\n";
+#endif
 		break;
 	case BenchInstancing:
 		cfg += "#define USE_INSTANCED_DRAW 1\n";
@@ -272,6 +277,9 @@ void scene::load_and_init_shaders(const base::source_location &loc)
 		break;
 	case BenchBaseVertex:
         _prg_tb_dc_data = get_uniform_location(loc, _prg, "tb_draw_data");
+#ifdef BASEVERTEX_WA
+        _prg_basevert = get_uniform_location(loc, _prg, "basevert");
+#endif
         break;
 	case BenchInstancing:
 		break;
@@ -936,6 +944,9 @@ void scene::gpu_draw(base::frame_context * const ctx)
 			else if (fast_draw_call_gl33) {
 				if (use_tex)
 					bind_texture(counter);
+#ifdef BASEVERTEX_WA
+                glUniform1i(_prg_basevert, offset);
+#endif
 				glDrawElementsBaseVertex(
 					GL_TRIANGLES,
 					dc->_nelements,
