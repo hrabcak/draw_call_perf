@@ -414,10 +414,6 @@ void scene::init_gpu_stuff(const base::source_location &loc)
 	if (_tex_mode != BenchTexNone) {
 		create_textures(loc);
 	}
-
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
