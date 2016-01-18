@@ -50,6 +50,7 @@ renderer::renderer(base::app * const a, const base::source_location &loc)
 	, _vendor_id(0)
 	, _device_id(0)
 	, _rev_id(0)
+	, _shutdown_code(base::ecOK)
 {
     thread::start(loc);
 
@@ -129,25 +130,12 @@ void renderer::run()
     }
     catch (const base::exception &e) {
         MessageBoxA(0, e.text().c_str(), "Error...", MB_APPLMODAL);
-		
-		benchmark * app = dynamic_cast<benchmark*>(_app);
-		if (app){
-			if (base::cfg().sceneType == base::config::SceneType::stCubes){
-				app->write_test_data_csv(CUBES_TEST_FILE_NAME, base::stats(), 0, 0, true);
-			}
-			else if (base::cfg().sceneType == base::config::SceneType::stBuildings){
-				app->write_test_data_csv(BUILDINGS_TEST_FILE_NAME, base::stats(), 0, 0, true);
-			}
-			else if (base::cfg().sceneType == base::config::SceneType::stGrass){
-				app->write_test_data_csv(GRASS_TEST_FILE_NAME, base::stats(), 0, 0, true);
-			}
-		}
-
         _shutdown = true;
+		_shutdown_code = base::ecError;
         _event.signal();
     }
 
-    _app->shutdown();
+    _app->shutdown(_shutdown_code);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

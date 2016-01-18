@@ -49,6 +49,11 @@ enum proc_scn_type{
 	psCount
 };
 
+enum exit_code_type{
+	ecOK = 0,
+	ecError = 1
+};
+
 struct stats_data
 {
     uint64 _buffer_mem;

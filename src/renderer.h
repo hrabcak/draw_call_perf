@@ -44,6 +44,7 @@ protected:
 	std::list<base::frame_context*> _waiting;
 	base::mutex _mx_queue;
 	bool _shutdown;
+	base::exit_code_type _shutdown_code;
 	base::app *_app;
 	std::string _graphic_card_name;
 	std::string _graphic_card_driver;
