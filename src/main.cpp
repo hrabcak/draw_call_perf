@@ -103,7 +103,7 @@ LPSTR* CommandLineToArgvA(LPSTR lpCmdLine, INT *pNumArgs)
     return result;
 }
 
-int WINAPI _WinMainWrapper(
+int WINAPI WinMain(
     HINSTANCE /*hInstance*/,
     HINSTANCE /*hPrevInstance*/,
     LPSTR lpCmdLine,
@@ -374,32 +374,21 @@ int WINAPI _WinMainWrapper(
             return -1;
         }
 
-		benchmark myapp;
+		int a = 1, b = 0;
+		a /= b;
+
+        benchmark myapp;
 		base::run_app_win(&myapp, false);
 	}
 	catch(const base::exception &e) {
 		std::cout << e.text();
 		return -1;
 	}
-
-	return 0;
-}
-
-int WINAPI WinMain(
-	HINSTANCE /*hInstance*/,
-	HINSTANCE /*hPrevInstance*/,
-	LPSTR lpCmdLine,
-	int /*nCmdShow*/)
-{
-	int result = 0;
-	__try{
-		result = _WinMainWrapper(NULL, NULL, lpCmdLine, 0);
-	}
-	__except(EXCEPTION_EXECUTE_HANDLER){
-		MessageBox(0, "Some exception caught!!!", "Exception", MB_OK | MB_ICONERROR);
+	catch (...){
+		std::cout << "some exception!!!" << std::endl;
 		return -1;
 	}
 
-	return result;
+	return 0;
 }
 
