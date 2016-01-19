@@ -153,10 +153,9 @@ void benchmark::draw_frame()
         if (dt > 1000000) {
             const float dtf = float(dt) * 0.000001f;
             const float fps = float(nframes) / dtf;
-            const float r_nframes = 1.0f / float(nframes);
+			const float r_nframes = 1.0f / float(nframes);
 
-			
-			static uint32 nvert ;
+			static uint32 nvert;
 			static uint32 nelem;
 			get_face_and_vert_count(base::cfg().mesh_size, nelem, nvert);
 			get_mesh_size_str(mesh_size_str,
@@ -387,7 +386,8 @@ bool benchmark::write_test_data_csv(
 			"gpu_drv_ver,"
 			"gpu_vendor_id,"
 			"gpu_device_id,"
-			"gpu_rev_id",
+			"gpu_rev_id,"
+			"test_status",
 			pFile);
 	}
 	else{
@@ -414,7 +414,7 @@ bool benchmark::write_test_data_csv(
 
 	fprintf(
 		pFile,
-		"\n%s,%s,%s,%i,%u,%i,%s,%u,%f,%f,%f,%u,%llu,%llu,%u,%u,%s,%s,%s,%s,%s",
+		"\n%s,%s,%s,%i,%u,%i,%s,%u,%f,%f,%f,%u,%llu,%llu,%u,%u,%s,%s,%s,%s,%s,OK",
 		this->get_test_name(),
 		_renderer->get_gpu_str(),
 		base::cfg().use_vbo ? "true" : "false",
@@ -438,7 +438,7 @@ bool benchmark::write_test_data_csv(
 		rev_id.c_str());
 	}
 	else{
-		fprintf(pFile, "\n,,,,,,,,,,,,,,,,,,,,");
+		fprintf(pFile, "\n,,,,,,,,,,,,,,,,,,,,,FAILED");
 	}
 	fclose(pFile);
 
@@ -483,7 +483,8 @@ bool benchmark::grass_write_test_data_csv(
 			"gpu_drv_ver,"
 			"gpu_vendor_id,"
 			"gpu_device_id,"
-			"gpu_rev_id"
+			"gpu_rev_id,"
+			"test_status"
 			,pFile);
 	}
 	else{
@@ -510,7 +511,7 @@ bool benchmark::grass_write_test_data_csv(
 
 	fprintf(
 		pFile
-		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%s,%s,%s,%u,%u,%u,%s,%s,%s,%s,%s,%s"
+		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%s,%s,%s,%u,%u,%u,%s,%s,%s,%s,%s,%s,OK"
 		, this->get_test_name()
 		, _renderer->get_gpu_str()
 		, nframes
@@ -534,7 +535,7 @@ bool benchmark::grass_write_test_data_csv(
 		);
 	}
 	else{
-		fprintf(pFile, "\n,,,,,,,,,,,,,,,,,,,");
+		fprintf(pFile, "\n,,,,,,,,,,,,,,,,,,,,FAILED");
 	}
 	
 	fclose(pFile);
@@ -573,7 +574,8 @@ bool benchmark::buildings_write_test_data_csv(
 			"gpu_vendor,"
 			"gpu_vendor_id,"
 			"gpu_device_id,"
-			"gpu_rev_id"
+			"gpu_rev_id,"
+			"test_status"
 			, pFile);
 	}
 	else{
@@ -600,7 +602,7 @@ bool benchmark::buildings_write_test_data_csv(
 
 	fprintf(
 		pFile
-		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%d,%s,%s,%s,%s"
+		, "\n%s,%s,%u,%f,%f,%f,%llu,%llu,%d,%s,%s,%s,%s,OK"
 		, _renderer->get_gpu_str()
 		, _renderer->get_gpu_driver_str()
 		, nframes
@@ -617,7 +619,7 @@ bool benchmark::buildings_write_test_data_csv(
 		);
 	}
 	else{
-		fprintf(pFile, "\n,,,,,,,,,,,,");
+		fprintf(pFile, "\n,,,,,,,,,,,,,FAILED");
 	}
 	
 	fclose(pFile);
@@ -657,7 +659,7 @@ void benchmark::on_shutdown()
 	if (_shutdown_code == base::ecDriverError){
 		if (!_benchmark_mode){
 			MessageBox(0,
-				"Your graphics driver has some issue."
+				"Graphic driver error occured."
 				"To solve this problem please visit www.nvidia.com and pick some real graphic card!",
 				"Driver error",
 				MB_OK | MB_ICONERROR);
@@ -672,6 +674,8 @@ void benchmark::on_shutdown()
 			else if (base::cfg().sceneType == base::config::stBuildings){
 				buildings_write_test_data_csv(BUILDINGS_TEST_FILE_NAME, _test_stats, 0, 0, true);
 			}
+
+			std::cout << "Graphic driver error occured" << std::endl;
 		}
 	}
 }
