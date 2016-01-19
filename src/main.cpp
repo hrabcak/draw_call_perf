@@ -374,9 +374,6 @@ int WINAPI WinMain(
             return -1;
         }
 
-		int a = 1, b = 0;
-		a /= b;
-
         benchmark myapp;
 		base::run_app_win(&myapp, false);
 	}

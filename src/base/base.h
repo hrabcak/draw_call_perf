@@ -51,7 +51,8 @@ enum proc_scn_type{
 
 enum exit_code_type{
 	ecOK = 0,
-	ecError = 1
+	ecAppError = 1,
+	ecDriverError = 2
 };
 
 struct stats_data

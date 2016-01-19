@@ -71,8 +71,7 @@ void renderer::run()
 		_run_wrapper();
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER){
-		MessageBox(0, "Some system exception!!", "Exception", MB_OK | MB_ICONERROR);
-		_app->shutdown(base::ecError);
+		_app->shutdown(base::ecDriverError);
 	}
 }
 
@@ -137,13 +136,14 @@ void renderer::_run_wrapper(){
 		if (_shutdown)
 			break;
 		}
-
+		
+		
 		printf("Renderer thread ended...\n");
 	}
 	catch (const base::exception &e) {
 		MessageBoxA(0, e.text().c_str(), "Error...", MB_APPLMODAL);
 		_shutdown = true;
-		_shutdown_code = base::ecError;
+		_shutdown_code = base::ecAppError;
 		_event.signal();
 	}
 

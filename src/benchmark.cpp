@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <sstream>
+#include <Windows.h>
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -626,7 +627,8 @@ bool benchmark::buildings_write_test_data_csv(
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-const char * benchmark::get_texturing_mode_str(int mode){
+const char * benchmark::get_texturing_mode_str(int mode)
+{
 	switch (mode){
 	case 0: return "No texture";
 		break;
@@ -643,8 +645,35 @@ const char * benchmark::get_texturing_mode_str(int mode){
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void benchmark::get_mesh_size_str(char * out_str,ushort nvert, ushort nelem){
+void benchmark::get_mesh_size_str(char * out_str,ushort nvert, ushort nelem)
+{
     sprintf(out_str, "%uF/%uV", nelem / 3, nvert);
 };
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void benchmark::on_shutdown()
+{
+	if (_shutdown_code == base::ecDriverError){
+		if (!_benchmark_mode){
+			MessageBox(0,
+				"Your graphics driver has some issue."
+				"To solve this problem please visit www.nvidia.com and pick some real graphic card!",
+				"Driver error",
+				MB_OK | MB_ICONERROR);
+		}
+		else{
+			if (base::cfg().sceneType == base::config::stGrass) {
+				grass_write_test_data_csv(GRASS_TEST_FILE_NAME, _test_stats, 0, 0,true);
+			}
+			else if (base::cfg().sceneType == base::config::stCubes){
+				write_test_data_csv(CUBES_TEST_FILE_NAME, _test_stats, 0, 0, true);
+			}
+			else if (base::cfg().sceneType == base::config::stBuildings){
+				buildings_write_test_data_csv(BUILDINGS_TEST_FILE_NAME, _test_stats, 0, 0, true);
+			}
+		}
+	}
+}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
