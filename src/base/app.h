@@ -42,6 +42,7 @@ class canvas;
 class font;
 struct frame_context;
 class source_location;
+enum exit_code_type;
 
 class app
 {
@@ -101,8 +102,10 @@ public:
     float get_fovy() const { return _fovy; }
     float get_aspect() const { return _aspect; }
 
-    void shutdown() { _shutdown = true; }
-    bool is_shutdown() const { return _shutdown; }
+	void shutdown(base::exit_code_type exit_code) { _shutdown = true; _shutdown_code = exit_code; }
+	void shutdown() { _shutdown = true; }
+
+	bool is_shutdown() const { return _shutdown; }
 
 protected:
 	static app *_app;
@@ -124,6 +127,7 @@ protected:
 	bool _active : 1;
     
     bool _shutdown;
+	base::exit_code_type _shutdown_code;
 
 	/// frame context pool
 	std::list<base::frame_context*> _pool;

@@ -30,6 +30,8 @@ THE SOFTWARE.
 #include "scene.h"
 #include "scene_buildings.h"
 
+#include <excpt.h>
+
 LPSTR* CommandLineToArgvA(LPSTR lpCmdLine, INT *pNumArgs)
 {
     int retval;
@@ -101,7 +103,7 @@ LPSTR* CommandLineToArgvA(LPSTR lpCmdLine, INT *pNumArgs)
     return result;
 }
 
-int WINAPI WinMain(
+int WINAPI _WinMainWrapper(
     HINSTANCE /*hInstance*/,
     HINSTANCE /*hPrevInstance*/,
     LPSTR lpCmdLine,
@@ -372,13 +374,32 @@ int WINAPI WinMain(
             return -1;
         }
 
-        benchmark myapp;
-
+		benchmark myapp;
 		base::run_app_win(&myapp, false);
 	}
 	catch(const base::exception &e) {
 		std::cout << e.text();
 		return -1;
 	}
+
 	return 0;
 }
+
+int WINAPI WinMain(
+	HINSTANCE /*hInstance*/,
+	HINSTANCE /*hPrevInstance*/,
+	LPSTR lpCmdLine,
+	int /*nCmdShow*/)
+{
+	int result = 0;
+	__try{
+		result = _WinMainWrapper(NULL, NULL, lpCmdLine, 0);
+	}
+	__except(EXCEPTION_EXECUTE_HANDLER){
+		MessageBox(0, "Some exception caught!!!", "Exception", MB_OK | MB_ICONERROR);
+		return -1;
+	}
+
+	return result;
+}
+

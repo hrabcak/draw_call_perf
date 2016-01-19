@@ -23,6 +23,10 @@ THE SOFTWARE.
 #ifndef __ASYNC_VBO_TRANSFERS_APP_SCENARIO2_H__
 #define __ASYNC_VBO_TRANSFERS_APP_SCENARIO2_H__
 
+#define GRASS_TEST_FILE_NAME			"grass_test.csv"
+#define CUBES_TEST_FILE_NAME			"cubes_test.csv"
+#define BUILDINGS_TEST_FILE_NAME		"buildings_test.csv"
+
 #include "base/app.h"
 #include "base/thread.h"
 
@@ -65,29 +69,29 @@ public:
 
     void gpu_draw_frame(base::frame_context * const ctx) override;
 
-private:
-	benchmark(const benchmark&);
-	void operator =(const benchmark&);
-
 	bool write_test_data_csv(
 		const char * file_name,
 		const base::stats_data & stats,
 		const float time,
-		const int nframes);
+		const int nframes,
+		bool is_dummy = false);
 
 	bool grass_write_test_data_csv(
 		const char * file_name,
 		const base::stats_data & stats,
 		const float time,
-		const int nframes);
+		const int nframes,
+		bool is_dummy = false);
 
 	bool buildings_write_test_data_csv(
 		const char * file_name,
 		const base::stats_data & stats,
 		const float time,
-		const int nframes);
-
-
+		const int nframes,
+		bool is_dummy = false);
+private:
+	benchmark(const benchmark&);
+	void operator =(const benchmark&);
 	const char * get_texturing_mode_str(int mode);
 	void get_mesh_size_str(char * out_str, ushort nvert, ushort nelem);
 };

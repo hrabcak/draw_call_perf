@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #include "renderer.h"
 #include "scene.h"
+#include "benchmark.h"
 
 #include "base/base.h"
 #include "base/canvas.h"
@@ -49,6 +50,7 @@ renderer::renderer(base::app * const a, const base::source_location &loc)
 	, _vendor_id(0)
 	, _device_id(0)
 	, _rev_id(0)
+	, _shutdown_code(base::ecOK)
 {
     thread::start(loc);
 
@@ -129,10 +131,11 @@ void renderer::run()
     catch (const base::exception &e) {
         MessageBoxA(0, e.text().c_str(), "Error...", MB_APPLMODAL);
         _shutdown = true;
+		_shutdown_code = base::ecError;
         _event.signal();
     }
 
-    _app->shutdown();
+    _app->shutdown(_shutdown_code);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

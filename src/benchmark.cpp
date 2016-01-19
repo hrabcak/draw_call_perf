@@ -281,13 +281,13 @@ void benchmark::draw_frame()
 
 			if (base::cfg().test != -1 && test_cycles == 3){
 				if (base::cfg().sceneType == base::config::stGrass) {
-					grass_write_test_data_csv("grass_test.csv", _test_stats, dtime_total, nframes_total);
+					grass_write_test_data_csv(GRASS_TEST_FILE_NAME, _test_stats, dtime_total, nframes_total);
 				}
 				else if (base::cfg().sceneType == base::config::stCubes){
-					write_test_data_csv("cubes_test.csv", _test_stats, dtime_total, nframes_total);
+					write_test_data_csv(CUBES_TEST_FILE_NAME, _test_stats, dtime_total, nframes_total);
 				}
 				else if (base::cfg().sceneType == base::config::stBuildings){
-					buildings_write_test_data_csv("buildings_test.csv", _test_stats, dtime_total, nframes_total);
+					buildings_write_test_data_csv(BUILDINGS_TEST_FILE_NAME, _test_stats, dtime_total, nframes_total);
 				}
 				_shutdown = true;
 			}
@@ -353,7 +353,8 @@ bool benchmark::write_test_data_csv(
 	const char * file_name,
 	const base::stats_data & stats,
 	const float time,
-	const int nframes)
+	const int nframes,
+	bool is_dummy)
 {
 	FILE * pFile;
 	pFile = fopen(file_name, "r+");
@@ -391,6 +392,8 @@ bool benchmark::write_test_data_csv(
 	else{
 		fseek(pFile, 0, SEEK_END);
 	}
+
+	if (!is_dummy){
 	std::ostringstream oss;
 	std::string vendor_id("");
 	std::string device_id("");
@@ -432,7 +435,10 @@ bool benchmark::write_test_data_csv(
 		vendor_id.c_str(),
 		device_id.c_str(),
 		rev_id.c_str());
-
+	}
+	else{
+		fprintf(pFile, "\n,,,,,,,,,,,,,,,,,,,,");
+	}
 	fclose(pFile);
 
 	return true;
@@ -444,7 +450,8 @@ bool benchmark::grass_write_test_data_csv(
 	const char * file_name,
 	const base::stats_data & stats,
 	const float time,
-	const int nframes)
+	const int nframes,
+	bool is_dummy)
 {
 	FILE * pFile;
 	pFile = fopen(file_name, "r+");
@@ -482,6 +489,7 @@ bool benchmark::grass_write_test_data_csv(
 		fseek(pFile, 0, SEEK_END);
 	}
 
+	if (!is_dummy){
 	std::ostringstream oss;
 	std::string vendor_id("");
 	std::string device_id("");
@@ -523,7 +531,11 @@ bool benchmark::grass_write_test_data_csv(
 		, device_id.c_str()
 		, rev_id.c_str()
 		);
-
+	}
+	else{
+		fprintf(pFile, "\n,,,,,,,,,,,,,,,,,,,");
+	}
+	
 	fclose(pFile);
 
 	return true;
@@ -535,7 +547,8 @@ bool benchmark::buildings_write_test_data_csv(
 	const char * file_name,
 	const base::stats_data & stats,
 	const float time,
-	const int nframes)
+	const int nframes,
+	bool is_dummy)
 {
 	FILE * pFile;
 	pFile = fopen(file_name, "r+");
@@ -566,6 +579,7 @@ bool benchmark::buildings_write_test_data_csv(
 		fseek(pFile, 0, SEEK_END);
 	}
 
+	if (!is_dummy){
 	std::ostringstream oss;
 	std::string vendor_id("");
 	std::string device_id("");
@@ -600,7 +614,11 @@ bool benchmark::buildings_write_test_data_csv(
 		, device_id.c_str()
 		, rev_id.c_str()
 		);
-
+	}
+	else{
+		fprintf(pFile, "\n,,,,,,,,,,,,");
+	}
+	
 	fclose(pFile);
 
 	return true;

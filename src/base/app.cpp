@@ -44,6 +44,7 @@ base::app::app()
 	, _benchmark_mode(cfg().test != -1)
 
     , _shutdown(false)
+	, _shutdown_code(base::ecOK)
 { 
 	assert(_app == 0);
     _app = this; 

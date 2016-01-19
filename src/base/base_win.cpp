@@ -220,6 +220,10 @@ void base::init_opengl_win()
         throw base::exception(SRC_LOCATION_STR) << "wglCreateContext failed!";
 
 	set_main_rc();
+
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
