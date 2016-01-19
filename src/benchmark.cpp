@@ -36,6 +36,8 @@ THE SOFTWARE.
 #include <sstream>
 #include <Windows.h>
 
+extern bool test_mode;
+
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 benchmark::benchmark()
@@ -77,8 +79,8 @@ void benchmark::start()
     // start renderer thread
     _renderer.reset(new renderer(this, SRC_LOCATION));
     
-    if (!_renderer->is_alive()) {
-        shutdown();
+	if (!_renderer->is_alive() || (test_mode && _renderer->get_vendor_id() == 4098 && (base::cfg().tex_mode == 3 || base::cfg().test == 4))) {
+        shutdown(base::ecAppError);
         return;
     }
    

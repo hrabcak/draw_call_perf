@@ -111,7 +111,7 @@ int WINAPI WinMain(
     LPSTR lpCmdLine,
     int /*nCmdShow*/)
 {
-    int argc;
+ 	int argc;
     LPSTR * const argv = CommandLineToArgvA(GetCommandLineA(), &argc);
 
 	try {
@@ -385,6 +385,7 @@ int WINAPI WinMain(
 		return -1;
 	}
 
+	
 	return 0;
 }
 
