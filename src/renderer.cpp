@@ -72,6 +72,7 @@ void renderer::run()
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER){
 		MessageBox(0, "Some system exception!!", "Exception", MB_OK | MB_ICONERROR);
+		_app->shutdown(base::ecError);
 	}
 }
 
