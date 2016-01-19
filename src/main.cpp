@@ -32,6 +32,8 @@ THE SOFTWARE.
 
 #include <excpt.h>
 
+bool test_mode = false;
+
 LPSTR* CommandLineToArgvA(LPSTR lpCmdLine, INT *pNumArgs)
 {
     int retval;
@@ -138,6 +140,7 @@ int WINAPI WinMain(
                 || stricmp(argv[i], "--test3") == 0
                 || stricmp(argv[i], "--test4") == 0) {
                 base::cfg().test = argv[i][6] - '0';
+				test_mode = true;
             }
             else if (
                    stricmp(argv[i], "--tex-mode0") == 0
@@ -379,10 +382,6 @@ int WINAPI WinMain(
 	}
 	catch(const base::exception &e) {
 		std::cout << e.text();
-		return -1;
-	}
-	catch (...){
-		std::cout << "some exception!!!" << std::endl;
 		return -1;
 	}
 

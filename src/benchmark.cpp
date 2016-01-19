@@ -678,6 +678,17 @@ void benchmark::on_shutdown()
 			std::cout << "Graphic driver error occured" << std::endl;
 		}
 	}
+	else if (_shutdown_code == base::ecAppError && _benchmark_mode){
+		if (base::cfg().sceneType == base::config::stGrass) {
+			grass_write_test_data_csv(GRASS_TEST_FILE_NAME, _test_stats, 0, 0, true);
+		}
+		else if (base::cfg().sceneType == base::config::stCubes){
+			write_test_data_csv(CUBES_TEST_FILE_NAME, _test_stats, 0, 0, true);
+		}
+		else if (base::cfg().sceneType == base::config::stBuildings){
+			buildings_write_test_data_csv(BUILDINGS_TEST_FILE_NAME, _test_stats, 0, 0, true);
+		}
+	}
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

@@ -6,6 +6,8 @@
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+extern bool test_mode;
+
 base::thread::thread()
 	: _handle(0)
 {}
@@ -51,8 +53,11 @@ void* base::thread::thread_fnc(void* data)
 	}
 	catch(const base::exception &e) {
 		std::cout << e.text();
-        MessageBoxA(0, e.text().c_str(), "Error...", MB_APPLMODAL);
-        PostQuitMessage(-1);
+		if (!test_mode)
+		{
+			MessageBoxA(0, e.text().c_str(), "Error...", MB_APPLMODAL);
+		}
+		PostQuitMessage(-1);
         return (void*)-1;
 	}
 	PostQuitMessage(-1);

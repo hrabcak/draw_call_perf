@@ -38,6 +38,8 @@ THE SOFTWARE.
 
 using namespace glm;
 
+extern bool test_mode;
+
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 renderer::renderer(base::app * const a, const base::source_location &loc)
@@ -141,7 +143,9 @@ void renderer::_run_wrapper(){
 		printf("Renderer thread ended...\n");
 	}
 	catch (const base::exception &e) {
-		MessageBoxA(0, e.text().c_str(), "Error...", MB_APPLMODAL);
+		if (!test_mode){
+			MessageBoxA(0, e.text().c_str(), "Error...", MB_APPLMODAL);
+		}
 		_shutdown = true;
 		_shutdown_code = base::ecAppError;
 		_event.signal();
