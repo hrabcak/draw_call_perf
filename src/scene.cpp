@@ -450,7 +450,7 @@ void scene::create_textures(const base::source_location &)
             256,
             28);
 
-        const int size = (256 * 256 * 28) / 2;
+        const int size = 256 * 256 * 28;
         char * data = 0;
         unsigned buf = base::create_buffer(size, &data, 0);
         memset(data, 0xff, size);
@@ -465,7 +465,7 @@ void scene::create_textures(const base::source_location &)
             256,
             28,
             GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT,
-            512 * 64 * 28,
+            1024 * 64 * 28,
             0);
 
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
@@ -478,7 +478,7 @@ void scene::create_textures(const base::source_location &)
             &tex_size);
 
         data = new char[size*4];
-        memset(data, 0, size*4);
+        memset(data, 0xcd, size*4);
 
         glGetCompressedTexImage(
             GL_TEXTURE_2D_ARRAY,
