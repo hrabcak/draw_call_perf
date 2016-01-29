@@ -52,6 +52,7 @@ protected:
 	ushort _vendor_id;
 	ushort _device_id;
 	ushort _rev_id;
+
 public:
 
     renderer(base::app * const a, const base::source_location &loc);
@@ -79,6 +80,9 @@ public:
 	ushort get_rev_id(){ return _rev_id; }
 
     bool is_alive() { return !_shutdown; };
+
+protected:
+	void _run_wrapper();
 };
 
 #endif // __ASYNC_VBO_TRANSFERS_RENDERER_H__

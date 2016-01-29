@@ -102,9 +102,10 @@ public:
     float get_fovy() const { return _fovy; }
     float get_aspect() const { return _aspect; }
 
-	void shutdown(base::exit_code_type exit_code) { _shutdown = true; _shutdown_code = exit_code; }
-	void shutdown() { _shutdown = true; }
-
+	virtual void on_shutdown() = 0;
+	void shutdown() { _shutdown = true; on_shutdown(); }
+	void shutdown(base::exit_code_type exit_code) { _shutdown_code = exit_code; shutdown(); }
+	
 	bool is_shutdown() const { return _shutdown; }
 
 protected:

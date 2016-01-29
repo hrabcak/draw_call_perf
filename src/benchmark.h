@@ -55,6 +55,7 @@ public:
     const char* get_wnd_name() const override { return get_app_name(); }
     const char* get_wnd_cls() const override { return "benchmark class"; }
     const char* get_test_name() const override;
+	void on_shutdown() override;
 
 	void set_benchmark_mode(bool mode) override { _benchmark_mode = mode; }
 	

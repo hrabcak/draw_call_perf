@@ -38,6 +38,8 @@ THE SOFTWARE.
 
 using namespace glm;
 
+extern bool test_mode;
+
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 renderer::renderer(base::app * const a, const base::source_location &loc)
@@ -67,14 +69,25 @@ renderer::~renderer() {}
 
 void renderer::run()
 {
-    try {
-        base::init_opengl_win();
-        base::init_opengl_dbg_win();
+	__try{
+		_run_wrapper();
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER){
+		_app->shutdown(base::ecDriverError);
+	}
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void renderer::_run_wrapper(){
+	try {
+		base::init_opengl_win();
+		base::init_opengl_dbg_win();
 
 		base::get_display_ven_dev_id(_vendor_id, _device_id, _rev_id);
 
 		if (_vendor_id == 0x1002/* || _vendor_id == 0x1022*/){
-			_graphic_card_name = base::ven_dev_id_to_ati_card_name(_vendor_id,_device_id);
+			_graphic_card_name = base::ven_dev_id_to_ati_card_name(_vendor_id, _device_id);
 		}
 		else{
 			_graphic_card_name = (char*)glGetString(GL_RENDERER);
@@ -84,58 +97,61 @@ void renderer::run()
 
 		_graphic_card_driver = (char*)glGetString(GL_VERSION);
 
-        // create frame_context pool
-        {
-            base::mutex_guard g(_mx_queue);
-            base::app::get()->create_frame_context_pool();
-        }
+		// create frame_context pool
+		{
+			base::mutex_guard g(_mx_queue);
+			base::app::get()->create_frame_context_pool();
+		}
 
-        _app->gpu_init();
+		_app->gpu_init();
 
-        _event.signal();
+		_event.signal();
 
-        for (;;) {
-            base::frame_context *ctx = 0;
+		for (;;) {
+			base::frame_context *ctx = 0;
 
-            if (!_waiting.empty() && _waiting.front()->check_fence()) {
-                base::mutex_guard g(_mx_queue);
-                base::app::get()->push_frame_context_to_pool(_waiting.front());
+			if (!_waiting.empty() && _waiting.front()->check_fence()) {
+				base::mutex_guard g(_mx_queue);
+				base::app::get()->push_frame_context_to_pool(_waiting.front());
 
-                _waiting.pop_front();
-            }
+				_waiting.pop_front();
+			}
 
-        {
-            base::mutex_guard g(_mx_queue);
-            if (!_queue.empty()) {
-                ctx = _queue.back();
-                _queue.pop_back();
-            }
-        }
+		{
+			base::mutex_guard g(_mx_queue);
+			if (!_queue.empty()) {
+				ctx = _queue.back();
+				_queue.pop_back();
+			}
+		}
 
-        if (ctx == 0) {
-            if (_shutdown) break;
-            continue;
-        }
+		if (ctx == 0) {
+			if (_shutdown) break;
+			continue;
+		}
 
-        draw_frame(ctx);
+		draw_frame(ctx);
 
-        ctx->put_fence();
-        _waiting.push_back(ctx);
+		ctx->put_fence();
+		_waiting.push_back(ctx);
 
-        if (_shutdown)
-            break;
-        }
+		if (_shutdown)
+			break;
+		}
+		
+		
+		printf("Renderer thread ended...\n");
+	}
+	catch (const base::exception &e) {
+		if (!test_mode){
+			MessageBoxA(0, e.text().c_str(), "Error...", MB_APPLMODAL);
+		}
+		_shutdown = true;
+		_shutdown_code = base::ecAppError;
+		_event.signal();
+	}
 
-        printf("Renderer thread ended...\n");
-    }
-    catch (const base::exception &e) {
-        MessageBoxA(0, e.text().c_str(), "Error...", MB_APPLMODAL);
-        _shutdown = true;
-		_shutdown_code = base::ecError;
-        _event.signal();
-    }
-
-    _app->shutdown(_shutdown_code);
+	_app->shutdown(_shutdown_code);
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

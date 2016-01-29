@@ -30,6 +30,10 @@ THE SOFTWARE.
 #include "scene.h"
 #include "scene_buildings.h"
 
+#include <excpt.h>
+
+bool test_mode = false;
+
 LPSTR* CommandLineToArgvA(LPSTR lpCmdLine, INT *pNumArgs)
 {
     int retval;
@@ -107,7 +111,7 @@ int WINAPI WinMain(
     LPSTR lpCmdLine,
     int /*nCmdShow*/)
 {
-    int argc;
+ 	int argc;
     LPSTR * const argv = CommandLineToArgvA(GetCommandLineA(), &argc);
 
 	try {
@@ -136,6 +140,7 @@ int WINAPI WinMain(
                 || stricmp(argv[i], "--test3") == 0
                 || stricmp(argv[i], "--test4") == 0) {
                 base::cfg().test = argv[i][6] - '0';
+				test_mode = true;
             }
             else if (
                    stricmp(argv[i], "--tex-mode0") == 0
@@ -373,12 +378,14 @@ int WINAPI WinMain(
         }
 
         benchmark myapp;
-
 		base::run_app_win(&myapp, false);
 	}
 	catch(const base::exception &e) {
 		std::cout << e.text();
 		return -1;
 	}
+
+	
 	return 0;
 }
+

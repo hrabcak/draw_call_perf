@@ -933,7 +933,7 @@ void gen_cube_simple_imp(
 	file_name += buf;
 	file_name += ".obj";
 
-	obj_writer ow;
+	//obj_writer ow;
 	//ow.open(file_name);
 
 	float step = 2.0f / faces_per_side;
@@ -990,9 +990,9 @@ void gen_cube_simple_imp(
 					cur_norm_uv_data += sizeof(glm::vec3) + sizeof(glm::vec2);
 				}
 
-				ow.write_vertex(vert.pos);
+				/*ow.write_vertex(vert.pos);
 				ow.write_normal(vert.norm);
-				ow.write_tex_coords(vert.uv);
+				ow.write_tex_coords(vert.uv);*/
 			}
 		}
 
@@ -1028,9 +1028,9 @@ void gen_cube_simple_imp(
 				cur_norm_uv_data += sizeof(glm::vec3) + sizeof(glm::vec2);
 			}
 
-			ow.write_vertex(vert.pos);
+			/*ow.write_vertex(vert.pos);
 			ow.write_normal(vert.norm);
-			ow.write_tex_coords(vert.uv);
+			ow.write_tex_coords(vert.uv);*/
 
 			vert.pos = glm::vec3(-1.0f, -1.0f, -1.0f);
 			
@@ -1051,9 +1051,9 @@ void gen_cube_simple_imp(
 				cur_norm_uv_data += sizeof(glm::vec3) + sizeof(glm::vec2);
 			}
 
-			ow.write_vertex(vert.pos);
+		/*	ow.write_vertex(vert.pos);
 			ow.write_normal(vert.norm);
-			ow.write_tex_coords(vert.uv);
+			ow.write_tex_coords(vert.uv);*/
 
 			vert.pos = glm::vec3(-1.0f, 1.0f, -1.0f);
 		}
@@ -1089,9 +1089,9 @@ void gen_cube_simple_imp(
 				cur_norm_uv_data += sizeof(glm::vec3) + sizeof(glm::vec2);
 			}
 
-			ow.write_vertex(vert.pos);
+		/*	ow.write_vertex(vert.pos);
 			ow.write_normal(vert.norm);
-			ow.write_tex_coords(vert.uv);
+			ow.write_tex_coords(vert.uv);*/
 		}
 
 		for (int j = 0; j < 4 * faces_per_side; j++){
@@ -1108,11 +1108,11 @@ void gen_cube_simple_imp(
 		}
 	}
 
-	for (int i = 0; i < curr_idx; i += 3){
+	/*for (int i = 0; i < curr_idx; i += 3){
 		ow.write_face_idx_from_zero(index_array[i], index_array[i], index_array[i],
 			index_array[i+1], index_array[i+1], index_array[i+1], 
 			index_array[i+2], index_array[i+2], index_array[i+2]);
-	}
+	}*/
 
 
 }
