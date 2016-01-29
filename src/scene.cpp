@@ -427,6 +427,60 @@ void scene::post_gpu_init()
 
 void scene::create_textures(const base::source_location &)
 {
+    if (0) {
+        // NVIDIA TEST TEX ARRAY
+        unsigned handle;
+
+        glGenTextures(1, &handle);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, handle);
+
+        glTexStorage3D(
+            GL_TEXTURE_2D_ARRAY,
+            9,
+            GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT,
+            256,
+            256,
+            28);
+
+        const int size = (256 * 256 * 28) / 2;
+        char * data = 0;
+        unsigned buf = base::create_buffer(size, &data, 0);
+        memset(data, 0xff, size);
+
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
+
+        glCompressedTexSubImage3D(
+            GL_TEXTURE_2D_ARRAY,
+            0,
+            0, 0, 0,
+            256,
+            256,
+            28,
+            GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT,
+            512 * 64 * 28,
+            0);
+
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
+        int tex_size = 0;
+        glGetTexLevelParameteriv(
+            GL_TEXTURE_2D_ARRAY,
+            0,
+            GL_TEXTURE_COMPRESSED_IMAGE_SIZE,
+            &tex_size);
+
+        data = new char[size*4];
+        memset(data, 0, size*4);
+
+        glGetCompressedTexImage(
+            GL_TEXTURE_2D_ARRAY,
+            0,
+            data);
+
+        int a = 0;
+    }
+
+
 	const int width = base::cfg().tex_size;
 	const int tex_size = width * width;
 	const int ntex = MAX_BLOCK_COUNT;
@@ -1194,7 +1248,7 @@ bool scene::send_test_data()
 		gpu_device_id.c_str(),
 		gpu_rev_id.c_str());
 
-	bool op = base::send_test_data(header, strlen(header), "Cube test", gpu_name, gpu_driver, best_score, ifs);
+	bool op = base::send_test_data(header, int(strlen(header)), "Cube test", gpu_name, gpu_driver, best_score, ifs);
 
 	return op;
 }
