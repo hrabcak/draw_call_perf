@@ -106,6 +106,9 @@ public:
 	void add_test_block(bool add_peaks);
 
 	static bool send_test_data();
+
+    bool test_nvidia_bug();
+
 protected:
 
     // heading is in degrees

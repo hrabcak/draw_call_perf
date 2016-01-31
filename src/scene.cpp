@@ -433,61 +433,92 @@ void scene::post_gpu_init()
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void scene::create_textures(const base::source_location &)
+bool scene::test_nvidia_bug()
 {
-    if (0) {
-        // NVIDIA TEST TEX ARRAY
-        unsigned handle;
+    // NVIDIA TEXTURE ARRAY BUG TEST
+    const base::pfd * const fd = base::get_pfd(base::PF_DXT1_SRGB);
 
-        glGenTextures(1, &handle);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, handle);
+    unsigned handle;
+    const unsigned width = 1664;
+    const unsigned height = 512;
+    const unsigned nslices = 4;
+    const unsigned nmips = 1;   // it works with one level
+    const unsigned pitch = (width > 0 ? glm::max(1u, (width + 3) / 4) : 0) * fd->_size;
+    const unsigned rows = height > 0 ? glm::max(1u, (height + 3) / 4) : 0;
+    const unsigned size = pitch * rows * nslices;
 
-        glTexStorage3D(
-            GL_TEXTURE_2D_ARRAY,
-            9,
-            GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT,
-            256,
-            256,
-            28);
+    glGenTextures(1, &handle);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, handle);
 
-        const int size = 256 * 256 * 28;
-        char * data = 0;
-        unsigned buf = base::create_buffer(size, &data, 0);
-        memset(data, 0xff, size);
+    glTexStorage3D(
+        GL_TEXTURE_2D_ARRAY,
+        nmips,
+        fd->_internal,
+        width,
+        height,
+        nslices);
 
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
+    // create test data
+    unsigned char * data = 0;
+    unsigned buf = base::create_buffer(size, &data, 0);
+    for (uint i = 0; i < size; ++i) data[i] = (i & 0xff);
+
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
+
+    // upload texture array slices
+    for (int i = 0; i < nslices; ++i) {
+        void * const offset = reinterpret_cast<void*>(pitch * rows * i);
 
         glCompressedTexSubImage3D(
             GL_TEXTURE_2D_ARRAY,
             0,
-            0, 0, 0,
-            256,
-            256,
-            28,
-            GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT,
-            1024 * 64 * 28,
-            0);
-
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-
-        int tex_size = 0;
-        glGetTexLevelParameteriv(
-            GL_TEXTURE_2D_ARRAY,
-            0,
-            GL_TEXTURE_COMPRESSED_IMAGE_SIZE,
-            &tex_size);
-
-        data = new char[size*4];
-        memset(data, 0xcd, size*4);
-
-        glGetCompressedTexImage(
-            GL_TEXTURE_2D_ARRAY,
-            0,
-            data);
-
-        int a = 0;
+            0, 0, i,
+            width,
+            height,
+            1,
+            fd->_internal,
+            pitch * rows,
+            offset);
     }
 
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
+    int tex_size = 0;
+    glGetTexLevelParameteriv(
+        GL_TEXTURE_2D_ARRAY,
+        0,
+        GL_TEXTURE_COMPRESSED_IMAGE_SIZE,
+        &tex_size);
+
+    data = new unsigned char[tex_size];
+    memset(data, 0xcd, tex_size);
+
+    glGetCompressedTexImage(
+        GL_TEXTURE_2D_ARRAY,
+        0,
+        data);
+
+
+    int idx = 0;
+    for (; idx < tex_size; ++idx) {
+        if (data[idx] != unsigned char(idx & 0xff)) {
+            break;
+        }
+    }
+
+    // cleanup
+    glDeleteTextures(1, &handle);
+    delete[] data;
+
+    return idx != tex_size ? false : true;
+}
+
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void scene::create_textures(const base::source_location &)
+{
+    test_nvidia_bug();
 
 	const int width = base::cfg().tex_size;
 	const int tex_size = width * width;
