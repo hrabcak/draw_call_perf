@@ -661,8 +661,7 @@ void benchmark::on_shutdown()
 	if (_shutdown_code == base::ecDriverError){
 		if (!_benchmark_mode){
 			MessageBox(0,
-				"Graphic driver error occured."
-				"To solve this problem please visit www.nvidia.com and pick some real graphic card!",
+				"Graphic driver error occured.",
 				"Driver error",
 				MB_OK | MB_ICONERROR);
 		}
