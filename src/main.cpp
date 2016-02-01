@@ -290,6 +290,9 @@ int WINAPI WinMain(
 			else if (stricmp(argv[i], "--var_cube_size") == 0) {
 				base::cfg().var_cube_size = true;
 			}
+			else if (stricmp(argv[i], "--enable-alpha-blend") == 0) {
+				base::cfg().use_alpha_blend = true;
+			}
 			else if (stricmp(argv[i], "--proc_scene_mode") == 0) {
 				int opt = argv[i + 1][0] - '0';
 				if (opt == 0){

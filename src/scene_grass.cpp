@@ -405,9 +405,11 @@ void scene_grass::update(base::frame_context * const ctx)
 void scene_grass::gpu_draw(base::frame_context * const ctx){
 	//glPolygonMode(GL_FRONT, GL_LINE);
 	
-	/*glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	*/
+	if (base::cfg().use_alpha_blend) {
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	}
+	
 	base::hptimer timer;
 
 	memset(_grass_tiles, 0, MAX_GRASS_TILES*sizeof(glm::vec2));

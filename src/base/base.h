@@ -344,6 +344,7 @@ struct config {
 		, no_cull(false)
 		, wire(false)
 		, var_cube_size(false)
+		, use_alpha_blend(false)
         //, use_nor_uv(false)
     {}
 
@@ -395,6 +396,8 @@ struct config {
 	bool no_cull;
 	bool wire;
 	bool var_cube_size;
+
+	bool use_alpha_blend;
 };
 
 config& cfg();

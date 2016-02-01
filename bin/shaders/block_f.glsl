@@ -37,7 +37,7 @@ in vec3 wpos;
     in flat uvec2 tex_handle;
 #endif
 
-out vec3 _retval;
+out vec4 _retval;
 
 void main()
 {
@@ -65,5 +65,5 @@ void main()
 
     //if (tex_color.a == 0.0) discard;
 
-    _retval = tex_color.rgb * fog + vec3(1.0f * (1-fog));
+    _retval = vec4(tex_color.rgb * fog + vec3(1.0f * (1-fog)),0.9);
 }

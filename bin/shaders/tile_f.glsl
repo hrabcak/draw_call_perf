@@ -1,8 +1,8 @@
 in vec3 color;
 
-out vec3 _retval;
+out vec4 _retval;
 
 
 void main() {
-	_retval = color;
+	_retval = vec4(color,1.0);
 }
