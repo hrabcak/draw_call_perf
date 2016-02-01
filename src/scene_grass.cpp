@@ -409,13 +409,18 @@ void scene_grass::gpu_draw(base::frame_context * const ctx){
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 	}
+
+	if (base::cfg().grass_cull){
+		glEnable(GL_CULL_FACE);
+	}
+	else{
+		glDisable(GL_CULL_FACE);
+	}
 	
 	base::hptimer timer;
 
 	memset(_grass_tiles, 0, MAX_GRASS_TILES*sizeof(glm::vec2));
 	calculate_visible_tiles(base::cfg().ngrass_tiles, _grs_data._tile_width);
-
-	glDisable(GL_CULL_FACE);
 
 	glUseProgram(_prg_floor);
 
