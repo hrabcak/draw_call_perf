@@ -842,6 +842,10 @@ void scene::gpu_draw(base::frame_context * const ctx)
 		glDisable(GL_CULL_FACE);
 	}
 	
+	if (base::cfg().use_alpha_blend) {
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	}
 
 	base::hptimer timer;
 

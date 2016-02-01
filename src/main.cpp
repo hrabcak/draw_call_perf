@@ -281,6 +281,9 @@ int WINAPI WinMain(
 			else if (stricmp(argv[i], "--buildings-nocull") == 0) {
 				base::cfg().no_cull = true;
 			}
+			else if (stricmp(argv[i], "--grass_cull") == 0) {
+				base::cfg().grass_cull = true;
+			}
 			else if (stricmp(argv[i], "--nocull") == 0) {
 				base::cfg().no_cull = true;
 			}
@@ -289,6 +292,9 @@ int WINAPI WinMain(
 			}
 			else if (stricmp(argv[i], "--var_cube_size") == 0) {
 				base::cfg().var_cube_size = true;
+			}
+			else if (stricmp(argv[i], "--enable-alpha-blend") == 0) {
+				base::cfg().use_alpha_blend = true;
 			}
 			else if (stricmp(argv[i], "--proc_scene_mode") == 0) {
 				int opt = argv[i + 1][0] - '0';
@@ -356,6 +362,7 @@ int WINAPI WinMain(
 					"--gs_use_end_primitive - Use end primitive in geometry shader.\n"
 					"--use_idx_buf - Use indnex buffer in mode 0.\n"
 					"--use_triangles - Use triagles instead of triangle strip. (in mode 0 and idx buf used)\n"
+					"--grass_cull - Enable backgface culling in grass scene."
 					"--gs_blades_per_run VALUE - Number of grass blades generated per GS run. Values:1, 2, 4, 8\n\n"
 
 					"--buildings-scene - Use building scene.\n"

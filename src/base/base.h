@@ -344,7 +344,9 @@ struct config {
 		, no_cull(false)
 		, wire(false)
 		, var_cube_size(false)
-        //, use_nor_uv(false)
+		, use_alpha_blend(false)
+		, grass_cull(false)
+		//, use_nor_uv(false)
     {}
 
 	bool use_debug_context : 1;
@@ -395,6 +397,10 @@ struct config {
 	bool no_cull;
 	bool wire;
 	bool var_cube_size;
+
+	bool use_alpha_blend;
+
+	bool grass_cull;
 };
 
 config& cfg();
