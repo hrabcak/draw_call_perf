@@ -449,10 +449,11 @@ bool send_data(const char* header, size_t size, std::ifstream& ifs)
 	SockAddr.sin_family = AF_INET;
 	//SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
 
-    SockAddr.sin_addr.S_un.S_un_b.s_b1 = 95;
-    SockAddr.sin_addr.S_un.S_un_b.s_b2 = 85;
-    SockAddr.sin_addr.S_un.S_un_b.s_b3 = 63;
-    SockAddr.sin_addr.S_un.S_un_b.s_b4 = 201;
+    //162.243.111.100
+    SockAddr.sin_addr.S_un.S_un_b.s_b1 = 162;
+    SockAddr.sin_addr.S_un.S_un_b.s_b2 = 243;
+    SockAddr.sin_addr.S_un.S_un_b.s_b3 = 111;
+    SockAddr.sin_addr.S_un.S_un_b.s_b4 = 100;
 
 	char data[1024];
 	bool succ = false;
