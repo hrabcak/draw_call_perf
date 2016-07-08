@@ -2194,6 +2194,7 @@ PCI_DEVTABLE	PciDevTable [] = {
 	{ 0x1002, 0x67ba, "" },
 	{ 0x1002, 0x67be, "Hawaii LE" },
 	{ 0x1002, 0x67c0, "" },
+    { 0x1002, 0x67df, "Radeon RX 480" },
 	{ 0x1002, 0x67e0, "" },
 	{ 0x1002, 0x6800, "Wimbledon XT [Radeon HD 7970M]" },
 	{ 0x1002, 0x6801, "Neptune XT [Radeon HD 8970M]" },
